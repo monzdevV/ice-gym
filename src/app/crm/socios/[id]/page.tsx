@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, ArrowLeft, Mail, Phone } from "lucide-react";
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { obtenerSocio } from "@/lib/datos/socios";
-import { COLOR_SOCIO, ETIQUETA_PAGO, ETIQUETA_SOCIO } from "@/lib/tipos";
+import { codigoCentro } from "@/design/tokens";
+import { ETIQUETA_PAGO } from "@/lib/tipos";
 import { dineroExacto, fecha, fechaHora, mesLargo, numero, relativo } from "@/lib/formato";
-import { Bloque, Pildora, SinDatos } from "@/components/crm/Primitivas";
+import { Dorsal, EstadoSocioMarca, Seccion, SinDatos } from "@/components/crm/Primitivas";
 import { Historial } from "@/components/crm/Historial";
 import { FormularioActividad } from "@/components/crm/FormularioActividad";
 import { AccionesSocio, CobrarRecibo, NotasSocio } from "@/components/crm/socios/ControlesSocio";
@@ -20,182 +21,172 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function PaginaSocio({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { socio, pagos, accesos, visitas30, actividades } = await obtenerSocio(id);
-
   if (!socio) notFound();
 
   const impagados = pagos.filter((p) => p.estado === "impagado");
   const deuda = impagados.reduce((s, p) => s + Number(p.importe), 0);
-  const ultimoAcceso = accesos[0]?.entrada ?? null;
+  const ultimo = accesos[0]?.entrada ?? null;
+
+  const cifras = [
+    { k: "Cuota", v: dineroExacto(socio.tarifa?.cuota_mensual ?? 0), pie: `${socio.tarifa?.nombre ?? ""} · al mes` },
+    { k: "Visitas", v: numero(visitas30), pie: "últimos 30 días" },
+    { k: "Última visita", v: ultimo ? relativo(ultimo) : "Nunca", pie: ultimo ? fechaHora(ultimo) : "sin accesos" },
+  ];
 
   return (
-    <main>
-      <header className="border-b border-acero px-4 py-5 lg:px-6">
-        <Link
-          href="/crm/socios"
-          className="etiqueta inline-flex items-center gap-1.5 text-[0.6rem] transition-colors hover:text-azul"
-        >
-          <ArrowLeft className="size-3" strokeWidth={1.5} aria-hidden />
+    <main className="pb-12">
+      <div className="px-4 pt-6 lg:px-8">
+        <Link href="/crm/socios" className="condensada inline-flex items-center gap-1.5 text-[0.85rem] text-tinta-2 hover:text-tinta">
+          <ArrowLeft className="size-4" weight="light" aria-hidden />
           Socios
         </Link>
+      </div>
 
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0">
-            <p className="font-mono text-xs text-niebla">{socio.numero_socio}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-3">
-              <h1 className="titular text-[clamp(1.9rem,4vw,2.75rem)] text-hielo">
-                {socio.nombre} {socio.apellidos}
-              </h1>
-              <Pildora texto={ETIQUETA_SOCIO[socio.estado]} color={COLOR_SOCIO[socio.estado]} />
-            </div>
-            <p className="mt-2 text-sm text-niebla">
-              {socio.tarifa?.nombre} en {socio.centro?.nombre} · socio desde {fecha(socio.fecha_alta)}
-              {socio.fecha_baja && ` · baja el ${fecha(socio.fecha_baja)}`}
-            </p>
+      <header className="flex flex-col gap-4 px-4 pb-6 pt-4 lg:px-8">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <Dorsal numero={socio.numero_socio} estado={socio.estado} grande />
+          <h1 className="rotulo text-[clamp(2rem,4.2vw,3.3rem)] text-tinta">
+            {socio.nombre} {socio.apellidos}
+          </h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <EstadoSocioMarca estado={socio.estado} />
+          <p className="text-[0.92rem] text-tinta-2">
+            {socio.numero_socio} · {codigoCentro(socio.centro?.nombre)} {socio.centro?.nombre.replace("Ice Gym ", "")} · socio
+            desde {fecha(socio.fecha_alta)}
+            {socio.fecha_baja && ` · baja el ${fecha(socio.fecha_baja)}`}
+          </p>
+          <div className="md:ml-auto">
+            <AccionesSocio id={socio.id} estado={socio.estado} />
           </div>
-          <AccionesSocio id={socio.id} estado={socio.estado} />
         </div>
       </header>
 
-      {/* Aviso de deuda: lo primero que tiene que ver recepción */}
+      {/* Deuda: placa de penalización, lo primero que ve recepción */}
       {impagados.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 border-b border-bengala/40 bg-bengala/8 px-4 py-3 lg:px-6" role="alert">
-          <AlertTriangle className="size-5 shrink-0 text-bengala" strokeWidth={1.5} aria-hidden />
-          <p className="text-sm text-hielo">
-            <strong className="font-semibold text-bengala">
-              {impagados.length} {impagados.length === 1 ? "recibo impagado" : "recibos impagados"}
-            </strong>{" "}
-            por un total de <span data-cifra>{dineroExacto(deuda)}</span>.
-          </p>
+        <div className="mx-4 mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 bg-alarma py-3 pl-4 pr-6 text-sobre-campo lg:mx-8" role="alert">
+          <span className="rotulo text-[1.4rem]">Debe {dineroExacto(deuda)}</span>
+          <span className="condensada text-[0.95rem]">
+            {impagados.length} {impagados.length === 1 ? "recibo impagado" : "recibos impagados"} · se cobran en la lista de pagos de abajo
+          </span>
         </div>
       )}
 
-      {/* Rail de datos */}
-      <dl className="grid grid-cols-2 border-b border-acero md:grid-cols-4">
-        {[
-          { k: "Cuota", v: dineroExacto(socio.tarifa?.cuota_mensual ?? 0), pie: "al mes" },
-          { k: "Visitas", v: numero(visitas30), pie: "últimos 30 días" },
-          { k: "Última visita", v: ultimoAcceso ? relativo(ultimoAcceso) : "—", pie: ultimoAcceso ? fechaHora(ultimoAcceso) : "nunca" },
-          { k: "Deuda", v: dineroExacto(deuda), pie: deuda > 0 ? "pendiente de cobro" : "al corriente", alarma: deuda > 0 },
-        ].map((d) => (
-          <div key={d.k} className="border-b border-r border-acero px-4 py-4 last:border-r-0 md:border-b-0 lg:px-6">
-            <dt className="etiqueta">{d.k}</dt>
-            <dd className={`cifra mt-3 text-[1.9rem] ${d.alarma ? "text-bengala" : "text-hielo"}`}>{d.v}</dd>
-            <dd className="mt-1.5 text-[0.7rem] text-niebla">{d.pie}</dd>
+      <div className="mb-10 grid grid-cols-1 gap-[3px] px-4 sm:grid-cols-3 lg:px-8">
+        {cifras.map((c) => (
+          <div key={c.k} className="bg-placa px-4 pb-4 pt-5">
+            <p className="cifra text-[2.2rem] text-tinta first-letter:uppercase">{c.v}</p>
+            <p className="condensada mt-2.5 text-[0.95rem] text-tinta">{c.k}</p>
+            <p className="mt-0.5 text-[0.8rem] text-tinta-2" data-cifra>
+              {c.pie}
+            </p>
           </div>
         ))}
-      </dl>
+      </div>
 
-      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:p-6">
-        <div className="space-y-4">
-          {/* Pagos */}
-          <Bloque titulo="Pagos" extra={<span className="text-[0.65rem] text-niebla">{pagos.length} recibos</span>}>
+      <div className="grid gap-x-10 gap-y-10 px-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:px-8">
+        <div className="flex min-w-0 flex-col gap-10">
+          <Seccion titulo="Pagos" extra={<span className="dato">{pagos.length} recibos</span>}>
             {pagos.length === 0 ? (
               <SinDatos titulo="Sin recibos" texto="Todavía no se ha emitido ninguna cuota para este socio." />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-acero">
-                      {["Periodo", "Concepto", "Importe", "Estado", ""].map((c, i) => (
-                        <th key={i} scope="col" className="etiqueta px-4 py-2.5 text-[0.58rem] font-semibold">
-                          {c}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pagos.map((p) => {
-                      const impagado = p.estado === "impagado";
-                      return (
-                        <tr
-                          key={p.id}
-                          className={`border-b border-acero/60 last:border-b-0 ${impagado ? "bg-bengala/6" : ""}`}
-                        >
-                          <td className={`px-4 py-2.5 capitalize ${impagado ? "text-hielo" : "text-niebla"}`}>
-                            {impagado && <span className="mr-2 inline-block h-3 w-[2px] translate-y-0.5 bg-bengala" aria-hidden />}
-                            {mesLargo(p.periodo)}
-                          </td>
-                          <td className="px-4 py-2.5 capitalize text-niebla">{p.concepto}</td>
-                          <td className="px-4 py-2.5 text-hielo">{dineroExacto(p.importe)}</td>
-                          <td className="px-4 py-2.5">
-                            <span
-                              className={`etiqueta text-[0.58rem] ${
-                                impagado ? "text-bengala" : p.estado === "pendiente" ? "text-hielo" : "text-niebla"
-                              }`}
-                            >
-                              {ETIQUETA_PAGO[p.estado]}
-                              {p.fecha_pago && <span className="ml-1.5 normal-case tracking-normal text-niebla/70">{fecha(p.fecha_pago)}</span>}
+              <ol className="flex flex-col">
+                {pagos.map((p) => {
+                  const impagado = p.estado === "impagado";
+                  return (
+                    <li
+                      key={p.id}
+                      className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-4 border-b border-linea py-2.5"
+                    >
+                      <span className="min-w-0">
+                        <span className="condensada block text-[0.95rem] capitalize text-tinta">{mesLargo(p.periodo)}</span>
+                        <span className="block text-[0.8rem] capitalize text-tinta-2">
+                          {p.concepto}
+                          {p.fecha_pago && ` · cobrado el ${fecha(p.fecha_pago)}`}
+                        </span>
+                      </span>
+                      <span className={`cifra text-[1.2rem] ${impagado ? "text-alarma-tinta" : "text-tinta"}`}>
+                        {dineroExacto(p.importe)}
+                      </span>
+                      <span className="flex min-w-[6.5rem] justify-end">
+                        {impagado ? (
+                          <span className="flex items-center gap-2">
+                            <span className="corte-d condensada bg-alarma py-1 pl-2 pr-4 text-[0.78rem] text-sobre-campo">
+                              Impagado
                             </span>
-                          </td>
-                          <td className="px-4 py-2.5 text-right">
-                            {p.estado !== "pagado" && <CobrarRecibo pagoId={p.id} socioId={socio.id} />}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            <CobrarRecibo pagoId={p.id} socioId={socio.id} />
+                          </span>
+                        ) : p.estado === "pendiente" ? (
+                          <CobrarRecibo pagoId={p.id} socioId={socio.id} />
+                        ) : (
+                          <span className="condensada text-[0.85rem] text-tinta-2">{ETIQUETA_PAGO[p.estado]}</span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
             )}
-          </Bloque>
+          </Seccion>
 
-          {/* Historial */}
-          <Bloque titulo="Historial" extra={<span className="cifra text-base text-hielo">{actividades.length}</span>}>
+          <Seccion titulo="Seguimiento" extra={<span className="cifra text-[1.2rem] text-tinta">{actividades.length}</span>}>
             <FormularioActividad socioId={socio.id} />
             <Historial actividades={actividades} />
-          </Bloque>
+          </Seccion>
         </div>
 
-        <div className="space-y-4">
-          <Bloque titulo="Contacto">
-            <dl className="divide-y divide-acero">
-              <div className="flex items-center gap-3 px-4 py-3">
-                <Mail className="size-4 shrink-0 text-niebla" strokeWidth={1.5} aria-hidden />
-                <div className="min-w-0">
-                  <dt className="etiqueta text-[0.58rem]">Email</dt>
-                  <dd className="mt-1 truncate text-sm">
-                    <a href={`mailto:${socio.email}`} className="text-hielo hover:text-azul">{socio.email}</a>
+        <div className="flex flex-col gap-10">
+          <Seccion titulo="Contacto">
+            <dl className="flex flex-col">
+              {[
+                { k: "Email", v: socio.email, href: `mailto:${socio.email}` },
+                {
+                  k: "Teléfono",
+                  v: socio.telefono ?? "Sin teléfono",
+                  href: socio.telefono ? `tel:${socio.telefono.replace(/\s/g, "")}` : undefined,
+                },
+                { k: "Nacimiento", v: fecha(socio.fecha_nacimiento) },
+              ].map((d) => (
+                <div key={d.k} className="grid grid-cols-[6rem_1fr] items-baseline gap-3 border-b border-linea py-2.5">
+                  <dt className="dato">{d.k}</dt>
+                  <dd className="truncate text-[0.95rem] text-tinta" data-cifra>
+                    {d.href ? (
+                      <a href={d.href} className="underline decoration-linea underline-offset-4 hover:decoration-tinta">
+                        {d.v}
+                      </a>
+                    ) : (
+                      d.v
+                    )}
                   </dd>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-3">
-                <Phone className="size-4 shrink-0 text-niebla" strokeWidth={1.5} aria-hidden />
-                <div className="min-w-0">
-                  <dt className="etiqueta text-[0.58rem]">Teléfono</dt>
-                  <dd className="mt-1 text-sm" data-cifra>
-                    {socio.telefono ? (
-                      <a href={`tel:${socio.telefono.replace(/\s/g, "")}`} className="text-hielo hover:text-azul">{socio.telefono}</a>
-                    ) : "—"}
-                  </dd>
-                </div>
-              </div>
+              ))}
             </dl>
-          </Bloque>
+          </Seccion>
 
-          <Bloque titulo="Últimos accesos">
+          <Seccion titulo="Accesos" extra={<span className="dato">Torno</span>}>
             {accesos.length === 0 ? (
-              <SinDatos titulo="Sin visitas" texto="Este socio aún no ha pasado por el torno." />
+              <SinDatos titulo="Sin visitas" texto="Todavía no ha pasado por el torno." />
             ) : (
-              <ul className="divide-y divide-acero/70">
+              <ol className="flex flex-col">
                 {accesos.map((a) => (
-                  <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                    <span className="text-hielo" data-cifra>{fechaHora(a.entrada)}</span>
-                    <span className="truncate text-xs text-niebla">
-                      {a.salida === null ? (
-                        <span className="etiqueta text-[0.55rem] text-azul">Dentro ahora</span>
-                      ) : (
-                        a.centro?.nombre.replace("Ice Gym ", "")
-                      )}
+                  <li key={a.id} className="grid grid-cols-[1fr_auto] items-baseline border-b border-linea py-2">
+                    <span className="text-[0.92rem] text-tinta" data-cifra>
+                      {fechaHora(a.entrada)}
                     </span>
+                    {a.salida === null ? (
+                      <span className="corte-d condensada bg-acento py-0.5 pl-2 pr-4 text-[0.75rem] text-sobre-campo">Dentro</span>
+                    ) : (
+                      <span className="condensada text-[0.85rem] text-tinta-2">{codigoCentro(a.centro?.nombre)}</span>
+                    )}
                   </li>
                 ))}
-              </ul>
+              </ol>
             )}
-          </Bloque>
+          </Seccion>
 
-          <Bloque titulo="Notas">
+          <Seccion titulo="Notas">
             <NotasSocio id={socio.id} notas={socio.notas ?? ""} />
-          </Bloque>
+          </Seccion>
         </div>
       </div>
     </main>

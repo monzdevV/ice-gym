@@ -1,44 +1,35 @@
 "use client"
 
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
+import { CheckCircle, Info, Warning, XCircle, CircleNotch } from "@phosphor-icons/react"
 
+/**
+ * Avisos con la estética de un rótulo de retransmisión: placa opaca, sin
+ * esquinas redondeadas ni sombra difusa, y colores sacados de los tokens.
+ */
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
       className="toaster group"
       icons={{
-        success: (
-          <CircleCheckIcon className="size-4" />
-        ),
-        info: (
-          <InfoIcon className="size-4" />
-        ),
-        warning: (
-          <TriangleAlertIcon className="size-4" />
-        ),
-        error: (
-          <OctagonXIcon className="size-4" />
-        ),
-        loading: (
-          <Loader2Icon className="size-4 animate-spin" />
-        ),
+        success: <CheckCircle className="size-4" weight="light" />,
+        info: <Info className="size-4" weight="light" />,
+        warning: <Warning className="size-4" weight="light" />,
+        error: <XCircle className="size-4" weight="light" />,
+        loading: <CircleNotch className="size-4 animate-spin" weight="light" />,
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-bg": "var(--tinta)",
+          "--normal-text": "var(--fondo)",
+          "--normal-border": "var(--tinta)",
+          "--border-radius": "0px",
         } as React.CSSProperties
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast: "!shadow-none font-sans",
+          title: "font-medium",
         },
       }}
       {...props}

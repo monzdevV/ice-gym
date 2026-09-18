@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { listarClasesSemana, type ClaseConOcupacion } from "@/lib/datos/clases";
 import { centroValido, listarCentros } from "@/lib/datos/comunes";
+import { codigoCentro } from "@/design/tokens";
 import { hora, numero } from "@/lib/formato";
-import { Encabezado, SinDatos } from "@/components/crm/Primitivas";
+import { Encabezado, SinDatos, claseEnlace } from "@/components/crm/Primitivas";
 import { FiltroCentro } from "@/components/crm/FiltroCentro";
 
 export const metadata: Metadata = { title: "Clases" };
 export const dynamic = "force-dynamic";
 
-const NOMBRE_DIA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 function diaMes(clave: string) {
   return new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", timeZone: "UTC" })
@@ -27,7 +28,6 @@ export default async function PaginaClases({
   const centros = await listarCentros();
   const centro = centroValido(centros, params.centro);
   const offset = Math.max(-8, Math.min(8, Number(params.semana) || 0));
-
   const { dias, porDia, hoy } = await listarClasesSemana(centro, offset);
 
   const todas = [...porDia.values()].flat();
@@ -44,138 +44,120 @@ export default async function PaginaClases({
   };
 
   return (
-    <main>
-      <Encabezado antetitulo={`Semana del ${diaMes(dias[0])} al ${diaMes(dias[6])}`} titulo="Clases">
-        <div className="flex flex-wrap items-center gap-2">
-          <nav className="flex border border-acero" aria-label="Cambiar de semana">
-            <Link href={enlace(offset - 1)} className="grid size-10 place-items-center text-niebla hover:text-azul" aria-label="Semana anterior">
-              <ChevronLeft className="size-4" strokeWidth={1.5} />
+    <main className="pb-12">
+      <Encabezado
+        titulo="Clases"
+        meta={
+          <span className="flex items-center gap-3">
+            <Link href={enlace(offset - 1)} className="text-tinta-2 hover:text-tinta" aria-label="Semana anterior">
+              <CaretLeft className="size-5" weight="bold" />
             </Link>
-            <Link
-              href={enlace(0)}
-              className={`etiqueta grid place-items-center border-x border-acero px-3 text-[0.6rem] ${offset === 0 ? "text-azul" : "hover:text-hielo"}`}
-            >
-              Esta semana
+            <span className="condensada text-[0.95rem] text-tinta">
+              {diaMes(dias[0])} – {diaMes(dias[6])}
+            </span>
+            <Link href={enlace(offset + 1)} className="text-tinta-2 hover:text-tinta" aria-label="Semana siguiente">
+              <CaretRight className="size-5" weight="bold" />
             </Link>
-            <Link href={enlace(offset + 1)} className="grid size-10 place-items-center text-niebla hover:text-azul" aria-label="Semana siguiente">
-              <ChevronRight className="size-4" strokeWidth={1.5} />
-            </Link>
-          </nav>
-          <FiltroCentro centros={centros} />
-        </div>
+            {offset !== 0 && (
+              <Link href={enlace(0)} className={claseEnlace}>
+                Volver a esta semana
+              </Link>
+            )}
+          </span>
+        }
+      >
+        <FiltroCentro centros={centros} />
       </Encabezado>
 
-      {/* Resumen de la semana */}
-      <dl className="grid grid-cols-3 border-b border-acero">
+      <div className="mb-8 grid grid-cols-3 gap-[3px] px-4 lg:px-8">
         {[
           { k: "Clases", v: numero(todas.length) },
           { k: "Ocupación", v: plazas > 0 ? `${Math.round((ocupadas / plazas) * 100)} %` : "—" },
           { k: "Completas", v: numero(completas) },
         ].map((d) => (
-          <div key={d.k} className="border-r border-acero px-4 py-4 last:border-r-0 lg:px-6">
-            <dt className="etiqueta">{d.k}</dt>
-            <dd className="cifra mt-2.5 text-[2rem] text-hielo">{d.v}</dd>
+          <div key={d.k} className="bg-placa px-4 pb-4 pt-5">
+            <p className="cifra text-[2.2rem] text-tinta">{d.v}</p>
+            <p className="condensada mt-2.5 text-[0.95rem] text-tinta">{d.k}</p>
           </div>
         ))}
-      </dl>
+      </div>
 
       {todas.length === 0 ? (
-        <SinDatos
-          titulo="Semana sin clases"
-          texto="No hay ninguna clase programada en estas fechas. Prueba con otra semana u otro centro."
-          accion={
-            <Link href={enlace(0)} className="etiqueta mt-2 text-[0.6rem] text-azul hover:underline">
-              Volver a esta semana
-            </Link>
-          }
-        />
+        <div className="px-4 lg:px-8">
+          <SinDatos
+            titulo="Semana sin clases"
+            texto="No hay clases programadas en estas fechas. Prueba otra semana u otro centro."
+            accion={
+              <Link href={enlace(0)} className={claseEnlace}>
+                Volver a esta semana
+              </Link>
+            }
+          />
+        </div>
       ) : (
-        <>
-          {/* Atajos de día en móvil */}
-          <nav className="scroll-fino sticky top-14 z-30 flex gap-1 overflow-x-auto border-b border-acero bg-negro/95 px-4 py-2 backdrop-blur lg:hidden" aria-label="Ir a un día">
-            {dias.map((d, i) => (
-              <a
-                key={d}
-                href={`#dia-${d}`}
-                className={`etiqueta shrink-0 border px-3 py-2 text-[0.58rem] ${
-                  d === hoy ? "border-azul text-azul" : "border-acero"
-                }`}
-              >
-                {NOMBRE_DIA[i].slice(0, 3)} {diaMes(d).split(" ")[0]}
-              </a>
-            ))}
-          </nav>
-
-          {/* Calendario: una columna por día */}
-          <div className="grid gap-px bg-acero lg:grid-cols-7">
-            {dias.map((d, i) => {
-              const clases = porDia.get(d) ?? [];
-              const esHoy = d === hoy;
-              return (
-                <section key={d} id={`dia-${d}`} className="scroll-mt-28 bg-negro" aria-labelledby={`t-${d}`}>
-                  <header
-                    className={`sticky top-14 z-20 flex items-baseline justify-between gap-2 border-b px-3 py-3 lg:static ${
-                      esHoy ? "border-azul bg-azul-hondo" : "border-acero bg-carbon"
+        <div className="grid gap-x-3 gap-y-8 px-4 md:grid-cols-2 lg:px-8 xl:grid-cols-7">
+          {dias.map((d, i) => {
+            const clases = porDia.get(d) ?? [];
+            const esHoy = d === hoy;
+            return (
+              <section key={d} aria-labelledby={`dia-${d}`} className="flex min-w-0 flex-col">
+                <header className="flex items-stretch">
+                  <span className={`w-2 ${esHoy ? "bg-acento" : "bg-tinta"}`} aria-hidden />
+                  <div
+                    className={`corte-d flex flex-1 items-baseline justify-between gap-2 py-2 pl-3 pr-5 ${
+                      esHoy ? "bg-acento text-sobre-campo" : "bg-tinta text-fondo"
                     }`}
                   >
-                    <h2 id={`t-${d}`} className={`titular text-lg ${esHoy ? "text-azul" : "text-hielo"}`}>
-                      {NOMBRE_DIA[i]}
+                    <h2 id={`dia-${d}`} className="rotulo text-[1.15rem]">
+                      {DIAS[i]}
                     </h2>
-                    <span className="etiqueta text-[0.58rem]">{esHoy ? "Hoy" : diaMes(d)}</span>
-                  </header>
+                    <span className="condensada text-[0.8rem]">{esHoy ? "Hoy" : diaMes(d)}</span>
+                  </div>
+                </header>
 
-                  {clases.length === 0 ? (
-                    <p className="px-3 py-6 text-center text-xs text-niebla/70">Sin clases</p>
-                  ) : (
-                    <ul className="flex flex-col gap-px bg-acero/60">
-                      {clases.map((clase) => (
-                        <BloqueClase key={clase.id} clase={clase} mostrarCentro={!centro} />
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              );
-            })}
-          </div>
-        </>
+                {clases.length === 0 ? (
+                  <p className="py-4 text-[0.85rem] text-tinta-2">Sin clases</p>
+                ) : (
+                  <ol className="mt-[3px] flex flex-col gap-[3px]">
+                    {clases.map((c) => (
+                      <FilaClase key={c.id} clase={c} mostrarCentro={!centro} />
+                    ))}
+                  </ol>
+                )}
+              </section>
+            );
+          })}
+        </div>
       )}
     </main>
   );
 }
 
-function BloqueClase({ clase, mostrarCentro }: { clase: ClaseConOcupacion; mostrarCentro: boolean }) {
+function FilaClase({ clase, mostrarCentro }: { clase: ClaseConOcupacion; mostrarCentro: boolean }) {
   const pct = clase.plazas > 0 ? Math.min(100, (clase.ocupadas / clase.plazas) * 100) : 0;
   const completa = clase.ocupadas >= clase.plazas;
   const pasada = new Date(clase.inicio).getTime() + clase.duracion_min * 60_000 < Date.now();
 
   return (
-    <li className={`bg-negro px-3 py-3 ${pasada ? "opacity-45" : ""}`}>
+    <li className={`bg-placa px-3 pb-2.5 pt-2 ${pasada ? "text-tinta-2" : ""}`}>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs font-semibold text-hielo" data-cifra>
-          {hora(clase.inicio)}
-        </span>
-        <span className="text-[0.62rem] text-niebla" data-cifra>
-          {clase.duracion_min} min
-        </span>
+        <span className={`cifra text-[1.15rem] ${pasada ? "text-tinta-2" : "text-tinta"}`}>{hora(clase.inicio)}</span>
+        {completa ? (
+          <span className="corte-d condensada bg-acento py-0.5 pl-2 pr-4 text-[0.72rem] text-sobre-campo">Completa</span>
+        ) : (
+          <span className="condensada text-[0.8rem] text-tinta-2" data-cifra>
+            {clase.ocupadas}/{clase.plazas}
+          </span>
+        )}
       </div>
-
-      <p className="titular mt-1.5 text-[1.05rem] leading-none text-hielo">{clase.nombre}</p>
-      <p className="mt-1 truncate text-[0.7rem] text-niebla">
+      <p className={`condensada mt-1 truncate text-[1rem] ${pasada ? "text-tinta-2" : "text-tinta"}`}>{clase.nombre}</p>
+      <p className="truncate text-[0.78rem] text-tinta-2">
         {clase.monitor}
-        {mostrarCentro && clase.centro && ` · ${clase.centro.nombre.replace("Ice Gym ", "")}`}
+        {mostrarCentro && clase.centro && ` · ${codigoCentro(clase.centro.nombre)}`}
       </p>
-
-      <div className="mt-2.5 flex items-center gap-2">
-        <span className="h-1 flex-1 bg-grafito">
-          <span
-            className="block h-full"
-            style={{ width: `${pct}%`, backgroundColor: completa ? "var(--ice-azul)" : "#2C9BBF" }}
-          />
-        </span>
-        <span className={`shrink-0 text-[0.65rem] ${completa ? "font-semibold text-azul" : "text-niebla"}`} data-cifra>
-          {completa ? "Completa" : `${clase.ocupadas}/${clase.plazas}`}
-        </span>
-      </div>
+      <span className="mt-2 block h-1 bg-placa-2" aria-hidden>
+        <span className={`block h-full ${pasada ? "bg-apagado" : "bg-dato-azul"}`} style={{ width: `${pct}%` }} />
+      </span>
     </li>
   );
 }

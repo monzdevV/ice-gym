@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { contarPorEstado, listarSocios, POR_PAGINA } from "@/lib/datos/socios";
 import { centroValido, listarCentros, listarTarifas } from "@/lib/datos/comunes";
-import { COLOR_SOCIO, ETIQUETA_SOCIO } from "@/lib/tipos";
-import { fecha, iniciales, numero } from "@/lib/formato";
-import { Encabezado, Pildora, SinDatos } from "@/components/crm/Primitivas";
+import { codigoCentro } from "@/design/tokens";
+import { fecha, numero } from "@/lib/formato";
+import { Dorsal, Encabezado, EstadoSocioMarca, SinDatos, claseEnlace } from "@/components/crm/Primitivas";
 import { FiltrosSocios } from "@/components/crm/socios/Filtros";
 
 export const metadata: Metadata = { title: "Socios" };
@@ -20,13 +20,7 @@ export default async function PaginaSocios({ searchParams }: { searchParams: Pro
   const tarifa = tarifas.some((t) => t.id === params.tarifa) ? params.tarifa! : null;
 
   const [{ socios, total, pagina }, conteo] = await Promise.all([
-    listarSocios({
-      q: params.q,
-      centro,
-      tarifa,
-      estado: params.estado,
-      pagina: Number(params.pagina) || 1,
-    }),
+    listarSocios({ q: params.q, centro, tarifa, estado: params.estado, pagina: Number(params.pagina) || 1 }),
     contarPorEstado(centro),
   ]);
 
@@ -38,121 +32,104 @@ export default async function PaginaSocios({ searchParams }: { searchParams: Pro
   };
 
   return (
-    <main>
-      <Encabezado antetitulo="Base de socios" titulo="Socios">
-        <p className="text-sm text-niebla" data-cifra>
-          <span className="cifra text-2xl text-hielo">{numero(total)}</span>{" "}
-          {total === 1 ? "resultado" : "resultados"}
-        </p>
-      </Encabezado>
+    <main className="pb-12">
+      <Encabezado
+        titulo="Socios"
+        meta={
+          <span>
+            <span className="cifra text-[1.2rem] text-tinta">{numero(total)}</span>{" "}
+            {total === 1 ? "resultado" : "resultados"}
+          </span>
+        }
+      />
 
       <FiltrosSocios centros={centros} tarifas={tarifas} conteo={conteo} />
 
-      {socios.length === 0 ? (
-        <SinDatos
-          titulo="Nadie coincide"
-          texto="Prueba con otro nombre o quita algún filtro. La búsqueda mira nombre, apellidos, email y número de socio."
-          accion={
-            <Link href="/crm/socios" className="etiqueta mt-2 text-[0.6rem] text-azul hover:underline">
-              Quitar filtros
-            </Link>
-          }
-        />
-      ) : (
-        <>
-          {/* Tabla en escritorio */}
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-acero">
-                  {["Nº socio", "Nombre", "Centro", "Tarifa", "Alta", "Estado"].map((c) => (
-                    <th key={c} scope="col" className="etiqueta px-4 py-3 text-[0.6rem] font-semibold first:pl-6 last:pr-6">
-                      {c}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {socios.map((s) => (
-                  <tr key={s.id} className="group border-b border-acero/70 transition-colors hover:bg-carbon">
-                    <td className="px-4 py-3 pl-6 font-mono text-xs text-niebla">{s.numero_socio}</td>
-                    <td className="px-4 py-3">
-                      <Link href={`/crm/socios/${s.id}`} className="flex items-center gap-3">
-                        <span className="grid size-8 shrink-0 place-items-center border border-acero bg-grafito text-[0.65rem] font-semibold text-niebla group-hover:border-azul group-hover:text-azul">
-                          {iniciales(s.nombre, s.apellidos)}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block truncate font-medium text-hielo group-hover:text-azul">
-                            {s.nombre} {s.apellidos}
-                          </span>
-                          <span className="block truncate text-xs text-niebla">{s.email}</span>
-                        </span>
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-niebla">{s.centro?.nombre.replace("Ice Gym ", "")}</td>
-                    <td className="px-4 py-3 text-hielo">{s.tarifa?.nombre}</td>
-                    <td className="px-4 py-3 text-niebla">{fecha(s.fecha_alta)}</td>
-                    <td className="px-4 py-3 pr-6">
-                      <Pildora texto={ETIQUETA_SOCIO[s.estado]} color={COLOR_SOCIO[s.estado]} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <div className="px-4 lg:px-8">
+        {socios.length === 0 ? (
+          <SinDatos
+            titulo="Nadie coincide"
+            texto="Prueba con otro nombre o quita algún filtro. La búsqueda mira nombre, apellidos, email y número de socio."
+            accion={
+              <Link href="/crm/socios" className={claseEnlace}>
+                Quitar filtros
+              </Link>
+            }
+          />
+        ) : (
+          <>
+            {/* Cabecera de la clasificación */}
+            <div className="hidden grid-cols-[4.5rem_minmax(0,1fr)_4rem_6rem_7.5rem_7rem] gap-4 border-b-2 border-tinta pb-2 md:grid">
+              {["Nº", "Socio", "Centro", "Tarifa", "Alta", "Estado"].map((c) => (
+                <span key={c} className="dato">
+                  {c}
+                </span>
+              ))}
+            </div>
 
-          {/* Lista en móvil */}
-          <ul className="divide-y divide-acero md:hidden">
-            {socios.map((s) => (
-              <li key={s.id}>
-                <Link href={`/crm/socios/${s.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-carbon">
-                  <span className="grid size-10 shrink-0 place-items-center border border-acero bg-grafito text-xs font-semibold text-niebla">
-                    {iniciales(s.nombre, s.apellidos)}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-hielo">
-                      {s.nombre} {s.apellidos}
+            <ol className="mt-[3px] flex flex-col gap-[3px]">
+              {socios.map((s) => (
+                <li key={s.id}>
+                  <Link
+                    href={`/crm/socios/${s.id}`}
+                    className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-1 bg-placa py-2 pr-4 transition-colors hover:bg-placa-2 md:grid-cols-[4.5rem_minmax(0,1fr)_4rem_6rem_7.5rem_7rem]"
+                  >
+                    <Dorsal numero={s.numero_socio} estado={s.estado} />
+                    <span className="min-w-0">
+                      <span className="condensada block truncate text-[1.02rem] text-tinta">
+                        {s.nombre} {s.apellidos}
+                      </span>
+                      <span className="block truncate text-[0.8rem] text-tinta-2">
+                        {s.email}
+                        <span className="md:hidden">
+                          {" "}
+                          · {codigoCentro(s.centro?.nombre)} · {s.tarifa?.nombre}
+                        </span>
+                      </span>
                     </span>
-                    <span className="block truncate text-xs text-niebla">
-                      {s.numero_socio} · {s.tarifa?.nombre} · {s.centro?.nombre.replace("Ice Gym ", "")}
+                    <span className="rotulo hidden text-[1.05rem] text-tinta md:block">{codigoCentro(s.centro?.nombre)}</span>
+                    <span className="condensada hidden text-[0.95rem] text-tinta md:block">{s.tarifa?.nombre}</span>
+                    <span className="hidden text-[0.88rem] text-tinta-2 md:block" data-cifra>
+                      {fecha(s.fecha_alta)}
                     </span>
-                  </span>
-                  <Pildora texto={ETIQUETA_SOCIO[s.estado]} color={COLOR_SOCIO[s.estado]} />
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    <span className="col-start-2 md:col-start-auto">
+                      <EstadoSocioMarca estado={s.estado} />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
 
-          {/* Paginación */}
-          {paginas > 1 && (
-            <nav className="flex items-center justify-between gap-4 border-t border-acero px-4 py-3 lg:px-6" aria-label="Paginación">
-              <p className="text-xs text-niebla" data-cifra>
-                Página {pagina} de {paginas}
-              </p>
-              <div className="flex gap-1">
-                {pagina > 1 ? (
-                  <Link href={enlacePagina(pagina - 1)} className="grid size-9 place-items-center border border-acero text-niebla hover:border-azul hover:text-azul" aria-label="Página anterior">
-                    <ChevronLeft className="size-4" strokeWidth={1.5} />
-                  </Link>
-                ) : (
-                  <span className="grid size-9 place-items-center border border-acero text-acero" aria-hidden>
-                    <ChevronLeft className="size-4" strokeWidth={1.5} />
-                  </span>
-                )}
-                {pagina < paginas ? (
-                  <Link href={enlacePagina(pagina + 1)} className="grid size-9 place-items-center border border-acero text-niebla hover:border-azul hover:text-azul" aria-label="Página siguiente">
-                    <ChevronRight className="size-4" strokeWidth={1.5} />
-                  </Link>
-                ) : (
-                  <span className="grid size-9 place-items-center border border-acero text-acero" aria-hidden>
-                    <ChevronRight className="size-4" strokeWidth={1.5} />
-                  </span>
-                )}
-              </div>
-            </nav>
-          )}
-        </>
-      )}
+            {paginas > 1 && (
+              <nav className="mt-6 flex items-center justify-between gap-4" aria-label="Paginación">
+                <p className="text-[0.85rem] text-tinta-2" data-cifra>
+                  Página {pagina} de {paginas}
+                </p>
+                <div className="flex items-center gap-5">
+                  {pagina > 1 ? (
+                    <Link href={enlacePagina(pagina - 1)} className="condensada flex items-center gap-1 text-[0.9rem] text-tinta hover:underline">
+                      <CaretLeft className="size-4" weight="bold" aria-hidden /> Anterior
+                    </Link>
+                  ) : (
+                    <span className="condensada flex items-center gap-1 text-[0.9rem] text-tinta-2 opacity-50">
+                      <CaretLeft className="size-4" weight="bold" aria-hidden /> Anterior
+                    </span>
+                  )}
+                  {pagina < paginas ? (
+                    <Link href={enlacePagina(pagina + 1)} className="condensada flex items-center gap-1 text-[0.9rem] text-tinta hover:underline">
+                      Siguiente <CaretRight className="size-4" weight="bold" aria-hidden />
+                    </Link>
+                  ) : (
+                    <span className="condensada flex items-center gap-1 text-[0.9rem] text-tinta-2 opacity-50">
+                      Siguiente <CaretRight className="size-4" weight="bold" aria-hidden />
+                    </span>
+                  )}
+                </div>
+              </nav>
+            )}
+          </>
+        )}
+      </div>
     </main>
   );
 }

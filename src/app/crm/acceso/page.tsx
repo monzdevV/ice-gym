@@ -2,8 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Logotipo } from "@/components/marca/Logotipo";
 import { FormularioAcceso } from "@/components/crm/FormularioAcceso";
+import { ControlTema } from "@/components/crm/ControlTema";
 
 export const metadata: Metadata = { title: "Acceso al CRM" };
+
+const CENTROS = [
+  { codigo: "CHA", ciudad: "Madrid", nombre: "Chamberí" },
+  { codigo: "POB", ciudad: "Barcelona", nombre: "Poblenou" },
+  { codigo: "RUZ", ciudad: "Valencia", nombre: "Ruzafa" },
+];
 
 export default async function PaginaAcceso({
   searchParams,
@@ -13,62 +20,55 @@ export default async function PaginaAcceso({
   const { siguiente } = await searchParams;
 
   return (
-    <main className="ruido relative grid min-h-dvh grid-cols-1 lg:grid-cols-[1fr_minmax(420px,38%)]">
-      {/* Panel izquierdo: la marca ocupa la pantalla, sin adornos */}
-      <section className="relative hidden overflow-hidden border-r border-acero lg:grid lg:grid-rows-[auto_1fr_auto]">
-        <div className="rejilla absolute inset-0 opacity-50" aria-hidden />
+    <main className="ruido grid min-h-dvh grid-cols-1 bg-fondo lg:grid-cols-[minmax(0,1.15fr)_minmax(420px,1fr)]">
+      {/* Placa de presentación: la retransmisión antes de empezar */}
+      <section className="hidden flex-col justify-between bg-tinta p-12 text-fondo lg:flex">
+        <Logotipo variante="apilado" sobrePlaca className="text-[1.6rem]" />
 
-        <div className="relative px-12 pt-10">
-          <Logotipo variante="linea" className="text-2xl" />
-        </div>
-
-        <div className="relative flex flex-col justify-center px-12">
-          <p className="etiqueta">Panel interno</p>
-          <h1 className="titular mt-4 max-w-md text-[clamp(3rem,5.5vw,5rem)] text-hielo">
-            Todo el club
+        <div>
+          <h1 className="rotulo text-[clamp(3.5rem,6.5vw,6rem)] leading-[0.86]">
+            Todo el club,
             <br />
-            en una pantalla
+            en directo
           </h1>
-          <div className="regla mt-8 w-full max-w-md" />
-          <p className="mt-6 max-w-sm text-sm leading-relaxed text-niebla">
-            Socios, cuotas, accesos y clases de los tres centros. Sin hojas de cálculo sueltas.
+          <p className="mt-6 max-w-sm text-[0.95rem] leading-relaxed opacity-75">
+            Socios, cuotas, accesos, clases y leads de los tres centros en una sola herramienta.
           </p>
         </div>
 
-        <dl className="relative flex divide-x divide-acero border-t border-acero">
-          {[
-            { k: "3", v: "centros" },
-            { k: "5", v: "secciones" },
-            { k: "24/7", v: "datos al día" },
-          ].map((d) => (
-            <div key={d.v} className="flex-1 px-12 py-7 first:pl-12">
-              <dt className="cifra text-[2.5rem] text-azul">{d.k}</dt>
-              <dd className="etiqueta mt-2.5">{d.v}</dd>
-            </div>
+        <ol className="flex flex-col gap-[3px]" aria-label="Centros de la cadena">
+          {CENTROS.map((c, i) => (
+            <li key={c.codigo} className="grid h-11 max-w-md grid-cols-[2.75rem_4rem_1fr] items-center bg-fondo text-tinta">
+              <span className="cifra grid h-full place-items-center bg-acento text-[1.3rem] text-sobre-campo">{i + 1}</span>
+              <span className="rotulo pl-3 text-[1.25rem]">{c.codigo}</span>
+              <span className="condensada pr-3 text-right text-[0.85rem] text-tinta-2">
+                {c.nombre} · {c.ciudad}
+              </span>
+            </li>
           ))}
-        </dl>
+        </ol>
       </section>
 
-      {/* Panel derecho: el formulario */}
-      <section className="flex flex-col justify-center px-6 py-12 sm:px-12">
-        <div className="mx-auto w-full max-w-sm">
-          <Logotipo variante="linea" className="mb-10 text-xl lg:hidden" />
+      {/* Formulario */}
+      <section className="flex flex-col px-6 py-8 sm:px-12">
+        <div className="flex items-center justify-between">
+          <Logotipo className="text-[1.4rem] lg:invisible" />
+          <ControlTema />
+        </div>
 
-          <p className="etiqueta">Identifícate</p>
-          <h2 className="titular mt-3 text-4xl text-hielo">Acceso al CRM</h2>
-          <p className="mt-3 text-sm text-niebla">
-            Entra con la cuenta que te haya dado el club.
-          </p>
+        <div className="mx-auto my-auto w-full max-w-sm py-12">
+          <h2 className="flex items-stretch">
+            <span className="w-2.5 bg-acento" aria-hidden />
+            <span className="corte-rotulo rotulo bg-tinta py-2 pl-4 pr-10 text-[2.4rem] text-fondo">Entrar</span>
+          </h2>
+          <p className="mt-5 text-[0.95rem] text-tinta-2">Usa la cuenta de equipo que te ha dado el club.</p>
 
           <FormularioAcceso siguiente={siguiente} />
-
-          <Link
-            href="/"
-            className="mt-10 inline-block text-xs text-niebla underline-offset-4 transition-colors hover:text-azul hover:underline"
-          >
-            Volver a icegym.com
-          </Link>
         </div>
+
+        <Link href="/" className="condensada text-[0.8rem] text-tinta-2 underline-offset-4 hover:text-tinta hover:underline">
+          Ir a la web pública
+        </Link>
       </section>
     </main>
   );

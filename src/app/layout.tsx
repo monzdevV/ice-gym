@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed, Barlow_Semi_Condensed } from "next/font/google";
+import { Barlow, Barlow_Condensed } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { color, variablesCss } from "@/design/tokens";
+import { cssTemas, marca, scriptTema } from "@/design/tokens";
 import "./globals.css";
 
 const display = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["700", "800"],
+  weight: ["600", "700", "800"],
+  style: ["normal", "italic"],
   variable: "--font-display",
   display: "swap",
 });
@@ -18,34 +19,26 @@ const cuerpo = Barlow({
   display: "swap",
 });
 
-const util = Barlow_Semi_Condensed({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  variable: "--font-util",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: {
-    default: "Ice Gym",
-    template: "%s · Ice Gym",
-  },
+  title: { default: "Ice Gym", template: "%s · Ice Gym" },
   description:
     "Cadena de gimnasios Ice Gym. Entrena en Madrid, Barcelona y Valencia con acceso libre, clases colectivas y sin permanencia.",
 };
 
 export const viewport: Viewport = {
-  themeColor: color.negro,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: marca.hielo },
+    { media: "(prefers-color-scheme: dark)", color: marca.negro },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="es"
-      className={`${display.variable} ${cuerpo.variable} ${util.variable}`}
-      style={variablesCss as React.CSSProperties}
-      suppressHydrationWarning
-    >
+    <html lang="es" className={`${display.variable} ${cuerpo.variable}`} suppressHydrationWarning>
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: cssTemas() }} />
+        <script dangerouslySetInnerHTML={{ __html: scriptTema }} />
+      </head>
       <body>
         {children}
         <Toaster position="bottom-right" />

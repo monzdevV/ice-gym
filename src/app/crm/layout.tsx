@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Logotipo } from "@/components/marca/Logotipo";
-import { NavegacionInferior, NavegacionLateral } from "@/components/crm/Navegacion";
+import { NavegacionInferior, PestanasSecciones } from "@/components/crm/Navegacion";
+import { ControlTema } from "@/components/crm/ControlTema";
 import { salir } from "./acciones/sesion";
 
 export default async function LayoutCrm({ children }: { children: React.ReactNode }) {
@@ -11,49 +11,61 @@ export default async function LayoutCrm({ children }: { children: React.ReactNod
     data: { user },
   } = await supabase.auth.getUser();
 
-  // La pantalla de acceso se pinta entera, sin armazón.
+  // La pantalla de acceso se pinta entera, sin la banda.
   if (!user) return <>{children}</>;
 
-  const inicial = (user.email ?? "?").charAt(0).toUpperCase();
+  const nombre = (user.email ?? "").split("@")[0];
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-acero bg-negro/95 px-4 backdrop-blur lg:px-5">
-        <Link href="/crm" className="shrink-0">
-          <Logotipo variante="linea" className="text-lg" />
+      <a
+        href="#contenido"
+        className="condensada sr-only z-50 bg-acento px-4 py-2 text-sobre-campo focus:not-sr-only focus:fixed focus:left-2 focus:top-2"
+      >
+        Saltar al contenido
+      </a>
+
+      {/* Banda superior de retransmisión */}
+      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-stretch border-b border-linea bg-placa">
+        <Link
+          href="/crm"
+          className="flex items-center border-r border-linea px-5 text-[1.45rem]"
+          aria-label="Ice Gym, ir al panel"
+        >
+          <Logotipo />
         </Link>
 
-        <div className="flex items-center gap-2">
-          <Link
-            href="/"
-            className="etiqueta hidden px-3 py-2 text-[0.65rem] transition-colors hover:text-azul sm:block"
-          >
-            Ver la web
-          </Link>
+        <div className="flex flex-1 items-stretch pl-2">
+          <PestanasSecciones />
+        </div>
 
-          <span
-            className="grid size-8 place-items-center border border-acero bg-grafito text-xs font-semibold text-niebla"
-            title={user.email ?? ""}
-          >
-            {inicial}
+        <div className="flex items-center gap-5 px-4 lg:px-5">
+          <ControlTema />
+          <span className="hidden h-6 w-px bg-linea lg:block" aria-hidden />
+          <span className="condensada hidden max-w-40 truncate text-[0.8rem] text-tinta-2 lg:block" title={user.email ?? ""}>
+            {nombre}
           </span>
-
           <form action={salir}>
             <button
               type="submit"
-              className="grid size-8 place-items-center border border-acero text-niebla transition-colors hover:border-bengala hover:text-bengala"
-              aria-label="Cerrar sesión"
+              className="condensada text-[0.8rem] text-tinta-2 underline-offset-4 transition-colors hover:text-tinta hover:underline"
             >
-              <LogOut className="size-4" strokeWidth={1.5} aria-hidden />
+              Salir
             </button>
           </form>
         </div>
       </header>
 
-      <div className="flex flex-1">
-        <NavegacionLateral />
-        <div className="min-w-0 flex-1 pb-20 lg:pb-0">{children}</div>
+      <div id="contenido" className="flex-1 pb-20 md:pb-0">
+        {children}
       </div>
+
+      <footer className="hidden items-center justify-between border-t border-linea px-6 py-3 md:flex">
+        <span className="dato">Ice Gym · CRM interno</span>
+        <Link href="/" className="dato transition-colors hover:text-tinta">
+          Ver la web pública
+        </Link>
+      </footer>
 
       <NavegacionInferior />
     </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { listarLeads } from "@/lib/datos/leads";
 import { centroValido, listarCentros } from "@/lib/datos/comunes";
+import { numero } from "@/lib/formato";
 import { Encabezado } from "@/components/crm/Primitivas";
 import { FiltroCentro } from "@/components/crm/FiltroCentro";
 import { Tablero } from "@/components/crm/leads/Tablero";
@@ -17,16 +18,20 @@ export default async function PaginaLeads({
   const centros = await listarCentros();
   const centroId = centroValido(centros, centro);
   const leads = await listarLeads(centroId);
+  const abiertos = leads.filter((l) => l.estado !== "convertido" && l.estado !== "perdido").length;
 
   return (
     <main>
-      <Encabezado antetitulo="Embudo comercial" titulo="Leads">
-        <div className="flex items-center gap-3">
-          <p className="hidden text-xs text-niebla sm:block">
-            Arrastra una tarjeta para cambiar su estado
-          </p>
-          <FiltroCentro centros={centros} />
-        </div>
+      <Encabezado
+        titulo="Leads"
+        meta={
+          <span>
+            <span className="cifra text-[1.2rem] text-tinta">{numero(abiertos)}</span> abiertos · arrastra
+            una fila para cambiarla de etapa
+          </span>
+        }
+      >
+        <FiltroCentro centros={centros} />
       </Encabezado>
 
       <Tablero leads={leads} />

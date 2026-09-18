@@ -2,58 +2,57 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { Check, PauseCircle, PlayCircle, UserX } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cambiarEstadoSocio, guardarNotasSocio, marcarPagado } from "@/app/crm/acciones/socios";
 import { ESTADO_INICIAL } from "@/lib/acciones";
 import type { EstadoSocio } from "@/lib/tipos";
+import { claseCampo } from "@/components/crm/Primitivas";
 
 /* ----------------------- Congelar, reactivar, baja ---------------------- */
 
 type Operacion = "congelar" | "reactivar" | "baja";
 
-const TEXTOS: Record<Operacion, { boton: string; titulo: string; cuerpo: string; confirmar: string }> = {
+const TEXTOS: Record<Operacion, { boton: string; titulo: string; cuerpo: string; confirmar: string; ejemplo: string }> = {
   congelar: {
     boton: "Congelar",
     titulo: "Congelar la cuota",
-    cuerpo: "El socio no podrá entrar ni se le emitirán cuotas hasta que lo reactives.",
+    cuerpo: "No podrá entrar ni se le cobrarán cuotas hasta que lo reactives.",
     confirmar: "Congelar",
+    ejemplo: "Lesión de rodilla, un mes",
   },
   reactivar: {
     boton: "Reactivar",
     titulo: "Reactivar al socio",
-    cuerpo: "Vuelve a tener acceso a los centros y se le emitirá la cuota del próximo mes.",
+    cuerpo: "Vuelve a tener acceso a los centros y se le cobrará la cuota del mes que viene.",
     confirmar: "Reactivar",
+    ejemplo: "Vuelve tras la lesión",
   },
   baja: {
     boton: "Dar de baja",
     titulo: "Dar de baja",
-    cuerpo: "Se cierra su ficha con fecha de hoy. Conservamos el historial de pagos y accesos.",
+    cuerpo: "Su ficha se cierra con fecha de hoy. El historial de pagos y accesos se conserva.",
     confirmar: "Dar de baja",
+    ejemplo: "Se muda a otra ciudad",
   },
 };
 
-function BotonConfirmar({ texto, peligro }: { texto: string; peligro: boolean }) {
+function BotonConfirmar({ texto }: { texto: string }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending}
-      className={`titular h-10 px-5 text-sm transition-colors disabled:opacity-50 ${
-        peligro ? "bg-bengala text-negro hover:bg-hielo" : "bg-azul text-negro hover:bg-hielo"
-      }`}
+      className="corte-d rotulo h-11 bg-tinta pl-5 pr-8 text-[1rem] text-fondo transition-transform active:translate-y-px disabled:opacity-50"
     >
-      {pending ? "Guardando" : texto}
+      {pending ? "Guardando…" : texto}
     </button>
   );
 }
@@ -62,8 +61,6 @@ function AccionConConfirmacion({ id, operacion }: { id: string; operacion: Opera
   const [abierto, setAbierto] = useState(false);
   const [estado, accion] = useActionState(cambiarEstadoSocio, ESTADO_INICIAL);
   const t = TEXTOS[operacion];
-  const peligro = operacion === "baja";
-  const Icono = operacion === "congelar" ? PauseCircle : operacion === "reactivar" ? PlayCircle : UserX;
 
   useEffect(() => {
     if (estado.ok) {
@@ -79,49 +76,41 @@ function AccionConConfirmacion({ id, operacion }: { id: string; operacion: Opera
       <DialogTrigger asChild>
         <button
           type="button"
-          className={`etiqueta flex h-10 items-center gap-2 border px-3 text-[0.6rem] transition-colors ${
-            peligro
-              ? "border-acero text-niebla hover:border-bengala hover:text-bengala"
-              : "border-acero text-niebla hover:border-azul hover:text-azul"
-          }`}
+          className="corte-a condensada -mx-[4px] px-5 py-2 text-[0.95rem] text-tinta-2 transition-colors hover:bg-placa-2 hover:text-tinta active:translate-y-px"
         >
-          <Icono className="size-4" strokeWidth={1.5} aria-hidden />
           {t.boton}
         </button>
       </DialogTrigger>
 
-      <DialogContent className="border-acero bg-carbon sm:max-w-md">
+      <DialogContent className="gap-0 rounded-none border-0 bg-placa p-0 shadow-none sm:max-w-md">
         <form action={accion}>
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="operacion" value={operacion} />
 
-          <DialogHeader>
-            <DialogTitle className="titular text-2xl text-hielo">{t.titulo}</DialogTitle>
-            <DialogDescription className="text-niebla">{t.cuerpo}</DialogDescription>
-          </DialogHeader>
+          <div className="flex items-stretch">
+            <span className="w-2.5 bg-acento" aria-hidden />
+            <DialogTitle className="corte-rotulo rotulo bg-tinta py-2 pl-4 pr-10 text-[1.8rem] text-fondo">
+              {t.titulo}
+            </DialogTitle>
+          </div>
 
-          <label htmlFor={`motivo-${operacion}`} className="etiqueta mb-2 mt-5 block">
-            Motivo (opcional)
-          </label>
-          <input
-            id={`motivo-${operacion}`}
-            name="motivo"
-            maxLength={200}
-            placeholder={peligro ? "Se muda de ciudad" : "Lesión de rodilla, un mes"}
-            className="h-10 w-full border border-acero bg-grafito px-3 text-sm text-hielo outline-none placeholder:text-niebla focus:border-azul"
-          />
+          <div className="flex flex-col gap-5 p-6">
+            <DialogDescription className="text-[0.95rem] leading-relaxed text-tinta-2">{t.cuerpo}</DialogDescription>
 
-          <DialogFooter className="mt-6 gap-2">
-            <DialogClose asChild>
-              <button
-                type="button"
-                className="etiqueta h-10 border border-acero px-4 text-[0.6rem] text-niebla hover:text-hielo"
-              >
-                Cancelar
-              </button>
-            </DialogClose>
-            <BotonConfirmar texto={t.confirmar} peligro={peligro} />
-          </DialogFooter>
+            <label className="flex flex-col gap-1.5">
+              <span className="condensada text-[0.85rem] text-tinta">Motivo (opcional)</span>
+              <input name="motivo" maxLength={200} placeholder={t.ejemplo} className={claseCampo} />
+            </label>
+
+            <div className="flex items-center justify-end gap-6">
+              <DialogClose asChild>
+                <button type="button" className="condensada text-[0.9rem] text-tinta-2 underline-offset-4 hover:text-tinta hover:underline">
+                  Cancelar
+                </button>
+              </DialogClose>
+              <BotonConfirmar texto={t.confirmar} />
+            </div>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
@@ -130,7 +119,7 @@ function AccionConConfirmacion({ id, operacion }: { id: string; operacion: Opera
 
 export function AccionesSocio({ id, estado }: { id: string; estado: EstadoSocio }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-y-1">
       {(estado === "activo" || estado === "impago") && <AccionConConfirmacion id={id} operacion="congelar" />}
       {(estado === "congelado" || estado === "baja") && <AccionConConfirmacion id={id} operacion="reactivar" />}
       {estado !== "baja" && <AccionConConfirmacion id={id} operacion="baja" />}
@@ -146,9 +135,9 @@ function BotonNotas() {
     <button
       type="submit"
       disabled={pending}
-      className="etiqueta border border-acero px-3 py-2 text-[0.6rem] text-niebla transition-colors hover:border-azul hover:text-azul disabled:opacity-50"
+      className="condensada text-[0.85rem] text-acento-tinta underline underline-offset-4 disabled:opacity-50"
     >
-      {pending ? "Guardando" : "Guardar notas"}
+      {pending ? "Guardando…" : "Guardar notas"}
     </button>
   );
 }
@@ -162,18 +151,20 @@ export function NotasSocio({ id, notas }: { id: string; notas: string }) {
   }, [estado]);
 
   return (
-    <form action={accion} className="p-4">
+    <form action={accion} className="flex flex-col gap-3 pt-3">
       <input type="hidden" name="id" value={id} />
-      <label htmlFor="notas-socio" className="sr-only">Notas</label>
+      <label htmlFor="notas-socio" className="sr-only">
+        Notas
+      </label>
       <textarea
         id="notas-socio"
         name="notas"
         rows={4}
         defaultValue={notas}
-        placeholder="Lesiones, preferencias, acuerdos con recepción…"
-        className="w-full resize-y border border-acero bg-grafito p-3 text-sm leading-relaxed text-hielo outline-none placeholder:text-niebla focus:border-azul"
+        placeholder="Lesiones, preferencias, acuerdos con recepción"
+        className={`${claseCampo} h-auto resize-y py-2.5 leading-relaxed`}
       />
-      <div className="mt-3 flex justify-end">
+      <div className="flex justify-end">
         <BotonNotas />
       </div>
     </form>
@@ -188,10 +179,9 @@ function BotonCobrar() {
     <button
       type="submit"
       disabled={pending}
-      className="etiqueta flex items-center gap-1 border border-acero px-2 py-1 text-[0.55rem] text-niebla transition-colors hover:border-azul hover:text-azul disabled:opacity-50"
+      className="corte-d rotulo bg-acento py-1.5 pl-3 pr-6 text-[0.9rem] text-sobre-campo transition-transform active:translate-y-px disabled:opacity-50"
     >
-      <Check className="size-3" strokeWidth={2} aria-hidden />
-      {pending ? "…" : "Cobrar"}
+      {pending ? "Cobrando…" : "Cobrar"}
     </button>
   );
 }

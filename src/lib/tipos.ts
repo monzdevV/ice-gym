@@ -1,5 +1,3 @@
-import { colorEstadoLead, colorEstadoSocio } from "@/design/tokens";
-
 /* ------------------------------- Leads -------------------------------- */
 
 export const ESTADOS_LEAD = [
@@ -22,7 +20,15 @@ export const ETIQUETA_LEAD: Record<EstadoLead, string> = {
   perdido: "Perdido",
 };
 
-export const COLOR_LEAD = colorEstadoLead;
+/** De etapa temprana (poco contraste) a avanzada (mucho). Perdido queda apagado. */
+export const COLOR_LEAD: Record<EstadoLead, string> = {
+  nuevo: "var(--rampa-0)",
+  contactado: "var(--rampa-1)",
+  visita_agendada: "var(--rampa-2)",
+  en_prueba: "var(--rampa-3)",
+  convertido: "var(--rampa-5)",
+  perdido: "var(--apagado)",
+};
 
 export const ORIGENES_LEAD = ["web", "visita", "telefono", "recomendacion", "campana"] as const;
 export type OrigenLead = (typeof ORIGENES_LEAD)[number];
@@ -47,7 +53,13 @@ export const ETIQUETA_SOCIO: Record<EstadoSocio, string> = {
   baja: "Baja",
 };
 
-export const COLOR_SOCIO = colorEstadoSocio;
+/** Placa del dorsal según el estado. Sólo el impago usa el rojo. */
+export const COLOR_SOCIO: Record<EstadoSocio, { fondo: string; texto: string }> = {
+  activo: { fondo: "var(--tinta)", texto: "var(--fondo)" },
+  congelado: { fondo: "var(--placa-2)", texto: "var(--tinta-2)" },
+  impago: { fondo: "var(--alarma)", texto: "var(--sobre-campo)" },
+  baja: { fondo: "transparent", texto: "var(--tinta-2)" },
+};
 
 /* ------------------------------- Pagos -------------------------------- */
 

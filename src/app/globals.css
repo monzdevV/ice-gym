@@ -3,72 +3,73 @@
 @import "shadcn/tailwind.css";
 
 /*
-  Los valores --ice-* los inyecta src/app/layout.tsx desde src/design/tokens.ts.
-  Aquí sólo se mapean a nombres de Tailwind: ningún color escrito a mano.
+  Los valores de cada tema los genera src/design/tokens.ts (cssTemas) y el
+  layout los inyecta en el <head>. Aquí sólo se mapean a nombres de Tailwind.
 */
 @theme {
-  /* Paleta Ice Gym */
-  --color-negro: var(--ice-negro);
-  --color-carbon: var(--ice-carbon);
-  --color-grafito: var(--ice-grafito);
-  --color-acero: var(--ice-acero);
-  --color-niebla: var(--ice-niebla);
-  --color-hielo: var(--ice-hielo);
-  --color-azul: var(--ice-azul);
-  --color-azul-hondo: var(--ice-azul-hondo);
-  --color-bengala: var(--ice-bengala);
+  --color-fondo: var(--fondo);
+  --color-placa: var(--placa);
+  --color-placa-2: var(--placa-2);
+  --color-linea: var(--linea);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-acento: var(--acento);
+  --color-acento-tinta: var(--acento-tinta);
+  --color-alarma: var(--alarma);
+  --color-alarma-tinta: var(--alarma-tinta);
+  --color-sobre-campo: var(--sobre-campo);
+  --color-dato-azul: var(--dato-azul);
+  --color-dato-bengala: var(--dato-bengala);
+  --color-apagado: var(--apagado);
 
-  /* Nombres semánticos que usan los componentes de shadcn */
-  --color-background: var(--ice-negro);
-  --color-foreground: var(--ice-hielo);
-  --color-card: var(--ice-carbon);
-  --color-card-foreground: var(--ice-hielo);
-  --color-popover: var(--ice-carbon);
-  --color-popover-foreground: var(--ice-hielo);
-  --color-primary: var(--ice-azul);
-  --color-primary-foreground: var(--ice-negro);
-  --color-secondary: var(--ice-grafito);
-  --color-secondary-foreground: var(--ice-hielo);
-  --color-muted: var(--ice-grafito);
-  --color-muted-foreground: var(--ice-niebla);
-  --color-accent: var(--ice-grafito);
-  --color-accent-foreground: var(--ice-hielo);
-  --color-destructive: var(--ice-bengala);
-  --color-destructive-foreground: var(--ice-hielo);
-  --color-border: var(--ice-acero);
-  --color-input: var(--ice-acero);
-  --color-ring: var(--ice-azul);
+  /* Nombres que usan los componentes de shadcn */
+  --color-background: var(--fondo);
+  --color-foreground: var(--tinta);
+  --color-card: var(--placa);
+  --color-card-foreground: var(--tinta);
+  --color-popover: var(--placa);
+  --color-popover-foreground: var(--tinta);
+  --color-primary: var(--acento);
+  --color-primary-foreground: var(--sobre-campo);
+  --color-secondary: var(--placa-2);
+  --color-secondary-foreground: var(--tinta);
+  --color-muted: var(--placa-2);
+  --color-muted-foreground: var(--tinta-2);
+  --color-accent: var(--placa-2);
+  --color-accent-foreground: var(--tinta);
+  --color-destructive: var(--alarma);
+  --color-border: var(--linea);
+  --color-input: var(--linea);
+  --color-ring: var(--acento-tinta);
 
-  --color-chart-1: var(--ice-azul);
-  --color-chart-2: #2e8da8;
-  --color-chart-3: #b9c3ce;
-  --color-chart-4: #4a515c;
-  --color-chart-5: var(--ice-bengala);
-
-  /* Tipografía */
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
-  --font-util: var(--font-util);
 
-  /* Esquinas rectas o casi: neutraliza el redondeo por defecto de shadcn */
-  --radius-none: 0px;
+  /* Esquinas rectas en todo */
   --radius-xs: 0px;
-  --radius-sm: var(--ice-radio);
-  --radius-md: var(--ice-radio);
-  --radius-lg: var(--ice-radio);
-  --radius-xl: 3px;
-  --radius-2xl: 3px;
-  --radius-3xl: 4px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+
+  --animate-cortina: cortina 0.26s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
-:root {
-  color-scheme: dark;
-  --radius: 2px;
+@keyframes cortina {
+  from {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+    transform: translateX(-6px);
+  }
+  to {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    transform: none;
+  }
 }
 
 @layer base {
   * {
-    border-color: var(--ice-acero);
+    border-color: var(--linea);
     min-width: 0;
   }
 
@@ -77,122 +78,137 @@
   }
 
   body {
-    background-color: var(--ice-negro);
-    color: var(--ice-hielo);
+    background-color: var(--fondo);
+    color: var(--tinta);
     font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-    font-feature-settings: "ss01";
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
 
-  /* Todas las cifras se alinean en columna */
-  .tabular,
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
   table,
-  [data-cifra] {
+  [data-cifra],
+  .cifra {
     font-variant-numeric: tabular-nums;
   }
 
   ::selection {
-    background: var(--ice-azul);
-    color: var(--ice-negro);
+    background: var(--acento);
+    color: var(--sobre-campo);
   }
 
   :focus-visible {
-    outline: 2px solid var(--ice-azul);
+    outline: 2px solid var(--acento-tinta);
     outline-offset: 2px;
+  }
+
+  input,
+  textarea,
+  select {
+    caret-color: var(--acento-tinta);
+  }
+
+  a {
+    text-underline-offset: 3px;
   }
 }
 
 /* ---------------------------------------------------------------
-   TIPOGRAFÍA
-   Titulares condensados, gruesos y en mayúsculas. Etiquetas
-   estrechas con mucho tracking. Nada de esto es decorativo: marca
-   la jerarquía entre "qué miro" y "qué dice".
+   TIPOGRAFÍA · la condensada del logotipo manda
    --------------------------------------------------------------- */
 
-.titular {
+/* Titulares y rótulos: condensada, gruesa, mayúsculas, en cursiva de retransmisión. */
+.rotulo {
   font-family: var(--font-display), ui-sans-serif, sans-serif;
   font-weight: 800;
+  font-style: italic;
   text-transform: uppercase;
-  letter-spacing: -0.015em;
-  line-height: 0.92;
+  letter-spacing: -0.01em;
+  line-height: 0.9;
 }
 
-.etiqueta {
-  font-family: var(--font-util), ui-sans-serif, sans-serif;
+/* Nombres, cabeceras de tabla, pestañas y botones: condensada recta. */
+.condensada {
+  font-family: var(--font-display), ui-sans-serif, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+/* Etiquetas de dato: condensada media, legible, sin tracking exagerado. */
+.dato {
+  font-family: var(--font-display), ui-sans-serif, sans-serif;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.6875rem;
-  line-height: 1;
-  color: var(--ice-niebla);
+  letter-spacing: 0.05em;
+  font-size: 0.78rem;
+  line-height: 1.1;
+  color: var(--tinta-2);
 }
 
+/* Cifras: condensada 800, tabular, recta para que las columnas cuadren. */
 .cifra {
   font-family: var(--font-display), ui-sans-serif, sans-serif;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-  line-height: 0.86;
+  line-height: 0.85;
 }
 
 /* ---------------------------------------------------------------
-   SUPERFICIES
-   Paneles planos separados por líneas de 1px, no por sombras.
+   PLACAS · opacas, planas y con el corte inclinado de los rótulos
    --------------------------------------------------------------- */
 
-.panel {
-  background-color: var(--ice-carbon);
-  border: 1px solid var(--ice-acero);
+.corte-d {
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--corte-placa)) 100%, 0 100%);
+}
+.corte-i {
+  clip-path: polygon(var(--corte-placa) 0, 100% 0, 100% 100%, 0 100%);
+}
+.corte-a {
+  clip-path: polygon(var(--corte-pestana) 0, 100% 0, calc(100% - var(--corte-pestana)) 100%, 0 100%);
+}
+.corte-rotulo {
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--corte-rotulo)) 100%, 0 100%);
 }
 
-/* El gesto que firma la marca: un corte diagonal en la esquina. */
-.corte {
-  clip-path: var(--ice-corte-panel);
+/* Textura de ruido: rompe el plano del suelo sin ensuciarlo. */
+.ruido {
+  position: relative;
+  isolation: isolate;
 }
-
-.corte-marca {
-  clip-path: var(--ice-corte-marca);
-}
-
-/* Regla de sección: una hairline que arranca en azul y se apaga. */
-.regla {
-  height: 1px;
-  background: linear-gradient(90deg, var(--ice-azul) 0, var(--ice-acero) 12%, var(--ice-acero) 100%);
-}
-
-/* Rejilla técnica de fondo, muy tenue. */
-.rejilla {
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--ice-acero) 55%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--ice-acero) 55%, transparent) 1px, transparent 1px);
-  background-size: 72px 72px;
-}
-
-/* Textura de ruido: rompe el plano del negro sin ensuciarlo. */
 .ruido::after {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: -1;
   pointer-events: none;
-  opacity: 0.035;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Barras de desplazamiento discretas */
-.scroll-fino {
+/* Barras de desplazamiento del sistema */
+* {
   scrollbar-width: thin;
-  scrollbar-color: var(--ice-acero) transparent;
+  scrollbar-color: var(--linea) transparent;
 }
-.scroll-fino::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-.scroll-fino::-webkit-scrollbar-thumb {
-  background: var(--ice-acero);
+::-webkit-scrollbar-thumb {
+  background: var(--linea);
 }
-.scroll-fino::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
 

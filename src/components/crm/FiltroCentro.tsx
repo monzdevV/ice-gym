@@ -2,10 +2,13 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
-import { ChevronDown, MapPin } from "lucide-react";
+import { codigoCentro } from "@/design/tokens";
 import type { Centro } from "@/lib/tipos";
 
-/** Selector de centro. Escribe en la URL, así el filtro se puede compartir. */
+/**
+ * Selector de centro con los códigos de tres letras, como la barra de sesiones
+ * de una retransmisión. Escribe en la URL, así el filtro se puede compartir.
+ */
 export function FiltroCentro({ centros }: { centros: Centro[] }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -18,37 +21,40 @@ export function FiltroCentro({ centros }: { centros: Centro[] }) {
     const siguientes = new URLSearchParams(params.toString());
     if (valor) siguientes.set("centro", valor);
     else siguientes.delete("centro");
+    siguientes.delete("pagina");
     empezar(() => router.push(`${pathname}?${siguientes.toString()}`, { scroll: false }));
   }
 
+  const opciones = [{ id: "", codigo: "Todos", nombre: "Todos los centros" }].concat(
+    centros.map((c) => ({ id: c.id, codigo: codigoCentro(c.slug), nombre: c.nombre }))
+  );
+
   return (
     <div
-      className={`relative flex items-center border border-acero bg-grafito transition-opacity ${
-        pendiente ? "opacity-60" : ""
-      }`}
+      role="radiogroup"
+      aria-label="Centro"
+      className={`flex items-stretch transition-opacity ${pendiente ? "opacity-60" : ""}`}
     >
-      <MapPin className="pointer-events-none ml-3 size-4 text-azul" strokeWidth={1.5} aria-hidden />
-      <label htmlFor="filtro-centro" className="sr-only">
-        Filtrar por centro
-      </label>
-      <select
-        id="filtro-centro"
-        value={actual}
-        onChange={(e) => cambiar(e.target.value)}
-        className="etiqueta appearance-none bg-transparent py-2.5 pl-2.5 pr-9 text-[0.65rem] text-hielo outline-none"
-      >
-        <option value="">Todos los centros</option>
-        {centros.map((centro) => (
-          <option key={centro.id} value={centro.id}>
-            {centro.nombre}
-          </option>
-        ))}
-      </select>
-      <ChevronDown
-        className="pointer-events-none absolute right-3 size-3.5 text-niebla"
-        strokeWidth={1.5}
-        aria-hidden
-      />
+      {opciones.map((o) => {
+        const activa = actual === o.id;
+        return (
+          <button
+            key={o.id || "todos"}
+            type="button"
+            role="radio"
+            aria-checked={activa}
+            title={o.nombre}
+            onClick={() => cambiar(o.id)}
+            className={`corte-a -mx-[4px] px-4 py-1.5 text-[0.95rem] transition-colors active:translate-y-px ${
+              activa
+                ? "rotulo bg-tinta text-fondo"
+                : "condensada text-tinta-2 hover:bg-placa-2 hover:text-tinta"
+            }`}
+          >
+            {o.codigo}
+          </button>
+        );
+      })}
     </div>
   );
 }

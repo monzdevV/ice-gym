@@ -2,19 +2,11 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { Mail, MessageCircle, Phone, Plus, StickyNote, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { registrarActividad } from "@/app/crm/acciones/leads";
 import { ESTADO_INICIAL } from "@/lib/acciones";
 import { TIPOS_ACTIVIDAD_MANUAL, ETIQUETA_ACTIVIDAD } from "@/lib/tipos";
-
-const ICONO = {
-  llamada: Phone,
-  email: Mail,
-  whatsapp: MessageCircle,
-  visita: UserCheck,
-  nota: StickyNote,
-} as const;
+import { claseCampo } from "@/components/crm/Primitivas";
 
 function Boton() {
   const { pending } = useFormStatus();
@@ -22,21 +14,15 @@ function Boton() {
     <button
       type="submit"
       disabled={pending}
-      className="etiqueta flex h-10 shrink-0 items-center gap-1.5 border border-azul/50 bg-azul/10 px-3 text-[0.6rem] text-azul transition-colors hover:bg-azul/20 disabled:opacity-50"
+      className="corte-d rotulo h-11 shrink-0 bg-tinta pl-4 pr-7 text-[0.95rem] text-fondo transition-transform active:translate-y-px disabled:opacity-50"
     >
-      <Plus className="size-3.5" strokeWidth={2} aria-hidden />
-      {pending ? "Guardando" : "Añadir"}
+      {pending ? "Guardando…" : "Apuntar"}
     </button>
   );
 }
 
-export function FormularioActividad({
-  leadId,
-  socioId,
-}: {
-  leadId?: string;
-  socioId?: string;
-}) {
+/** Apunta una llamada, email, WhatsApp, visita o nota en el historial. */
+export function FormularioActividad({ leadId, socioId }: { leadId?: string; socioId?: string }) {
   const [estado, accion] = useActionState(registrarActividad, ESTADO_INICIAL);
   const ref = useRef<HTMLFormElement>(null);
 
@@ -50,36 +36,24 @@ export function FormularioActividad({
   }, [estado]);
 
   return (
-    <form ref={ref} action={accion} className="border-b border-acero p-4">
+    <form ref={ref} action={accion} className="flex flex-col gap-3 py-4">
       {leadId && <input type="hidden" name="lead_id" value={leadId} />}
       {socioId && <input type="hidden" name="socio_id" value={socioId} />}
 
-      <fieldset>
+      <fieldset className="flex flex-wrap gap-x-1 gap-y-1">
         <legend className="sr-only">Tipo de actividad</legend>
-        <div className="flex flex-wrap gap-1.5">
-          {TIPOS_ACTIVIDAD_MANUAL.map((tipo, i) => {
-            const Icono = ICONO[tipo];
-            return (
-              <label
-                key={tipo}
-                className="etiqueta flex cursor-pointer items-center gap-1.5 border border-acero px-2.5 py-1.5 text-[0.58rem] transition-colors hover:border-niebla has-checked:border-azul has-checked:bg-azul/10 has-checked:text-azul"
-              >
-                <input
-                  type="radio"
-                  name="tipo"
-                  value={tipo}
-                  defaultChecked={i === 0}
-                  className="sr-only"
-                />
-                <Icono className="size-3" strokeWidth={1.5} aria-hidden />
-                {ETIQUETA_ACTIVIDAD[tipo]}
-              </label>
-            );
-          })}
-        </div>
+        {TIPOS_ACTIVIDAD_MANUAL.map((tipo, i) => (
+          <label
+            key={tipo}
+            className="corte-a -mx-[3px] cursor-pointer px-4 py-1.5 text-[0.9rem] text-tinta-2 transition-colors hover:bg-placa-2 hover:text-tinta has-checked:bg-tinta has-checked:text-fondo has-focus-visible:outline-2 has-focus-visible:outline-acento-tinta"
+          >
+            <input type="radio" name="tipo" value={tipo} defaultChecked={i === 0} className="sr-only" />
+            <span className="condensada">{ETIQUETA_ACTIVIDAD[tipo]}</span>
+          </label>
+        ))}
       </fieldset>
 
-      <div className="mt-3 flex gap-2">
+      <div className="flex gap-2">
         <label htmlFor="descripcion" className="sr-only">
           Qué ha pasado
         </label>
@@ -88,8 +62,8 @@ export function FormularioActividad({
           name="descripcion"
           required
           maxLength={2000}
-          placeholder="Llamada de 10 min, queda en pasarse el jueves…"
-          className="h-10 w-full border border-acero bg-grafito px-3 text-sm text-hielo outline-none transition-colors placeholder:text-niebla focus:border-azul"
+          placeholder="Llamada de 10 min, se pasa el jueves por la tarde"
+          className={claseCampo}
         />
         <Boton />
       </div>

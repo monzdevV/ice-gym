@@ -42,3 +42,6 @@ next-env.d.ts
 
 # claude code (local, per-user settings)
 .claude/settings.local.json
+
+# impeccable: registros temporales de la página de decisión
+.impeccable/questions/

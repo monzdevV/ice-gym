@@ -1,19 +1,21 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { ChevronDown, UserPlus } from "lucide-react";
+import { UserPlus } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { cambiarEstadoLead, convertirEnSocio, guardarNotasLead } from "@/app/crm/acciones/leads";
 import { ESTADO_INICIAL } from "@/lib/acciones";
+import { codigoCentro } from "@/design/tokens";
 import { ESTADOS_LEAD, ETIQUETA_LEAD, type EstadoLead, type Centro, type Tarifa } from "@/lib/tipos";
 import { dineroExacto } from "@/lib/formato";
+import { claseBotonPrincipal, claseCampo, claseError } from "@/components/crm/Primitivas";
 
-/* --------------------------- Cambio de estado --------------------------- */
+/* --------------------------- Cambio de etapa --------------------------- */
 
+/** Las seis etapas en fila: la actual en tinta; pulsar otra mueve el lead. */
 export function SelectorEstado({ id, actual }: { id: string; actual: EstadoLead }) {
   const [estado, accion, pendiente] = useActionState(cambiarEstadoLead, ESTADO_INICIAL);
-  const ref = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (estado.ok) toast.success(estado.mensaje);
@@ -21,27 +23,33 @@ export function SelectorEstado({ id, actual }: { id: string; actual: EstadoLead 
   }, [estado]);
 
   return (
-    <form ref={ref} action={accion} className="relative flex items-center border border-acero bg-grafito">
+    <form action={accion}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="estado_anterior" value={actual} />
-      <label htmlFor="estado-lead" className="sr-only">
-        Estado del lead
-      </label>
-      <select
-        id="estado-lead"
-        name="estado"
-        defaultValue={actual}
-        disabled={pendiente}
-        onChange={() => ref.current?.requestSubmit()}
-        className="etiqueta appearance-none bg-transparent py-2.5 pl-3 pr-9 text-[0.62rem] text-hielo outline-none disabled:opacity-50"
+      <div
+        role="group"
+        aria-label="Etapa del lead"
+        className={`flex flex-wrap gap-y-1 ${pendiente ? "opacity-60" : ""}`}
       >
-        {ESTADOS_LEAD.map((e) => (
-          <option key={e} value={e}>
-            {ETIQUETA_LEAD[e]}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 size-3.5 text-niebla" strokeWidth={1.5} aria-hidden />
+        {ESTADOS_LEAD.map((e) => {
+          const activa = e === actual;
+          return (
+            <button
+              key={e}
+              type="submit"
+              name="estado"
+              value={e}
+              aria-pressed={activa}
+              disabled={pendiente || activa}
+              className={`corte-a -mx-[4px] px-4 py-1.5 text-[0.9rem] transition-colors active:translate-y-px ${
+                activa ? "rotulo bg-tinta text-fondo" : "condensada text-tinta-2 hover:bg-placa-2 hover:text-tinta"
+              }`}
+            >
+              {ETIQUETA_LEAD[e]}
+            </button>
+          );
+        })}
+      </div>
     </form>
   );
 }
@@ -54,9 +62,9 @@ function BotonNotas() {
     <button
       type="submit"
       disabled={pending}
-      className="etiqueta border border-acero px-3 py-2 text-[0.6rem] text-niebla transition-colors hover:border-azul hover:text-azul disabled:opacity-50"
+      className="condensada text-[0.85rem] text-acento-tinta underline underline-offset-4 disabled:opacity-50"
     >
-      {pending ? "Guardando" : "Guardar notas"}
+      {pending ? "Guardando…" : "Guardar notas"}
     </button>
   );
 }
@@ -70,7 +78,7 @@ export function FormularioNotas({ id, notas }: { id: string; notas: string }) {
   }, [estado]);
 
   return (
-    <form action={accion} className="p-4">
+    <form action={accion} className="flex flex-col gap-3 pt-3">
       <input type="hidden" name="id" value={id} />
       <label htmlFor="notas" className="sr-only">
         Notas internas
@@ -80,10 +88,10 @@ export function FormularioNotas({ id, notas }: { id: string; notas: string }) {
         name="notas"
         rows={5}
         defaultValue={notas}
-        placeholder="Qué busca, cuándo puede venir, qué le frena…"
-        className="w-full resize-y border border-acero bg-grafito p-3 text-sm leading-relaxed text-hielo outline-none transition-colors placeholder:text-niebla focus:border-azul"
+        placeholder="Qué busca, cuándo puede venir, qué le frena"
+        className={`${claseCampo} h-auto resize-y py-2.5 leading-relaxed`}
       />
-      <div className="mt-3 flex justify-end">
+      <div className="flex justify-end">
         <BotonNotas />
       </div>
     </form>
@@ -95,13 +103,9 @@ export function FormularioNotas({ id, notas }: { id: string; notas: string }) {
 function BotonConvertir() {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="titular flex h-11 w-full items-center justify-center gap-2 bg-azul text-base text-negro transition-colors hover:bg-hielo disabled:opacity-50"
-    >
-      <UserPlus className="size-4" strokeWidth={2} aria-hidden />
-      {pending ? "Creando socio" : "Convertir en socio"}
+    <button type="submit" disabled={pending} className={`${claseBotonPrincipal} w-full`}>
+      <UserPlus className="size-5" weight="bold" aria-hidden />
+      {pending ? "Creando socio…" : "Convertir en socio"}
     </button>
   );
 }
@@ -112,88 +116,87 @@ export function PanelConvertir({
   tarifas,
   centroSugerido,
   tarifaSugerida,
-  yaEsSocio,
 }: {
   leadId: string;
   centros: Centro[];
   tarifas: Tarifa[];
   centroSugerido: string | null;
   tarifaSugerida: string | null;
-  yaEsSocio: boolean;
 }) {
   const [estado, accion] = useActionState(convertirEnSocio, ESTADO_INICIAL);
+  const [centroId, setCentroId] = useState(centroSugerido ?? centros[0]?.id ?? "");
   const [tarifaId, setTarifaId] = useState(tarifaSugerida ?? tarifas[1]?.id ?? tarifas[0]?.id ?? "");
-
-  useEffect(() => {
-    if (estado.ok === false) toast.error(estado.mensaje);
-  }, [estado]);
-
-  if (yaEsSocio) return null;
-
   const tarifa = tarifas.find((t) => t.id === tarifaId);
-  const campo =
-    "h-10 w-full appearance-none border border-acero bg-grafito px-3 text-sm text-hielo outline-none focus:border-azul";
+
+  const opcion = (activa: boolean) =>
+    `corte-a -mx-[4px] px-4 py-2 text-[0.95rem] transition-colors ${
+      activa ? "rotulo bg-tinta text-fondo" : "condensada text-tinta-2 hover:bg-placa-2 hover:text-tinta"
+    }`;
 
   return (
-    <form action={accion} className="space-y-3 p-4">
+    <form action={accion} className="flex flex-col gap-5 pt-4">
       <input type="hidden" name="lead_id" value={leadId} />
+      <input type="hidden" name="centro_id" value={centroId} />
+      <input type="hidden" name="tarifa_id" value={tarifaId} />
 
       <div>
-        <label htmlFor="centro_id" className="etiqueta mb-2 block">
-          Centro
-        </label>
-        <select
-          id="centro_id"
-          name="centro_id"
-          defaultValue={centroSugerido ?? centros[0]?.id ?? ""}
-          required
-          className={campo}
-        >
+        <p className="condensada mb-2 text-[0.85rem] text-tinta">Centro</p>
+        <div role="radiogroup" aria-label="Centro" className="flex flex-wrap gap-y-1">
           {centros.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
+            <button
+              key={c.id}
+              type="button"
+              role="radio"
+              aria-checked={centroId === c.id}
+              title={c.nombre}
+              onClick={() => setCentroId(c.id)}
+              className={opcion(centroId === c.id)}
+            >
+              {codigoCentro(c.slug)}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
       <div>
-        <label htmlFor="tarifa_id" className="etiqueta mb-2 block">
-          Tarifa
-        </label>
-        <select
-          id="tarifa_id"
-          name="tarifa_id"
-          value={tarifaId}
-          onChange={(e) => setTarifaId(e.target.value)}
-          required
-          className={campo}
-        >
-          {tarifas.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.nombre} · {dineroExacto(t.cuota_mensual)}/mes
-            </option>
-          ))}
-        </select>
+        <p className="condensada mb-2 text-[0.85rem] text-tinta">Tarifa</p>
+        <div role="radiogroup" aria-label="Tarifa" className="flex flex-col gap-[3px]">
+          {tarifas.map((t) => {
+            const activa = tarifaId === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="radio"
+                aria-checked={activa}
+                onClick={() => setTarifaId(t.id)}
+                className={`flex items-baseline justify-between px-3 py-2.5 text-left transition-colors ${
+                  activa ? "bg-tinta text-fondo" : "bg-placa text-tinta hover:bg-placa-2"
+                }`}
+              >
+                <span className="rotulo text-[1.15rem]">{t.nombre}</span>
+                <span className="cifra text-[1.15rem]">{dineroExacto(t.cuota_mensual)}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div>
-        <label htmlFor="apellidos" className="etiqueta mb-2 block">
-          Apellidos
-        </label>
-        <input
-          id="apellidos"
-          name="apellidos"
-          placeholder="Si el lead sólo dejó el nombre"
-          className={`${campo} placeholder:text-niebla`}
-        />
-      </div>
+      <label className="flex flex-col gap-1.5">
+        <span className="condensada text-[0.85rem] text-tinta">Apellidos</span>
+        <input name="apellidos" placeholder="Si el lead sólo dejó el nombre" className={claseCampo} />
+      </label>
 
       {tarifa && (
-        <p className="border-l-2 border-azul bg-azul/5 px-3 py-2 text-xs leading-relaxed text-niebla">
-          Se emitirá la cuota de este mes ({dineroExacto(tarifa.cuota_mensual)})
-          {Number(tarifa.matricula) > 0 && ` y la matrícula (${dineroExacto(tarifa.matricula)})`} como
-          pendientes de cobro.
+        <p className="text-[0.88rem] leading-relaxed text-tinta-2">
+          Se emite la cuota de este mes ({dineroExacto(tarifa.cuota_mensual)})
+          {Number(tarifa.matricula) > 0 && ` y la matrícula (${dineroExacto(tarifa.matricula)})`}, pendientes de cobro.
+        </p>
+      )}
+
+      {estado.ok === false && (
+        <p role="alert" className={claseError}>
+          {estado.mensaje}
         </p>
       )}
 

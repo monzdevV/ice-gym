@@ -28,7 +28,16 @@ export type FilaOcupacion = {
   dentro_ahora: number;
 };
 
+export type EntradaReciente = {
+  id: string;
+  entrada: string;
+  salida: string | null;
+  socio: { id: string; nombre: string; apellidos: string; numero_socio: string } | null;
+  centro: { nombre: string } | null;
+};
+
 export type DatosPanel = {
+  ultimasEntradas: EntradaReciente[];
   sociosActivos: number;
   altasMes: number;
   bajasMes: number;
@@ -70,6 +79,11 @@ export async function cargarPanel(centroId: string | null): Promise<DatosPanel> 
   let qIngresos = supabase.from("ingresos_por_mes").select("*").gte("periodo", inicioDeMes(-5));
   let qAfluencia = supabase.from("afluencia_por_hora").select("*");
   let qLeads = supabase.from("leads").select("estado").gte("created_at", hace90);
+  let qEntradas = supabase
+    .from("accesos")
+    .select("id, entrada, salida, socio:socios(id, nombre, apellidos, numero_socio), centro:centros(nombre)")
+    .order("entrada", { ascending: false })
+    .limit(7);
 
   if (centroId) {
     qActivos = qActivos.eq("centro_id", centroId);
@@ -78,9 +92,10 @@ export async function cargarPanel(centroId: string | null): Promise<DatosPanel> 
     qIngresos = qIngresos.eq("centro_id", centroId);
     qAfluencia = qAfluencia.eq("centro_id", centroId);
     qLeads = qLeads.eq("centro_id", centroId);
+    qEntradas = qEntradas.eq("centro_id", centroId);
   }
 
-  const [activos, altas, bajas, ingresos, ocupacion, afluencia, leadsRecientes] = await Promise.all([
+  const [activos, altas, bajas, ingresos, ocupacion, afluencia, leadsRecientes, entradas] = await Promise.all([
     qActivos,
     qAltas,
     qBajas,
@@ -88,6 +103,7 @@ export async function cargarPanel(centroId: string | null): Promise<DatosPanel> 
     supabase.from("ocupacion_centros").select("*").returns<FilaOcupacion[]>(),
     qAfluencia.returns<FilaAfluencia[]>(),
     qLeads.returns<{ estado: EstadoLead }[]>(),
+    qEntradas.returns<EntradaReciente[]>(),
   ]);
 
   // Ingresos: serie de 6 meses y totales del mes en curso
@@ -131,6 +147,7 @@ export async function cargarPanel(centroId: string | null): Promise<DatosPanel> 
   }
 
   return {
+    ultimasEntradas: entradas.data ?? [],
     sociosActivos: activos.count ?? 0,
     altasMes: altas.count ?? 0,
     bajasMes: bajas.count ?? 0,

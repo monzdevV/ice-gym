@@ -1,27 +1,53 @@
-/** Esqueletos de carga: misma retícula que la pantalla real, para que nada salte al llegar los datos. */
+/** Esqueletos de carga con la misma retícula que la pantalla real, para que nada salte. */
 
 function Cabecera() {
   return (
-    <div className="border-b border-acero px-4 py-5 lg:px-6">
-      <div className="h-2.5 w-28 bg-grafito" />
-      <div className="mt-3 h-9 w-44 bg-grafito" />
+    <div className="flex items-end gap-5 px-4 pb-5 pt-7 lg:px-8">
+      <div className="flex items-stretch">
+        <span className="w-2.5 bg-acento" />
+        <span className="corte-rotulo h-14 w-52 bg-placa-2" />
+      </div>
     </div>
+  );
+}
+
+const pulso = "animate-pulse motion-reduce:animate-none";
+
+export function EsqueletoPanel() {
+  return (
+    <main className={pulso}>
+      <Cabecera />
+      <div className="grid gap-8 px-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-8">
+        <div className="flex flex-col gap-[3px]">
+          <div className="h-11 bg-placa-2" />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-12 bg-placa" />
+          ))}
+        </div>
+        <div className="flex flex-col gap-10">
+          <div className="grid grid-cols-2 gap-[3px] sm:grid-cols-3 xl:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-32 bg-placa" />
+            ))}
+          </div>
+          <div className="h-60 bg-placa" />
+        </div>
+      </div>
+    </main>
   );
 }
 
 export function EsqueletoTablero() {
   return (
-    <main className="animate-pulse">
+    <main className={pulso}>
       <Cabecera />
-      <div className="flex gap-3 overflow-hidden p-4 lg:grid lg:grid-cols-6 lg:p-6">
+      <div className="flex gap-4 overflow-hidden px-4 lg:grid lg:grid-cols-6 lg:gap-3 lg:px-8">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="w-[258px] shrink-0 border border-acero lg:w-auto">
-            <div className="h-10 border-b border-acero bg-carbon" />
-            <div className="space-y-2 p-2">
-              {Array.from({ length: 3 - (i % 2) }).map((_, j) => (
-                <div key={j} className="h-28 bg-carbon" />
-              ))}
-            </div>
+          <div key={i} className="flex w-[264px] shrink-0 flex-col gap-[3px] lg:w-auto">
+            <div className="h-10 bg-placa-2" />
+            {Array.from({ length: 3 - (i % 2) }).map((_, j) => (
+              <div key={j} className="h-16 bg-placa" />
+            ))}
           </div>
         ))}
       </div>
@@ -31,17 +57,12 @@ export function EsqueletoTablero() {
 
 export function EsqueletoTabla() {
   return (
-    <main className="animate-pulse">
+    <main className={pulso}>
       <Cabecera />
-      <div className="h-24 border-b border-acero" />
-      <div className="divide-y divide-acero/70">
+      <div className="flex flex-col gap-[3px] px-4 lg:px-8">
+        <div className="mb-4 h-12 max-w-xl border-b-2 border-linea" />
         {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-6 py-3.5">
-            <div className="h-3 w-16 bg-grafito" />
-            <div className="size-8 bg-grafito" />
-            <div className="h-3 w-48 bg-grafito" />
-            <div className="ml-auto h-5 w-20 bg-grafito" />
-          </div>
+          <div key={i} className="h-12 bg-placa" />
         ))}
       </div>
     </main>
@@ -50,15 +71,14 @@ export function EsqueletoTabla() {
 
 export function EsqueletoCalendario() {
   return (
-    <main className="animate-pulse">
+    <main className={pulso}>
       <Cabecera />
-      <div className="h-24 border-b border-acero" />
-      <div className="grid gap-px bg-acero lg:grid-cols-7">
+      <div className="grid gap-3 px-4 md:grid-cols-2 lg:px-8 xl:grid-cols-7">
         {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className="bg-negro">
-            <div className="h-12 border-b border-acero bg-carbon" />
+          <div key={i} className="flex flex-col gap-[3px]">
+            <div className="h-10 bg-placa-2" />
             {Array.from({ length: 4 }).map((_, j) => (
-              <div key={j} className="m-px h-20 bg-carbon/60" />
+              <div key={j} className="h-20 bg-placa" />
             ))}
           </div>
         ))}
@@ -69,16 +89,18 @@ export function EsqueletoCalendario() {
 
 export function EsqueletoFicha() {
   return (
-    <main className="animate-pulse">
+    <main className={pulso}>
       <Cabecera />
-      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:p-6">
-        <div className="space-y-4">
-          <div className="panel h-40" />
-          <div className="panel h-80" />
+      <div className="grid gap-10 px-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:px-8">
+        <div className="flex flex-col gap-[3px]">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-14 bg-placa" />
+          ))}
         </div>
-        <div className="space-y-4">
-          <div className="panel h-56" />
-          <div className="panel h-40" />
+        <div className="flex flex-col gap-[3px]">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-12 bg-placa" />
+          ))}
         </div>
       </div>
     </main>
