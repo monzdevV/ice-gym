@@ -108,7 +108,51 @@ export function codigoCentro(slugONombre: string | null | undefined) {
   return limpio.slice(0, 3).toUpperCase();
 }
 
-function variables(t: Tema) {
+type Campos = { acento: string; alarma: string; sobreCampo: string };
+const camposMarca: Campos = { acento: marca.azul, alarma: marca.bengala, sobreCampo: marca.negro };
+
+/**
+ * CRM: herramienta interna, sin la estética de la web. Neutros fríos,
+ * un único azul de acción y rojo sólo para impagos.
+ */
+export const temasCrm: Record<"claro" | "oscuro", Tema & Campos> = {
+  claro: {
+    fondo: "#F7F7F8",
+    placa: "#FFFFFF",
+    placa2: "#F1F1F4",
+    linea: "#E4E4E9",
+    tinta: "#111114",
+    tinta2: "#5E5F6B",
+    acentoTinta: "#1D4ED8",
+    alarmaTinta: "#B91C1C",
+    datoAzul: "#2563EB",
+    datoBengala: "#EA580C",
+    rampa: ["#BFDBFE", "#93C5FD", "#60A5FA", "#3B82F6", "#2563EB", "#1D4ED8"],
+    apagado: "#A1A1AA",
+    acento: "#2563EB",
+    alarma: "#DC2626",
+    sobreCampo: "#FFFFFF",
+  },
+  oscuro: {
+    fondo: "#0B0B0D",
+    placa: "#141417",
+    placa2: "#1C1C21",
+    linea: "#27272D",
+    tinta: "#F4F4F5",
+    tinta2: "#A1A1AA",
+    acentoTinta: "#60A5FA",
+    alarmaTinta: "#F87171",
+    datoAzul: "#3B82F6",
+    datoBengala: "#F97316",
+    rampa: ["#1E3A8A", "#1E40AF", "#1D4ED8", "#2563EB", "#3B82F6", "#60A5FA"],
+    apagado: "#52525B",
+    acento: "#3B82F6",
+    alarma: "#EF4444",
+    sobreCampo: "#FFFFFF",
+  },
+};
+
+function variables(t: Tema, c: Campos = camposMarca) {
   return [
     `--fondo:${t.fondo}`,
     `--placa:${t.placa}`,
@@ -116,11 +160,11 @@ function variables(t: Tema) {
     `--linea:${t.linea}`,
     `--tinta:${t.tinta}`,
     `--tinta-2:${t.tinta2}`,
-    `--acento:${marca.azul}`,
+    `--acento:${c.acento}`,
     `--acento-tinta:${t.acentoTinta}`,
-    `--alarma:${marca.bengala}`,
+    `--alarma:${c.alarma}`,
     `--alarma-tinta:${t.alarmaTinta}`,
-    `--sobre-campo:${marca.negro}`,
+    `--sobre-campo:${c.sobreCampo}`,
     `--dato-azul:${t.datoAzul}`,
     `--dato-bengala:${t.datoBengala}`,
     `--apagado:${t.apagado}`,
@@ -135,7 +179,13 @@ function variables(t: Tema) {
 export function cssTemas() {
   const claro = variables(temas.claro);
   const oscuro = variables(temas.oscuro);
+  const crmClaro = variables(temasCrm.claro, temasCrm.claro);
+  const crmOscuro = variables(temasCrm.oscuro, temasCrm.oscuro);
   return [
+    `.crm{${crmClaro}}`,
+    `@media (prefers-color-scheme: dark){:root:not([data-tema="claro"]) .crm{${crmOscuro}}}`,
+    `:root[data-tema="oscuro"] .crm{${crmOscuro}}`,
+    `:root[data-tema="claro"] .crm{${crmClaro}}`,
     `:root{${claro};color-scheme:light}`,
     `@media (prefers-color-scheme: dark){:root:not([data-tema="claro"]){${oscuro};color-scheme:dark}}`,
     `:root[data-tema="oscuro"]{${oscuro};color-scheme:dark}`,

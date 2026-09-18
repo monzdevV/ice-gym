@@ -16,33 +16,43 @@ function estaActiva(pathname: string, href: string) {
   return href === "/crm" ? pathname === "/crm" : pathname.startsWith(href);
 }
 
-/**
- * Pestañas de la banda superior. La activa es un campo azul con el corte
- * inclinado de los rótulos; el resto es sólo texto.
- */
-export function PestanasSecciones() {
+/** Menú lateral de escritorio. La sección activa es una píldora oscura. */
+export function MenuLateral() {
   const pathname = usePathname();
 
   return (
-    <nav className="hidden h-full items-stretch md:flex" aria-label="Secciones del CRM">
-      {SECCIONES.map(({ href, texto }) => {
+    <nav className="flex flex-col gap-0.5" aria-label="Secciones del CRM">
+      {SECCIONES.map(({ href, texto, Icono }) => {
         const activa = estaActiva(pathname, href);
         return (
           <Link
             key={href}
             href={href}
             aria-current={activa ? "page" : undefined}
-            className={`corte-a -mx-[5px] flex items-center px-6 text-[1.05rem] transition-colors duration-150 active:translate-y-px ${
-              activa
-                ? "rotulo bg-acento text-sobre-campo"
-                : "condensada text-tinta-2 hover:bg-placa-2 hover:text-tinta"
+            className={`flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm font-medium transition-colors duration-150 ${
+              activa ? "bg-tinta text-fondo" : "text-tinta-2 hover:bg-placa-2 hover:text-tinta"
             }`}
           >
+            <Icono className="size-[18px]" weight={activa ? "fill" : "regular"} aria-hidden />
             {texto}
           </Link>
         );
       })}
     </nav>
+  );
+}
+
+/** Título de la sección actual para la barra superior. */
+export function TituloSeccion() {
+  const pathname = usePathname();
+  const seccion = SECCIONES.find(({ href }) => estaActiva(pathname, href));
+  if (!seccion) return null;
+  const { Icono, texto } = seccion;
+  return (
+    <span className="flex items-center gap-2 text-sm font-medium text-tinta">
+      <Icono className="size-[18px] text-tinta-2" aria-hidden />
+      {texto}
+    </span>
   );
 }
 
@@ -66,9 +76,9 @@ export function NavegacionInferior() {
               activa ? "text-tinta" : "text-tinta-2"
             }`}
           >
-            {activa && <span className="corte-a absolute inset-x-3 top-0 h-[3px] bg-acento" aria-hidden />}
-            <Icono className="size-[22px]" weight={activa ? "regular" : "light"} aria-hidden />
-            <span className="condensada text-[0.72rem]">{texto}</span>
+            {activa && <span className="absolute inset-x-6 top-0 h-0.5 rounded-full bg-tinta" aria-hidden />}
+            <Icono className="size-[22px]" weight={activa ? "fill" : "regular"} aria-hidden />
+            <span className="text-[0.72rem] font-medium">{texto}</span>
           </Link>
         );
       })}
