@@ -12,10 +12,12 @@ import { CobrarRecibo } from "@/components/crm/socios/ControlesSocio";
 export const metadata: Metadata = { title: "Pagos" };
 export const dynamic = "force-dynamic";
 
+const POR_PAGINA = 80;
+
 export default async function PaginaPagos({
   searchParams,
 }: {
-  searchParams: Promise<{ centro?: string; estado?: string }>;
+  searchParams: Promise<{ centro?: string; estado?: string; todos?: string }>;
 }) {
   const params = await searchParams;
   const centros = await listarCentros();
@@ -24,10 +26,14 @@ export default async function PaginaPagos({
 
   const { impagados, resto, totales } = await listarPagos({ centro, estado, meses: 3 });
 
-  const enlaceEstado = (valor: string | null) => {
+  // Se pintan los primeros recibos; el resto, solo si se piden (cientos de filas frenan la página).
+  const mostrados = params.todos ? resto : resto.slice(0, POR_PAGINA);
+
+  const enlaceEstado = (valor: string | null, todos = false) => {
     const sp = new URLSearchParams();
     if (centro) sp.set("centro", centro);
     if (valor) sp.set("estado", valor);
+    if (todos) sp.set("todos", "1");
     const q = sp.toString();
     return `/crm/pagos${q ? `?${q}` : ""}`;
   };
@@ -99,7 +105,7 @@ export default async function PaginaPagos({
             <SinDatos titulo="Sin recibos" texto="No hay recibos con este filtro en los últimos tres meses." />
           ) : (
             <ol className="flex flex-col">
-              {resto.map((p) => (
+              {mostrados.map((p) => (
                 <li
                   key={p.id}
                   className="grid grid-cols-[minmax(0,1fr)_auto_7rem] items-center gap-x-4 border-b border-linea py-2.5 sm:grid-cols-[minmax(0,1fr)_10rem_auto_7rem]"
@@ -127,6 +133,17 @@ export default async function PaginaPagos({
                   </span>
                 </li>
               ))}
+              {mostrados.length < resto.length && (
+                <li className="flex justify-center pt-4">
+                  <Link
+                    href={enlaceEstado(estado, true)}
+                    scroll={false}
+                    className="inline-flex h-8 items-center rounded-md border border-linea bg-placa px-3 text-[0.8125rem] font-medium text-tinta-2 hover:bg-placa-2 hover:text-tinta"
+                  >
+                    Ver los {numero(resto.length - mostrados.length)} recibos restantes
+                  </Link>
+                </li>
+              )}
             </ol>
           )}
         </Seccion>

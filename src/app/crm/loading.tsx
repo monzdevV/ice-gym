@@ -1,3 +1,3 @@
-import { EsqueletoPanel } from "@/components/crm/Esqueletos";
+import { EsqueletoDashboard } from "@/components/crm/dashboard/Esqueleto";
 
-export default EsqueletoPanel;
+export default EsqueletoDashboard;

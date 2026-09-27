@@ -5,10 +5,7 @@ import { useTransition } from "react";
 import { codigoCentro } from "@/design/tokens";
 import type { Centro } from "@/lib/tipos";
 
-/**
- * Selector de centro con los códigos de tres letras, como la barra de sesiones
- * de una retransmisión. Escribe en la URL, así el filtro se puede compartir.
- */
+/** Selector de centro segmentado. Escribe en la URL, así el filtro se puede compartir. */
 export function FiltroCentro({ centros }: { centros: Centro[] }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -33,7 +30,7 @@ export function FiltroCentro({ centros }: { centros: Centro[] }) {
     <div
       role="radiogroup"
       aria-label="Centro"
-      className={`flex items-stretch transition-opacity ${pendiente ? "opacity-60" : ""}`}
+      className={`flex h-8 items-stretch rounded-lg border border-linea bg-placa p-0.5 transition-opacity ${pendiente ? "opacity-60" : ""}`}
     >
       {opciones.map((o) => {
         const activa = actual === o.id;
@@ -45,10 +42,8 @@ export function FiltroCentro({ centros }: { centros: Centro[] }) {
             aria-checked={activa}
             title={o.nombre}
             onClick={() => cambiar(o.id)}
-            className={`corte-a -mx-[4px] px-4 py-1.5 text-[0.95rem] transition-colors active:translate-y-px ${
-              activa
-                ? "rotulo bg-tinta text-fondo"
-                : "condensada text-tinta-2 hover:bg-placa-2 hover:text-tinta"
+            className={`rounded-md px-2.5 text-[0.8125rem] font-medium transition-colors ${
+              activa ? "bg-placa-2 text-tinta shadow-sm" : "text-tinta-2 hover:text-tinta"
             }`}
           >
             {o.codigo}

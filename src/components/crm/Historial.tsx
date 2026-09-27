@@ -27,25 +27,29 @@ export function Historial({ actividades }: { actividades: Actividad[] }) {
   }
 
   return (
-    <ol className="flex flex-col">
+    <ol className="flex flex-col pt-2">
       {actividades.map((a) => {
         const Icono = ICONO[a.tipo] ?? NotePencil;
         const sistema = a.tipo === "cambio_estado";
         return (
-          <li key={a.id} className="grid grid-cols-[2rem_1fr] gap-3 border-b border-linea py-3.5 last:border-b-0">
-            <Icono
-              className={`mt-0.5 size-5 ${sistema ? "text-tinta-2" : "text-acento-tinta"}`}
-              weight="light"
-              aria-hidden
-            />
+          <li key={a.id} className="group relative grid grid-cols-[2rem_1fr] gap-3 pb-5 last:pb-0">
+            {/* Hilo de la línea de tiempo */}
+            <span className="absolute bottom-0 left-4 top-8 w-px bg-linea group-last:hidden" aria-hidden />
+            <span
+              className={`relative grid size-8 place-items-center rounded-full border border-linea ${
+                sistema ? "bg-placa text-tinta-2" : "bg-placa-2 text-acento-tinta"
+              }`}
+            >
+              <Icono className="size-4" aria-hidden />
+            </span>
             <div className="min-w-0">
               <p className="flex flex-wrap items-baseline gap-x-3">
-                <span className="condensada text-[0.9rem] text-tinta">{ETIQUETA_ACTIVIDAD[a.tipo]}</span>
+                <span className="text-sm font-medium text-tinta">{ETIQUETA_ACTIVIDAD[a.tipo]}</span>
                 <span className="text-[0.8rem] text-tinta-2" data-cifra>
                   {fechaHora(a.created_at)}
                 </span>
               </p>
-              <p className={`mt-1 whitespace-pre-line text-[0.92rem] leading-relaxed ${sistema ? "text-tinta-2" : "text-tinta"}`}>
+              <p className={`mt-0.5 whitespace-pre-line text-sm leading-relaxed ${sistema ? "text-tinta-2" : "text-tinta"}`}>
                 {a.descripcion}
               </p>
             </div>

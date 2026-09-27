@@ -1,3 +1,3 @@
-import { EsqueletoTablero } from "@/components/crm/Esqueletos";
+import { EsqueletoOportunidades } from "@/components/crm/Esqueletos";
 
-export default EsqueletoTablero;
+export default EsqueletoOportunidades;

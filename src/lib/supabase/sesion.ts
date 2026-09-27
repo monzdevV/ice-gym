@@ -25,9 +25,10 @@ export async function actualizarSesion(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims valida el JWT en local (claves asimétricas) y solo llama a Auth
+  // cuando hay que refrescar el token; getUser iba a la red en cada petición.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   return { response, user };
 }

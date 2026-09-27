@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FormularioAcceso } from "@/components/crm/FormularioAcceso";
-import { ControlTema } from "@/components/crm/ControlTema";
+import { InterruptorTema } from "@/components/crm/InterruptorTema";
 
 export const metadata: Metadata = { title: "Acceso al CRM" };
 
@@ -21,7 +21,7 @@ export default async function PaginaAcceso({
   return (
     <main className="flex min-h-dvh flex-col px-4 py-6">
       <div className="flex justify-end">
-        <ControlTema />
+        <InterruptorTema />
       </div>
 
       <div className="m-auto w-full max-w-sm">

@@ -9,13 +9,15 @@ export function Encabezado({
   titulo,
   meta,
   children,
+  className = "px-4 lg:px-8",
 }: {
   titulo: string;
   meta?: ReactNode;
   children?: ReactNode;
+  className?: string;
 }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 px-4 pb-5 pt-6 lg:px-8">
+    <header className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pb-5 pt-6 ${className}`}>
       <div className="flex min-w-0 flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-tinta">{titulo}</h1>
         {meta && <div className="text-sm text-tinta-2">{meta}</div>}

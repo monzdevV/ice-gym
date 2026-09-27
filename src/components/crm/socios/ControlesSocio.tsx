@@ -62,13 +62,16 @@ function AccionConConfirmacion({ id, operacion }: { id: string; operacion: Opera
   const [estado, accion] = useActionState(cambiarEstadoSocio, ESTADO_INICIAL);
   const t = TEXTOS[operacion];
 
+  // Al llegar un resultado nuevo se cierra el diálogo (ajuste durante el render, sin efecto).
+  const [visto, setVisto] = useState(estado);
+  if (estado !== visto) {
+    setVisto(estado);
+    if (estado.ok) setAbierto(false);
+  }
+
   useEffect(() => {
-    if (estado.ok) {
-      toast.success(estado.mensaje);
-      setAbierto(false);
-    } else if (estado.ok === false) {
-      toast.error(estado.mensaje);
-    }
+    if (estado.ok) toast.success(estado.mensaje);
+    else if (estado.ok === false) toast.error(estado.mensaje);
   }, [estado]);
 
   return (

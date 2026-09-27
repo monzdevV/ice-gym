@@ -123,34 +123,91 @@ export const temasCrm: Record<"claro" | "oscuro", Tema & Campos> = {
     linea: "#E4E4E9",
     tinta: "#111114",
     tinta2: "#5E5F6B",
-    acentoTinta: "#1D4ED8",
+    acentoTinta: "#4338CA",
     alarmaTinta: "#B91C1C",
     datoAzul: "#2563EB",
     datoBengala: "#EA580C",
     rampa: ["#BFDBFE", "#93C5FD", "#60A5FA", "#3B82F6", "#2563EB", "#1D4ED8"],
     apagado: "#A1A1AA",
-    acento: "#2563EB",
+    acento: "#4F46E5",
     alarma: "#DC2626",
     sobreCampo: "#FFFFFF",
   },
   oscuro: {
-    fondo: "#0B0B0D",
-    placa: "#141417",
-    placa2: "#1C1C21",
-    linea: "#27272D",
-    tinta: "#F4F4F5",
-    tinta2: "#A1A1AA",
-    acentoTinta: "#60A5FA",
+    fondo: "#0E0E10",
+    placa: "#151518",
+    placa2: "#1D1D21",
+    linea: "#2A2A30",
+    tinta: "#EDEDEF",
+    tinta2: "#9B9BA6",
+    acentoTinta: "#A5A6FF",
     alarmaTinta: "#F87171",
-    datoAzul: "#3B82F6",
-    datoBengala: "#F97316",
-    rampa: ["#1E3A8A", "#1E40AF", "#1D4ED8", "#2563EB", "#3B82F6", "#60A5FA"],
+    datoAzul: "#3987E5",
+    datoBengala: "#D95926",
+    rampa: ["#184F95", "#1C5CAB", "#256ABF", "#2A78D6", "#3987E5", "#5598E7"],
     apagado: "#52525B",
-    acento: "#3B82F6",
+    acento: "#5B5BF6",
     alarma: "#EF4444",
     sobreCampo: "#FFFFFF",
   },
 };
+
+/**
+ * Sólo CRM: series de gráficas (paleta categórica validada con la guía de
+ * visualización, en orden fijo), estados y tonos de etiqueta.
+ */
+const extrasCrm = {
+  claro: {
+    "serie-1": "#2A78D6",
+    "serie-2": "#EB6834",
+    "serie-3": "#1BAF7A",
+    "serie-4": "#EDA100",
+    "serie-5": "#E87BA4",
+    exito: "#15803D",
+    aviso: "#B45309",
+    critico: "#DC2626",
+    "tag-azul": "#1D4ED8",
+    "tag-verde": "#15803D",
+    "tag-ambar": "#B45309",
+    "tag-violeta": "#6D28D9",
+    "tag-rosa": "#BE185D",
+    "tag-gris": "#52525B",
+    "relleno-azul": "#2563EB",
+    "relleno-verde": "#15803D",
+    "relleno-ambar": "#C2410C",
+    "relleno-violeta": "#7C3AED",
+    "relleno-rosa": "#DB2777",
+    "relleno-gris": "#52525B",
+  },
+  oscuro: {
+    "serie-1": "#3987E5",
+    "serie-2": "#D95926",
+    "serie-3": "#199E70",
+    "serie-4": "#C98500",
+    "serie-5": "#D55181",
+    exito: "#34D399",
+    aviso: "#FBBF24",
+    critico: "#F87171",
+    "tag-azul": "#7DB3FF",
+    "tag-verde": "#5EE0A0",
+    "tag-ambar": "#F5C451",
+    "tag-violeta": "#B7A6FF",
+    "tag-rosa": "#F59BC4",
+    "tag-gris": "#A1A1AA",
+    "relleno-azul": "#2563EB",
+    "relleno-verde": "#15803D",
+    "relleno-ambar": "#C2410C",
+    "relleno-violeta": "#7C3AED",
+    "relleno-rosa": "#DB2777",
+    "relleno-gris": "#52525B",
+  },
+} as const;
+
+function variablesExtra(e: Record<string, string>) {
+  return Object.entries(e)
+    .map(([k, v]) => `--${k}:${v}`)
+    .join(";");
+}
 
 function variables(t: Tema, c: Campos = camposMarca) {
   return [
@@ -179,12 +236,13 @@ function variables(t: Tema, c: Campos = camposMarca) {
 export function cssTemas() {
   const claro = variables(temas.claro);
   const oscuro = variables(temas.oscuro);
-  const crmClaro = variables(temasCrm.claro, temasCrm.claro);
-  const crmOscuro = variables(temasCrm.oscuro, temasCrm.oscuro);
+  const crmClaro = `${variables(temasCrm.claro, temasCrm.claro)};${variablesExtra(extrasCrm.claro)};color-scheme:light`;
+  const crmOscuro = `${variables(temasCrm.oscuro, temasCrm.oscuro)};${variablesExtra(extrasCrm.oscuro)};color-scheme:dark`;
   return [
-    `.crm{${crmClaro}}`,
-    `@media (prefers-color-scheme: dark){:root:not([data-tema="claro"]) .crm{${crmOscuro}}}`,
-    `:root[data-tema="oscuro"] .crm{${crmOscuro}}`,
+    // El CRM es oscuro por defecto; sólo un "claro" elegido a mano lo aclara.
+    `.crm{${crmOscuro}}`,
+    // La landing vive de noche, como sus fotos: siempre oscura.
+    `.landing{${oscuro};color-scheme:dark}`,
     `:root[data-tema="claro"] .crm{${crmClaro}}`,
     `:root{${claro};color-scheme:light}`,
     `@media (prefers-color-scheme: dark){:root:not([data-tema="claro"]){${oscuro};color-scheme:dark}}`,

@@ -59,6 +59,7 @@ export async function cambiarEstadoSocio(
   revalidatePath(`/crm/socios/${id}`);
   revalidatePath("/crm/socios");
   revalidatePath("/crm");
+  revalidatePath("/crm/club");
   return { ok: true, mensaje: `${regla.verbo}: ${socio.numero_socio}.` };
 }
 
@@ -124,5 +125,6 @@ export async function marcarPagado(
 
   revalidatePath("/crm/pagos");
   revalidatePath("/crm");
+  revalidatePath("/crm/club");
   return { ok: true, mensaje: "Recibo cobrado." };
 }

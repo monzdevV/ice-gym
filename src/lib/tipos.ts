@@ -30,6 +30,33 @@ export const COLOR_LEAD: Record<EstadoLead, string> = {
   perdido: "var(--apagado)",
 };
 
+/** Probabilidad de cierre por defecto de cada etapa, en %. */
+export const PROBABILIDAD_ETAPA: Record<EstadoLead, number> = {
+  nuevo: 10,
+  contactado: 25,
+  visita_agendada: 50,
+  en_prueba: 75,
+  convertido: 100,
+  perdido: 0,
+};
+
+/** Etapas en las que el lead sigue vivo. */
+export const ETAPAS_ABIERTAS = ["nuevo", "contactado", "visita_agendada", "en_prueba"] as const;
+
+export function esAbierto(estado: EstadoLead) {
+  return (ETAPAS_ABIERTAS as readonly string[]).includes(estado);
+}
+
+/** Tono de etiqueta (var CSS) de cada etapa. */
+export const TONO_LEAD: Record<EstadoLead, string> = {
+  nuevo: "var(--relleno-azul)",
+  contactado: "var(--relleno-violeta)",
+  visita_agendada: "var(--relleno-ambar)",
+  en_prueba: "var(--relleno-rosa)",
+  convertido: "var(--relleno-verde)",
+  perdido: "var(--relleno-gris)",
+};
+
 export const ORIGENES_LEAD = ["web", "visita", "telefono", "recomendacion", "campana"] as const;
 export type OrigenLead = (typeof ORIGENES_LEAD)[number];
 
@@ -40,6 +67,18 @@ export const ETIQUETA_ORIGEN: Record<OrigenLead, string> = {
   recomendacion: "Recomendación",
   campana: "Campaña",
 };
+
+export const TONO_ORIGEN: Record<OrigenLead, string> = {
+  web: "var(--relleno-azul)",
+  visita: "var(--relleno-verde)",
+  telefono: "var(--relleno-violeta)",
+  recomendacion: "var(--relleno-ambar)",
+  campana: "var(--relleno-rosa)",
+};
+
+export function esOrigenLead(valor: unknown): valor is OrigenLead {
+  return typeof valor === "string" && (ORIGENES_LEAD as readonly string[]).includes(valor);
+}
 
 /* ------------------------------- Socios ------------------------------- */
 
@@ -139,6 +178,11 @@ export type Lead = {
   socio_id: string | null;
   fecha_visita: string | null;
   motivo_perdida: string | null;
+  valor_estimado: number | null;
+  probabilidad: number | null;
+  proxima_accion: string | null;
+  proxima_accion_fecha: string | null;
+  etiquetas: string[];
 };
 
 export type Socio = {

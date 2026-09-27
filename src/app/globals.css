@@ -21,6 +21,14 @@
   --color-dato-azul: var(--dato-azul);
   --color-dato-bengala: var(--dato-bengala);
   --color-apagado: var(--apagado);
+  --color-serie-1: var(--serie-1);
+  --color-serie-2: var(--serie-2);
+  --color-serie-3: var(--serie-3);
+  --color-serie-4: var(--serie-4);
+  --color-serie-5: var(--serie-5);
+  --color-exito: var(--exito);
+  --color-aviso: var(--aviso);
+  --color-critico: var(--critico);
 
   /* Nombres que usan los componentes de shadcn */
   --color-background: var(--fondo);
@@ -246,6 +254,21 @@
 }
 .crm .ruido::after {
   display: none;
+}
+
+/* Etiqueta de color: el tono llega en --tono (relleno-azul, relleno-verde…). */
+.crm .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 1.375rem;
+  padding: 0 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--tono, var(--relleno-gris));
 }
 
 /* Barras de desplazamiento del sistema */

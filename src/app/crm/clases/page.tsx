@@ -136,6 +136,8 @@ export default async function PaginaClases({
 function FilaClase({ clase, mostrarCentro }: { clase: ClaseConOcupacion; mostrarCentro: boolean }) {
   const pct = clase.plazas > 0 ? Math.min(100, (clase.ocupadas / clase.plazas) * 100) : 0;
   const completa = clase.ocupadas >= clase.plazas;
+  // Componente de servidor: se pinta en cada petición, así que leer la hora aquí es correcto.
+  // eslint-disable-next-line react-hooks/purity
   const pasada = new Date(clase.inicio).getTime() + clase.duracion_min * 60_000 < Date.now();
 
   return (
