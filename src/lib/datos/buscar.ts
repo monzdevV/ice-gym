@@ -1,7 +1,6 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { EstadoLead, EstadoSocio } from "@/lib/tipos";
 import {
   etiquetaSector,
   nombreCompleto,
@@ -13,8 +12,6 @@ import {
 } from "@/lib/b2b";
 
 export type ResultadoBusqueda = {
-  leads: { id: string; nombre: string; email: string; estado: EstadoLead }[];
-  socios: { id: string; nombre: string; apellidos: string; numero_socio: string; estado: EstadoSocio }[];
   empresas: { id: string; nombre: string; tipo: TipoEmpresa; sector: string; ciudad: string | null; logo_url: string | null }[];
   contactos: {
     id: string;
@@ -45,7 +42,7 @@ export type ResultadoBusqueda = {
   }[];
 };
 
-const VACIO: ResultadoBusqueda = { leads: [], socios: [], empresas: [], contactos: [], oportunidades: [], interacciones: [] };
+const VACIO: ResultadoBusqueda = { empresas: [], contactos: [], oportunidades: [], interacciones: [] };
 const POR_GRUPO = 5;
 
 /** Minúsculas y sin tildes: «García» y «garcia» son lo mismo. */
@@ -75,8 +72,8 @@ function filtrar<T>(filas: T[], palabras: string[], campos: (f: T) => (string | 
 
 /**
  * Búsqueda rápida para la paleta de comandos (se sirve desde /crm/buscar).
- * Club: leads y socios con ilike por palabra. B2B: empresas, contactos,
- * oportunidades y actividades filtradas en JS (sin tildes, varias palabras).
+ * Empresas, contactos, oportunidades y actividades filtradas en JS
+ * (sin tildes, varias palabras).
  */
 export async function buscarGlobal(texto: string): Promise<ResultadoBusqueda> {
   // Fuera los caracteres que tienen significado en los filtros de PostgREST.
@@ -87,18 +84,7 @@ export async function buscarGlobal(texto: string): Promise<ResultadoBusqueda> {
   const palabras = crudas.map(normalizar);
   const supabase = await createClient();
 
-  // Club: cada palabra debe aparecer en algún campo (un .or por palabra = AND entre ellas).
-  let qLeads = supabase.from("leads").select("id, nombre, email, estado");
-  let qSocios = supabase.from("socios").select("id, nombre, apellidos, numero_socio, estado");
-  for (const w of crudas) {
-    const p = `%${w}%`;
-    qLeads = qLeads.or(`nombre.ilike.${p},email.ilike.${p}`);
-    qSocios = qSocios.or(`nombre.ilike.${p},apellidos.ilike.${p},email.ilike.${p},numero_socio.ilike.${p}`);
-  }
-
-  const [leads, socios, empresas, contactos, oportunidades, interacciones] = await Promise.all([
-    qLeads.order("updated_at", { ascending: false }).limit(6),
-    qSocios.order("apellidos").limit(6),
+  const [empresas, contactos, oportunidades, interacciones] = await Promise.all([
     supabase
       .from("empresas")
       .select("id, nombre, tipo, sector, ciudad, logo_url")
@@ -129,8 +115,6 @@ export async function buscarGlobal(texto: string): Promise<ResultadoBusqueda> {
   ]);
 
   return {
-    leads: (leads.data ?? []) as ResultadoBusqueda["leads"],
-    socios: (socios.data ?? []) as ResultadoBusqueda["socios"],
     empresas: filtrar(empresas.data ?? [], palabras, (e) => [e.nombre, e.sector, etiquetaSector(e.sector), e.ciudad]),
     contactos: filtrar(contactos.data ?? [], palabras, (c) => [nombreCompleto(c), c.email, c.cargo, c.empresa?.nombre]),
     oportunidades: filtrar(oportunidades.data ?? [], palabras, (o) => [o.nombre, o.empresa?.nombre]),

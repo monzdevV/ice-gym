@@ -7,22 +7,17 @@ import {
   AddressBook,
   ArrowSquareOut,
   Buildings,
-  CalendarBlank,
   ChartBar,
   CheckSquare,
   DotsThreeOutline,
-  Gauge,
   GearSix,
   Lightning,
-  Receipt,
   Target,
-  UserPlus,
-  UsersThree,
   type Icon,
 } from "@phosphor-icons/react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-type Contador = "leads" | "oportunidades" | "tareas";
+type Contador = "oportunidades" | "tareas";
 export type Contadores = Record<Contador, number>;
 type Seccion = { href: string; texto: string; corto?: string; Icono: Icon; contador?: Contador };
 
@@ -39,16 +34,6 @@ const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
       { href: "/crm/contactos", texto: "Contactos", Icono: AddressBook },
       { href: "/crm/actividades", texto: "Actividades", Icono: Lightning },
       { href: "/crm/tareas", texto: "Tareas", Icono: CheckSquare, contador: "tareas" },
-    ],
-  },
-  {
-    titulo: "Club",
-    secciones: [
-      { href: "/crm/club", texto: "Panel del club", Icono: Gauge },
-      { href: "/crm/leads", texto: "Leads del club", Icono: UserPlus, contador: "leads" },
-      { href: "/crm/socios", texto: "Socios", Icono: UsersThree },
-      { href: "/crm/pagos", texto: "Pagos", Icono: Receipt },
-      { href: "/crm/clases", texto: "Clases", Icono: CalendarBlank },
     ],
   },
 ];

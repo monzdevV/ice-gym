@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Tag } from "@/components/crm/leads/Piezas";
+import type { CSSProperties, ReactNode } from "react";
 import { iniciales } from "@/lib/formato";
 import {
   ETIQUETA_ESTADO_EMPRESA,
@@ -28,7 +28,15 @@ import {
 
 /** Piezas visuales compartidas del CRM B2B (server-safe: sin hooks). */
 
-export { Tag };
+
+/** Etiqueta de color: el tono llega por la variable --tono. */
+export function Tag({ tono, children, className = "" }: { tono?: string; children: ReactNode; className?: string }) {
+  return (
+    <span className={`tag ${className}`} style={tono ? ({ "--tono": tono } as CSSProperties) : undefined}>
+      {children}
+    </span>
+  );
+}
 
 const TAMANO = { xs: "size-5 text-[0.6rem]", sm: "size-7 text-[0.7rem]", md: "size-9 text-xs", lg: "size-14 text-base" } as const;
 type Tamano = keyof typeof TAMANO;

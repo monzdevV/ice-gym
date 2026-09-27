@@ -9,7 +9,6 @@ import { ClaseCuerpo } from "@/components/crm/ClaseCuerpo";
 import { BotonPaleta, PaletaComandos } from "@/components/crm/PaletaComandos";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BotonCrear } from "@/components/crm/dashboard/BotonCrear";
-import { ETAPAS_ABIERTAS } from "@/lib/tipos";
 import { ETAPAS_ABIERTAS_B2B } from "@/lib/b2b";
 import { catalogos as cargarCatalogos } from "@/lib/datos/b2b";
 import { salir } from "./acciones/sesion";
@@ -29,13 +28,12 @@ export default async function LayoutCrm({ children }: { children: React.ReactNod
   if (!user) return <div className={raiz}>{children}</div>;
 
   // Contadores del menú y catálogos del botón «Crear», todo a la vez.
-  const [leads, oportunidades, tareas, catalogos] = await Promise.all([
-    supabase.from("leads").select("id", { count: "exact", head: true }).in("estado", [...ETAPAS_ABIERTAS]),
+  const [oportunidades, tareas, catalogos] = await Promise.all([
     supabase.from("oportunidades").select("id", { count: "exact", head: true }).in("etapa", [...ETAPAS_ABIERTAS_B2B]),
     supabase.from("interacciones").select("id", { count: "exact", head: true }).eq("estado", "pendiente"),
     cargarCatalogos(),
   ]);
-  const contadores = { leads: leads.count ?? 0, oportunidades: oportunidades.count ?? 0, tareas: tareas.count ?? 0 };
+  const contadores = { oportunidades: oportunidades.count ?? 0, tareas: tareas.count ?? 0 };
 
   const nombre = String(user.email ?? "").split("@")[0];
 

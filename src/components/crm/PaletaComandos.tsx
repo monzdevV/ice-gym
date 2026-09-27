@@ -6,26 +6,18 @@ import {
   AddressBook,
   ArrowSquareOut,
   Buildings,
-  CalendarBlank,
   ChartBar,
-  ChartLineUp,
   CheckSquare,
-  Gauge,
   GearSix,
   Lightning,
   MagnifyingGlass,
   Plus,
-  Receipt,
   Target,
   User,
-  UserPlus,
-  UsersThree,
   type Icon,
 } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ResultadoBusqueda } from "@/lib/datos/buscar";
-import { EVENTO_NUEVO_LEAD } from "@/components/crm/leads/NuevoLead";
-import { ETIQUETA_LEAD, ETIQUETA_SOCIO } from "@/lib/tipos";
 import {
   ETIQUETA_ETAPA,
   ETIQUETA_INTERACCION,
@@ -40,8 +32,6 @@ import { Avatar, LogoEmpresa } from "@/components/crm/b2b/Piezas";
 import { pedirCrear, type TipoCrear } from "@/components/crm/dashboard/eventos";
 
 const SIN_RESULTADOS: ResultadoBusqueda = {
-  leads: [],
-  socios: [],
   empresas: [],
   contactos: [],
   oportunidades: [],
@@ -103,12 +93,7 @@ export function PaletaComandos() {
   const [buscando, empezar] = useTransition();
   const lista = useRef<HTMLUListElement>(null);
 
-  function nuevoLead() {
-    if (pathname === "/crm/leads") window.dispatchEvent(new Event(EVENTO_NUEVO_LEAD));
-    else router.push("/crm/leads?nuevo=1");
-  }
-
-  // Atajos globales: ⌘K / Ctrl+K y «/» abren la paleta; N crea un lead.
+  // Atajos globales: ⌘K / Ctrl+K y «/» abren la paleta.
   useEffect(() => {
     function tecla(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -120,9 +105,6 @@ export function PaletaComandos() {
       if (e.key === "/") {
         e.preventDefault();
         setAbierta(true);
-      } else if (e.key.toLowerCase() === "n") {
-        e.preventDefault();
-        nuevoLead();
       }
     }
     const abrir = () => setAbierta(true);
@@ -132,7 +114,6 @@ export function PaletaComandos() {
       window.removeEventListener("keydown", tecla);
       window.removeEventListener(EVENTO_PALETA, abrir);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   // Búsqueda en servidor con un pequeño retardo; cada tecla cancela la petición anterior.
@@ -171,20 +152,12 @@ export function PaletaComandos() {
       { id: "c-contacto", grupo: "Crear", texto: "Nuevo contacto", Icono: Plus, claves: "crear persona", ir: crear("contacto") },
       { id: "c-tarea", grupo: "Crear", texto: "Nueva tarea", Icono: Plus, claves: "crear pendiente recordatorio", ir: crear("tarea") },
       { id: "c-actividad", grupo: "Crear", texto: "Registrar actividad", Icono: Plus, claves: "crear llamada email reunion nota", ir: crear("actividad") },
-      { id: "nuevo", grupo: "Crear", texto: "Nuevo lead del club", Icono: UserPlus, atajo: "N", claves: "crear", ir: nuevoLead },
       { id: "panel", grupo: "Ir a", texto: "Dashboard", Icono: ChartBar, claves: "inicio panel", ir: ir("/crm") },
       { id: "oportunidades", grupo: "Ir a", texto: "Oportunidades", Icono: Target, claves: "pipeline tablero", ir: ir(ruta.oportunidades) },
       { id: "empresas", grupo: "Ir a", texto: "Empresas", Icono: Buildings, claves: "cuentas proveedores clientes", ir: ir(ruta.empresas) },
       { id: "contactos", grupo: "Ir a", texto: "Contactos", Icono: AddressBook, claves: "personas", ir: ir(ruta.contactos) },
       { id: "actividades", grupo: "Ir a", texto: "Actividades", Icono: Lightning, claves: "historial llamadas reuniones", ir: ir(ruta.actividades) },
       { id: "tareas", grupo: "Ir a", texto: "Tareas", Icono: CheckSquare, claves: "pendientes agenda", ir: ir(ruta.tareas) },
-      { id: "club", grupo: "Ir a", texto: "Panel del club", Icono: Gauge, claves: "gimnasio", ir: ir("/crm/club") },
-      { id: "leads", grupo: "Ir a", texto: "Leads del club", Icono: UserPlus, ir: ir("/crm/leads") },
-      { id: "tablero", grupo: "Ir a", texto: "Tablero de leads", Icono: Target, ir: ir("/crm/leads?vista=tablero") },
-      { id: "prevision", grupo: "Ir a", texto: "Previsión de leads", Icono: ChartLineUp, ir: ir("/crm/leads?vista=prevision") },
-      { id: "socios", grupo: "Ir a", texto: "Socios", Icono: UsersThree, ir: ir("/crm/socios") },
-      { id: "pagos", grupo: "Ir a", texto: "Pagos", Icono: Receipt, ir: ir("/crm/pagos") },
-      { id: "clases", grupo: "Ir a", texto: "Clases", Icono: CalendarBlank, ir: ir("/crm/clases") },
       { id: "configuracion", grupo: "Ir a", texto: "Configuración", Icono: GearSix, claves: "ajustes equipo", ir: ir(ruta.configuracion) },
       { id: "web", grupo: "Ir a", texto: "Web pública", Icono: ArrowSquareOut, ir: ir("/") },
     ];
@@ -243,22 +216,6 @@ export function PaletaComandos() {
       })),
       ...encontrados.interacciones.filter((i) => i.tipo === "tarea").map(aInteraccion("Tareas", CheckSquare)),
       ...encontrados.interacciones.filter((i) => i.tipo !== "tarea").map(aInteraccion("Actividades", Lightning)),
-      ...encontrados.leads.map<Item>((l) => ({
-        id: `l-${l.id}`,
-        grupo: "Leads del club",
-        texto: l.nombre,
-        detalle: `${ETIQUETA_LEAD[l.estado]} · ${l.email}`,
-        Icono: UserPlus,
-        ir: ir(`/crm/leads/${l.id}`),
-      })),
-      ...encontrados.socios.map<Item>((s) => ({
-        id: `s-${s.id}`,
-        grupo: "Socios",
-        texto: `${s.nombre} ${s.apellidos}`,
-        detalle: `${s.numero_socio} · ${ETIQUETA_SOCIO[s.estado]}`,
-        Icono: User,
-        ir: ir(`/crm/socios/${s.id}`),
-      })),
       ...filtrados,
     ];
     // eslint-disable-next-line react-hooks/exhaustive-deps

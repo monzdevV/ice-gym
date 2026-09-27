@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
 import {
   Buildings,
   CaretDown,
@@ -9,7 +8,6 @@ import {
   Lightning,
   Plus,
   Target,
-  UserPlus,
   UserCircle,
   type Icon,
 } from "@phosphor-icons/react";
@@ -18,7 +16,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Catalogos } from "@/lib/datos/b2b";
@@ -26,7 +23,6 @@ import { NuevaOportunidad } from "@/components/crm/oportunidades/NuevaOportunida
 import { NuevaEmpresa } from "@/components/crm/empresas/NuevaEmpresa";
 import { NuevoContacto } from "@/components/crm/contactos/NuevoContacto";
 import { NuevaInteraccion } from "@/components/crm/actividad/NuevaInteraccion";
-import { EVENTO_NUEVO_LEAD } from "@/components/crm/leads/NuevoLead";
 import { EVENTO_CREAR, type TipoCrear } from "./eventos";
 
 const OPCIONES: { tipo: TipoCrear; texto: string; Icono: Icon }[] = [
@@ -52,19 +48,11 @@ function abrir(tipo: TipoCrear) {
 
 /** Botón global «+ Crear» de la cabecera, con los diálogos de alta del CRM B2B. */
 export function BotonCrear({ catalogos }: { catalogos: Catalogos }) {
-  const router = useRouter();
-  const pathname = usePathname();
-
   useEffect(() => {
     const escuchar = (e: Event) => abrir((e as CustomEvent<TipoCrear>).detail);
     window.addEventListener(EVENTO_CREAR, escuchar);
     return () => window.removeEventListener(EVENTO_CREAR, escuchar);
   }, []);
-
-  function nuevoLead() {
-    if (pathname === "/crm/leads") window.dispatchEvent(new Event(EVENTO_NUEVO_LEAD));
-    else router.push("/crm/leads?nuevo=1");
-  }
 
   return (
     <>
@@ -88,12 +76,6 @@ export function BotonCrear({ catalogos }: { catalogos: Catalogos }) {
               {texto}
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-xs text-tinta-2">Club</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={nuevoLead}>
-            <UserPlus className="size-4" aria-hidden />
-            Lead del club
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 

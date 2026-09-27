@@ -4,7 +4,7 @@ import { cargarDashboard } from "@/lib/datos/dashboard";
 import { ruta } from "@/lib/b2b";
 import { dinero, numero, porcentaje } from "@/lib/formato";
 import { Encabezado, claseEnlace } from "@/components/crm/Primitivas";
-import { Kpi, Tarjeta } from "@/components/crm/panel/Kpi";
+import { Kpi, Tarjeta } from "@/components/crm/dashboard/Kpi";
 import { FiltrosDashboard } from "@/components/crm/dashboard/FiltrosDashboard";
 import {
   GraficoCreadas,
