@@ -31,7 +31,11 @@ export default async function PaginaOportunidades({
   const cifra = "font-semibold tabular-nums text-tinta";
 
   return (
-    <main className="flex flex-col px-4 pb-10 md:h-[calc(100dvh-3.5rem)] md:pb-4 lg:px-8">
+    <main
+      className={`flex flex-col px-4 pb-10 md:pb-4 lg:px-8 ${
+        filtros.vista === "tabla" ? "md:h-[calc(100dvh-3.5rem)]" : ""
+      }`}
+    >
       <Encabezado
         titulo="Oportunidades"
         className="px-0 lg:px-0"

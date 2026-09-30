@@ -148,7 +148,7 @@ function Columna({
 
   return (
     <section
-      className={`flex max-h-[75dvh] w-[288px] shrink-0 snap-start flex-col rounded-xl border bg-placa-2/40 transition-colors md:max-h-none ${
+      className={`flex max-h-[75dvh] w-[288px] shrink-0 snap-start flex-col rounded-xl border bg-placa-2/40 transition-colors md:max-h-none md:w-0 md:min-w-[190px] md:flex-1 ${
         isOver ? "border-acento bg-acento/5" : "border-linea"
       }`}
       aria-label={`${ETIQUETA_ETAPA[etapa]}: ${items.length} oportunidades, ${dinero(valor)}`}
@@ -158,11 +158,11 @@ function Columna({
           <span className="size-2 rounded-full" style={{ backgroundColor: TONO_ETAPA[etapa] }} aria-hidden />
           <h2 className="truncate text-sm font-semibold text-tinta">{ETIQUETA_ETAPA[etapa]}</h2>
           <span className="rounded-md bg-placa-2 px-1.5 text-xs tabular-nums text-tinta-2">{numero(items.length)}</span>
-          <span className="ml-auto text-sm font-medium tabular-nums text-tinta">{dinero(valor)}</span>
         </div>
-        {etapa !== "ganada" && etapa !== "perdida" && valor > 0 && (
-          <p className="text-right text-xs tabular-nums text-tinta-2">{dinero(esperado)} esperados</p>
-        )}
+        <p className="flex flex-wrap items-baseline gap-x-1.5 text-xs tabular-nums text-tinta-2">
+          <span className="text-sm font-medium text-tinta">{dinero(valor)}</span>
+          {etapa !== "ganada" && etapa !== "perdida" && valor > 0 && <span>· {dinero(esperado)} esperados</span>}
+        </p>
       </header>
 
       <SortableContext id={etapa} items={items.map((o) => o.id)} strategy={verticalListSortingStrategy}>
@@ -336,7 +336,7 @@ export function Kanban({ filas, etapas }: { filas: OportunidadCompleta[]; etapas
       }}
     >
       <div
-        className="relative -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 md:h-full lg:-mx-8 lg:px-8"
+        className="relative -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 md:h-[calc(100dvh-4.5rem)] md:min-h-[420px] lg:-mx-8 lg:px-8"
         role="region"
         aria-label="Tablero de oportunidades"
       >
