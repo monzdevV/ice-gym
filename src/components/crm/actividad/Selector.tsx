@@ -101,7 +101,7 @@ export function Selector({
               role="combobox"
               aria-expanded={abierto}
               aria-controls={idLista}
-              className={`${caja} focus-visible:border-acento focus-visible:ring-3 focus-visible:ring-acento/20 ${valor ? "pr-14" : ""}`}
+              className={`${caja} focus-visible:border-acento-tinta focus-visible:ring-3 focus-visible:ring-acento-tinta/20 ${valor ? "pr-14" : ""}`}
             >
               {actual?.icono}
               <span className={`min-w-0 flex-1 truncate ${actual ? "text-tinta" : "text-tinta-2"}`}>{actual?.texto ?? placeholder}</span>
@@ -119,7 +119,7 @@ export function Selector({
             </button>
           )}
         </div>
-        <PopoverContent align="start" className="w-(--radix-popover-trigger-width) min-w-64 gap-0 border border-linea bg-placa p-0 text-tinta">
+        <PopoverContent align="start" className="w-(--radix-popover-trigger-width) min-w-64 gap-0 bg-placa p-0 text-tinta shadow-lg">
           <label className="flex items-center gap-2 border-b border-linea px-3">
             <MagnifyingGlass className="size-4 shrink-0 text-tinta-2" aria-hidden />
             <span className="sr-only">Buscar</span>

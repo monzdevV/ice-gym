@@ -165,7 +165,7 @@ export default async function PaginaEmpresa({
           <Dato etiqueta="Alta">{`${fecha(empresa.created_at)} (${relativo(empresa.created_at)})`}</Dato>
           <Dato etiqueta="Última modificación">{fecha(empresa.updated_at)}</Dato>
         </dl>
-        <div className="mt-5 border-t border-linea pt-4">
+        <div className="mt-6">
           <Dato etiqueta="Descripción">
             {empresa.descripcion && <p className="whitespace-pre-line leading-relaxed">{empresa.descripcion}</p>}
           </Dato>
@@ -226,10 +226,10 @@ export default async function PaginaEmpresa({
             </button>
           </NuevoContacto>
         </div>
-        <div className="hidden overflow-x-auto rounded-xl border border-linea bg-placa md:block">
+        <div className="hidden overflow-x-auto rounded-2xl bg-placa shadow-placa md:block">
           <table className="w-full min-w-[860px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-linea text-[0.8125rem] text-tinta-2">
+              <tr className="text-[0.8125rem] text-tinta-2">
                 <th className="py-2.5 pl-4 pr-4 font-normal">Contacto</th>
                 <th className="py-2.5 pr-4 font-normal">Cargo</th>
                 <th className="py-2.5 pr-4 font-normal">Email</th>
@@ -279,7 +279,7 @@ export default async function PaginaEmpresa({
         </div>
         <ul className="grid gap-2 md:hidden">
           {empresa.contactos.map((c) => (
-            <li key={c.id} className="rounded-xl border border-linea bg-placa p-3.5">
+            <li key={c.id} className="rounded-2xl bg-placa p-3.5 shadow-placa">
               <Link href={ruta.contacto(c.id)} className="flex items-center gap-3">
                 <Avatar nombre={c.nombre} apellidos={c.apellidos} url={c.avatar_url} tamano="md" />
                 <span className="min-w-0 flex-1">
@@ -320,14 +320,14 @@ export default async function PaginaEmpresa({
     ) : (
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-stretch justify-between gap-3">
-          <ol className="grid flex-1 grid-cols-3 gap-px overflow-hidden rounded-xl border border-linea bg-linea sm:grid-cols-6" aria-label="Resumen por etapa">
+          <ol className="grid flex-1 grid-cols-3 gap-1 rounded-2xl bg-placa p-1.5 shadow-placa sm:grid-cols-6" aria-label="Resumen por etapa">
             {porEtapa.map(({ e, n, valor }) => (
-              <li key={e} className={`flex flex-col gap-0.5 bg-placa px-3 py-2.5 ${n === 0 ? "opacity-55" : ""}`}>
+              <li key={e} className={`flex flex-col gap-1 rounded-xl px-3 py-2.5 ${n === 0 ? "opacity-55" : ""}`}>
                 <span className="flex items-center gap-1.5 text-xs text-tinta-2">
                   <span className="size-2 rounded-full" style={{ background: TONO_ETAPA[e] }} aria-hidden />
                   {ETIQUETA_ETAPA[e]}
                 </span>
-                <span className="text-sm font-semibold tabular-nums text-tinta">{n}</span>
+                <span className="cifra text-2xl text-tinta">{n}</span>
                 <span className="text-xs tabular-nums text-tinta-2">{dinero(valor)}</span>
               </li>
             ))}
@@ -339,10 +339,10 @@ export default async function PaginaEmpresa({
           </NuevaOportunidad>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-linea bg-placa">
+        <div className="overflow-x-auto rounded-2xl bg-placa shadow-placa">
           <table className="w-full min-w-[980px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-linea text-[0.8125rem] text-tinta-2">
+              <tr className="text-[0.8125rem] text-tinta-2">
                 <th className="py-2.5 pl-4 pr-4 font-normal">Oportunidad</th>
                 <th className="py-2.5 pr-4 font-normal">Tipo</th>
                 <th className="py-2.5 pr-4 font-normal">Etapa</th>
@@ -380,7 +380,7 @@ export default async function PaginaEmpresa({
                         <span className="flex min-w-0 flex-col leading-tight">
                           <span className="truncate text-tinta">{o.proxima_accion ?? "Seguimiento"}</span>
                           {o.proxima_accion_fecha && (
-                            <span className={`text-xs tabular-nums ${vencida ? "font-medium text-alarma-tinta" : "text-tinta-2"}`}>
+                            <span className={`text-xs tabular-nums ${vencida ? "font-medium text-critico" : "text-tinta-2"}`}>
                               {vencida ? "Vencida · " : ""}
                               {fechaCorta(o.proxima_accion_fecha)}
                             </span>
@@ -434,7 +434,7 @@ export default async function PaginaEmpresa({
       </Link>
 
       {/* Cabecera */}
-      <header className="mt-3 flex flex-col gap-4 border-b border-linea pb-5">
+      <header className="mt-3 flex flex-col gap-4 pb-1">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-4">
             <LogoEmpresa nombre={empresa.nombre} url={empresa.logo_url} tamano="lg" />
@@ -499,9 +499,9 @@ export default async function PaginaEmpresa({
       {/* Cifras clave */}
       <dl className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         {kpis.map((c) => (
-          <div key={c.k} className="min-w-0 rounded-xl border border-linea bg-placa px-4 py-3">
+          <div key={c.k} className="min-w-0 rounded-2xl bg-placa px-4 py-3.5 shadow-placa">
             <dt className="text-[0.8125rem] text-tinta-2">{c.k}</dt>
-            <dd className="mt-1 truncate text-xl font-semibold tabular-nums text-tinta">{c.v}</dd>
+            <dd className="cifra mt-1.5 truncate text-[1.75rem] text-tinta">{c.v}</dd>
             <dd className="truncate text-xs text-tinta-2">{c.d}</dd>
           </div>
         ))}
@@ -528,7 +528,7 @@ function TareaMini({ i, ahora }: { i: InteraccionCompleta; ahora: number }) {
       <BadgeInteraccion tipo={i.tipo} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm text-tinta">{i.titulo}</span>
-        <span className={`block text-xs tabular-nums ${vencida ? "font-medium text-alarma-tinta" : "text-tinta-2"}`}>
+        <span className={`block text-xs tabular-nums ${vencida ? "font-medium text-critico" : "text-tinta-2"}`}>
           {vencida ? "Vencida · " : ""}
           {fechaHora(i.fecha)}
           {i.oportunidad && ` · ${i.oportunidad.nombre}`}

@@ -148,7 +148,7 @@ export function SelectorEmpresa({
           ref={lista}
           id={idLista}
           role="listbox"
-          className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-lg border border-linea bg-placa p-1 shadow-lg"
+          className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-xl bg-placa p-1 shadow-lg ring-1 ring-tinta/5"
         >
           {opciones.length === 0 && <li className="px-2.5 py-2 text-sm text-tinta-2">Ninguna empresa con «{texto}».</li>}
           {opciones.map((e, i) => (
@@ -307,7 +307,7 @@ export function CamposContacto({
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-4 rounded-lg border border-linea bg-placa-2/40 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-4 rounded-xl bg-placa-2 px-3 py-2.5">
         <label htmlFor={`${id}-principal`} className="flex min-w-0 flex-col">
           <span className="text-[0.8125rem] font-medium text-tinta">Contacto principal</span>
           <span className="text-xs text-tinta-2">

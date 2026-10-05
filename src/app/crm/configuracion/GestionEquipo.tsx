@@ -48,7 +48,7 @@ function FormularioMiembro({ miembro, alTerminar }: { miembro: Miembro | null; a
   return (
     <form action={accion} className="flex flex-col gap-4">
       {miembro && <input type="hidden" name="id" value={miembro.id} />}
-      <div className="flex items-center gap-3 rounded-lg border border-linea bg-placa-2/50 p-3">
+      <div className="flex items-center gap-3 rounded-xl bg-placa-2 p-3">
         <Avatar nombre={nombre || "?"} apellidos={apellidos} tono={tonoColor(color)} tamano="md" />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-tinta">{nombreCompleto({ nombre: nombre || "Nuevo miembro", apellidos })}</p>
@@ -94,7 +94,7 @@ function FormularioMiembro({ miembro, alTerminar }: { miembro: Miembro | null; a
         <button
           type="button"
           onClick={alTerminar}
-          className="inline-flex h-9 items-center rounded-md border border-linea px-4 text-sm font-medium text-tinta hover:bg-placa-2"
+          className="inline-flex h-9 items-center rounded-md bg-placa-2 px-4 text-sm font-medium text-tinta transition-colors hover:bg-linea"
         >
           Cancelar
         </button>
@@ -152,7 +152,7 @@ export function GestionEquipo({ equipo, emailActual }: { equipo: Miembro[]; emai
           texto="Añade a las personas que llevan empresas, oportunidades y tareas. Usa el mismo email con el que entran al CRM para que funcione «Mis tareas»."
         />
       ) : (
-        <ul className="overflow-hidden rounded-xl border border-linea bg-placa">
+        <ul className="overflow-hidden rounded-2xl bg-placa shadow-placa">
           {lista.map((m) => {
             const yo = !!emailActual && m.email.toLowerCase() === emailActual.toLowerCase();
             return (
@@ -186,7 +186,7 @@ export function GestionEquipo({ equipo, emailActual }: { equipo: Miembro[]; emai
       )}
 
       <Dialog open={editando !== null} onOpenChange={(v) => !v && setEditando(null)}>
-        <DialogContent className="border border-linea bg-placa p-5 text-tinta sm:max-w-md">
+        <DialogContent className="bg-placa p-5 text-tinta shadow-lg sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-tinta">{editando === "nuevo" ? "Añadir al equipo" : "Editar miembro"}</DialogTitle>
             <DialogDescription className="text-tinta-2">Personas que pueden llevar cuentas, oportunidades y tareas.</DialogDescription>

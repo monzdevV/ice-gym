@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { catalogos } from "@/lib/datos/b2b";
 import { listarOportunidades, totalesAbiertas } from "@/lib/datos/oportunidades";
 import { dinero, numero } from "@/lib/formato";
-import { Encabezado, claseBotonPrincipal } from "@/components/crm/Primitivas";
+import { claseBotonPrincipal } from "@/components/crm/Primitivas";
 import { NuevaOportunidad } from "@/components/crm/oportunidades/NuevaOportunidad";
 import { VistaOportunidades } from "@/components/crm/oportunidades/VistaOportunidades";
 import { cuantosFiltros, leerFiltros } from "@/components/crm/oportunidades/filtros";
@@ -28,41 +28,24 @@ export default async function PaginaOportunidades({
   }
 
   const t = totalesAbiertas(filas);
-  const cifra = "font-semibold tabular-nums text-tinta";
 
   return (
-    <main
-      className={`flex flex-col px-4 pb-10 md:pb-4 lg:px-8 ${
-        filtros.vista === "tabla" ? "md:h-[calc(100dvh-3.5rem)]" : ""
-      }`}
-    >
-      <Encabezado
-        titulo="Oportunidades"
-        className="px-0 lg:px-0"
-        meta={
-          <dl className="flex flex-wrap gap-x-5 gap-y-1">
-            <div className="flex items-baseline gap-1.5">
-              <dd className={cifra}>{numero(t.n)}</dd>
-              <dt>abiertas</dt>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <dd className={cifra}>{dinero(t.valor)}</dd>
-              <dt>en pipeline</dt>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <dd className={cifra}>{dinero(t.esperado)}</dd>
-              <dt>valor esperado</dt>
-            </div>
-          </dl>
-        }
-      >
-        <NuevaOportunidad catalogos={cats} />
-      </Encabezado>
-
+    // En escritorio la pantalla queda fija: ocupa justo el alto de la ventana
+    // (aquí no hay barra superior en escritorio) y solo hacen scroll las columnas del Kanban o el cuerpo de la tabla.
+    // En móvil se deja el scroll de página: cabecera + filtros + barra inferior
+    // dejarían el tablero en media pantalla; ahí cada columna ya scrollea por
+    // dentro (max-h) y el tablero se desliza en horizontal con snap.
+    // Crear oportunidades se hace desde «Crear», arriba: un solo botón para todo.
+    <main className="flex flex-col px-4 pb-10 md:h-dvh md:overflow-hidden md:px-8 md:pb-4 md:pt-5">
       <VistaOportunidades
         filas={filas}
         catalogos={cats}
         hayAlguna={hayAlguna}
+        cifras={[
+          { etiqueta: "Abiertas", valor: numero(t.n) },
+          { etiqueta: "Pipeline", valor: dinero(t.valor) },
+          { etiqueta: "Valor esperado", valor: dinero(t.esperado) },
+        ]}
         accionVacia={
           <NuevaOportunidad catalogos={cats}>
             <button type="button" className={`${claseBotonPrincipal} mt-2`}>

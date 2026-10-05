@@ -19,7 +19,7 @@ export function Encabezado({
   return (
     <header className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pb-5 pt-6 ${className}`}>
       <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-tinta">{titulo}</h1>
+        <h1 className="rotulo text-[2rem] text-tinta">{titulo}</h1>
         {meta && <div className="text-sm text-tinta-2">{meta}</div>}
       </div>
       {children && <div className="flex flex-wrap items-center gap-3">{children}</div>}
@@ -28,8 +28,8 @@ export function Encabezado({
 }
 
 /**
- * Sección sin caja: un título condensado y una regla que la separa del resto.
- * La profundidad la dan el espacio y las líneas, nunca una tarjeta.
+ * Sección en placa: se separa del suelo por tono y una sombra suave, sin bordes.
+ * La cabecera no lleva regla: el espacio basta para distinguirla del contenido.
  */
 export function Seccion({
   titulo,
@@ -46,37 +46,38 @@ export function Seccion({
 }) {
   return (
     <section
-      className={`flex min-w-0 flex-col rounded-xl border border-linea bg-placa shadow-[0_1px_2px_rgb(0_0_0/0.04)] ${className}`}
+      className={`flex min-w-0 flex-col rounded-2xl bg-placa shadow-placa ${className}`}
       aria-labelledby={id}
     >
-      <header className="flex items-center gap-3 border-b border-linea px-4 py-3">
+      <header className="flex items-center gap-3 px-5 pb-1 pt-4">
         <h2 id={id} className="text-sm font-semibold text-tinta">
           {titulo}
         </h2>
         <div className="ml-auto flex items-center gap-3">{extra}</div>
       </header>
-      <div className="min-h-0 flex-1 p-4">{children}</div>
+      <div className="min-h-0 flex-1 px-5 pb-5 pt-3">{children}</div>
     </section>
   );
 }
 
-/** Estado del socio: texto con una marca sólida. El impago es una placa de penalización. */
+/** Estado del socio: punto de color + texto. Verde = activo; el impago va en rojo suave. */
 export function EstadoSocioMarca({ estado }: { estado: EstadoSocio }) {
   if (estado === "impago") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-alarma/30 bg-alarma/10 px-2 py-0.5 text-xs font-medium text-alarma-tinta">
-        <span className="size-1.5 rounded-full bg-alarma" aria-hidden />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-critico-suave px-2 py-0.5 text-xs font-semibold text-critico">
+        <span className="size-1.5 shrink-0 rounded-full bg-critico" aria-hidden />
         {ETIQUETA_SOCIO.impago}
       </span>
     );
   }
 
-  const marca = estado === "activo" ? "bg-emerald-500" : estado === "congelado" ? "bg-acento" : "bg-apagado";
+  const marca = estado === "activo" ? "bg-exito" : estado === "congelado" ? "bg-acento-tinta" : "bg-apagado";
+  const fondo = estado === "activo" ? "bg-exito-suave" : estado === "congelado" ? "bg-acento-suave" : "bg-placa-2";
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border border-linea bg-placa px-2 py-0.5 text-xs font-medium ${
-        estado === "activo" ? "text-tinta" : "text-tinta-2"
+      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${fondo} ${
+        estado === "baja" ? "text-tinta-2" : "text-tinta"
       }`}
     >
       <span className={`size-1.5 shrink-0 rounded-full ${marca}`} aria-hidden />
@@ -98,7 +99,7 @@ export function Dorsal({
   const cifras = numero.replace(/^IG-0*/, "");
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-md border border-linea bg-placa-2 font-mono font-medium tabular-nums ${
+      className={`inline-flex shrink-0 items-center justify-center rounded-md bg-placa-2 font-mono font-medium tabular-nums ${
         grande ? "h-12 min-w-16 px-3 text-xl" : "h-7 min-w-11 px-2 text-xs"
       } ${estado === "baja" ? "text-tinta-2 line-through" : "text-tinta"}`}
       title={numero}
@@ -134,12 +135,12 @@ export const claseEnlace =
 
 /** Botón principal. */
 export const claseBotonPrincipal =
-  "inline-flex h-9 items-center justify-center gap-2 rounded-md bg-acento px-4 text-sm font-medium text-sobre-campo shadow-sm transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-acento px-4 text-sm font-semibold text-sobre-campo transition-[background-color,transform] duration-150 ease-out hover:bg-acento/90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50";
 
 /** Campo de formulario. */
 export const claseCampo =
-  "h-9 w-full rounded-md border border-linea bg-placa px-3 text-sm text-tinta shadow-xs outline-none transition-[border-color,box-shadow] placeholder:text-tinta-2 focus:border-acento focus:ring-3 focus:ring-acento/20";
+  "h-9 w-full rounded-lg border border-linea bg-placa px-3 text-sm text-tinta outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-tinta-2 focus:border-acento focus:ring-3 focus:ring-acento/30 aria-invalid:border-critico aria-invalid:ring-critico/20";
 
 /** Error de formulario. */
 export const claseError =
-  "rounded-md border border-alarma/30 bg-alarma/10 px-3 py-2 text-sm font-medium text-alarma-tinta";
+  "rounded-lg bg-critico-suave px-3 py-2 text-sm font-semibold text-critico";

@@ -73,11 +73,11 @@ function Pildora<T extends string>({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={`flex h-8 items-stretch overflow-hidden rounded-lg border bg-placa text-[0.8125rem] transition-colors hover:border-tinta-2/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento ${
-            activa ? "border-acento/50" : "border-linea"
+          className={`flex h-8 items-stretch overflow-hidden rounded-lg text-[0.8125rem] shadow-placa transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta ${
+            activa ? "bg-acento-suave" : "bg-placa hover:bg-placa-2"
           }`}
         >
-          <span className="flex items-center border-r border-linea px-2.5 text-tinta-2">{etiqueta}</span>
+          <span className="flex items-center pl-2.5 text-tinta-2">{etiqueta}</span>
           <span className="flex max-w-40 items-center gap-1.5 px-2.5 font-medium text-tinta">
             <span className="truncate">{actual}</span>
             <CaretDown className="size-3 shrink-0 text-tinta-2" weight="bold" aria-hidden />
@@ -127,10 +127,10 @@ function ChipsTipo({
             role="radio"
             aria-checked={activo}
             onClick={() => onCambio(c.valor)}
-            className={`flex h-8 shrink-0 items-center gap-2 rounded-full border px-3 text-[0.8125rem] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento ${
+            className={`flex h-8 shrink-0 items-center gap-2 rounded-full px-3 text-[0.8125rem] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta ${
               activo
-                ? "border-tinta bg-tinta text-fondo"
-                : "border-linea bg-placa text-tinta hover:border-tinta-2/40"
+                ? "bg-acento-suave text-acento-tinta"
+                : "bg-placa text-tinta shadow-placa hover:bg-placa-2"
             } ${c.n === 0 && !activo ? "opacity-60" : ""}`}
           >
             {c.tono && <span className="size-2 rounded-full" style={{ background: c.tono }} aria-hidden />}
@@ -225,11 +225,11 @@ function Tabla({
   const router = useRouter();
   const props = { filtros, ordenar };
   return (
-    <div className="overflow-hidden rounded-xl border border-linea bg-placa">
+    <div className="overflow-hidden rounded-2xl bg-placa shadow-placa">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
           <thead className="bg-placa">
-            <tr className="border-b border-linea text-[0.8125rem] text-tinta-2">
+            <tr className="text-[0.8125rem] text-tinta-2">
               <Cabecera texto="Empresa" clave={COLUMNAS_ORDENABLES.Empresa} {...props} className="pl-4" />
               <Cabecera texto="Tipo" {...props} />
               <Cabecera texto="Sector" {...props} />
@@ -338,7 +338,7 @@ function Tarjeta({ e, lanzar }: { e: EmpresaConResumen; lanzar: (a: AccionRapida
   return (
     <li
       onClick={(ev) => !esControl(ev) && router.push(ruta.empresa(e.id))}
-      className="group flex cursor-pointer flex-col gap-3 rounded-xl border border-linea bg-placa p-4 transition-colors hover:border-tinta-2/30 active:bg-placa-2"
+      className="group flex cursor-pointer flex-col gap-3 rounded-2xl bg-placa p-4 shadow-placa transition-[background-color,transform] duration-150 hover:bg-placa-2/40 active:scale-[0.99]"
     >
       <div className="flex items-start gap-3">
         <LogoEmpresa nombre={e.nombre} url={e.logo_url} tamano="md" />
@@ -386,7 +386,7 @@ function Tarjeta({ e, lanzar }: { e: EmpresaConResumen; lanzar: (a: AccionRapida
           </li>
         )}
       </ul>
-      <dl className="mt-auto grid grid-cols-3 gap-2 border-t border-linea pt-3 text-center">
+      <dl className="mt-auto grid grid-cols-3 gap-2 rounded-xl bg-placa-2/60 px-2 py-2.5 text-center">
         <div>
           <dt className="text-xs text-tinta-2">Contactos</dt>
           <dd className="font-semibold tabular-nums text-tinta">{e.n_contactos}</dd>
@@ -424,9 +424,9 @@ function Pie({ filas }: { filas: EmpresaConResumen[] }) {
     { k: "Pipeline abierto", v: dinero(suma.abierto) },
   ];
   return (
-    <dl className="grid grid-cols-2 border-t border-linea text-sm sm:grid-cols-4">
-      {celdas.map((c, i) => (
-        <div key={c.k} className={`flex items-baseline gap-2 px-4 py-2.5 ${i > 0 ? "sm:border-l sm:border-linea" : ""}`}>
+    <dl className="grid grid-cols-2 bg-placa-2/50 text-sm sm:grid-cols-4">
+      {celdas.map((c) => (
+        <div key={c.k} className="flex items-baseline gap-2 px-4 py-2.5">
           <dt className="order-2 text-tinta-2">{c.k}</dt>
           <dd className="order-1 font-semibold tabular-nums text-tinta">{c.v}</dd>
         </div>
@@ -516,7 +516,7 @@ export function VistaEmpresas({
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             placeholder="Buscar nombre, web, email, ciudad…"
-            className="h-8 w-full rounded-lg border border-linea bg-placa pl-8 pr-2 text-[0.8125rem] text-tinta outline-none placeholder:text-tinta-2 focus:border-acento focus:ring-2 focus:ring-acento/25"
+            className="h-8 w-full rounded-lg border border-linea bg-placa pl-8 pr-2 text-[0.8125rem] text-tinta outline-none placeholder:text-tinta-2 focus:border-acento-tinta focus:ring-2 focus:ring-acento-tinta/20"
           />
         </label>
         <Pildora
@@ -563,7 +563,7 @@ export function VistaEmpresas({
           type="button"
           onClick={() => cambiar({ dir: filtros.dir === "asc" ? "desc" : "asc" })}
           aria-label={filtros.dir === "asc" ? "Orden ascendente; cambiar a descendente" : "Orden descendente; cambiar a ascendente"}
-          className="grid size-8 place-items-center rounded-lg border border-linea bg-placa text-tinta-2 hover:text-tinta"
+          className="grid size-8 place-items-center rounded-lg bg-placa text-tinta-2 shadow-placa transition-colors hover:bg-placa-2 hover:text-tinta"
         >
           {filtros.dir === "asc" ? <ArrowUp className="size-4" aria-hidden /> : <ArrowDown className="size-4" aria-hidden />}
         </button>
@@ -579,7 +579,7 @@ export function VistaEmpresas({
           </button>
         )}
 
-        <div role="radiogroup" aria-label="Vista" className="ml-auto flex h-8 rounded-lg border border-linea bg-placa p-0.5">
+        <div role="radiogroup" aria-label="Vista" className="ml-auto flex h-8 rounded-lg bg-placa p-0.5 shadow-placa">
           {(
             [
               { v: "tabla", texto: "Tabla", Icono: Rows },
@@ -623,7 +623,7 @@ export function VistaEmpresas({
               }
             />
           ) : (
-            <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-linea px-6 py-12">
+            <div className="flex flex-col items-start gap-3 rounded-2xl bg-placa px-6 py-12 shadow-placa">
               <Buildings className="size-8 text-tinta-2" aria-hidden />
               <p className="text-base font-semibold text-tinta">Aún no hay empresas</p>
               <p className="max-w-md text-sm text-tinta-2">

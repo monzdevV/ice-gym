@@ -61,7 +61,7 @@ export default async function PaginaTareas({
             {vencidas > 0 && (
               <>
                 {" · "}
-                <span className="font-medium tabular-nums text-alarma-tinta">{numero(vencidas)} vencidas</span>
+                <span className="font-medium tabular-nums text-critico">{numero(vencidas)} vencidas</span>
                 {valores.responsable || de === "mias" || valores.prioridad ? " en esta vista" : ""}
               </>
             )}

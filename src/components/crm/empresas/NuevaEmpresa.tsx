@@ -53,7 +53,7 @@ function Formulario({ catalogos, alCrear }: { catalogos: Catalogos; alCrear: () 
           {estado.mensaje}
         </p>
       )}
-      <div className="mt-4 flex items-center justify-end gap-2 border-t border-linea pt-4">
+      <div className="mt-5 flex items-center justify-end gap-2">
         <Enviar />
       </div>
     </form>

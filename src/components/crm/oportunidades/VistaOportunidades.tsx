@@ -6,6 +6,8 @@ import { Kanban as IconoKanban, Table } from "@phosphor-icons/react";
 import type { OportunidadCompleta } from "@/lib/b2b";
 import type { Catalogos } from "@/lib/datos/b2b";
 import { SinDatos } from "@/components/crm/Primitivas";
+import { BotonPaleta } from "@/components/crm/PaletaComandos";
+import { MenuCrear } from "@/components/crm/dashboard/BotonCrear";
 import { ProveedorAcciones } from "./Acciones";
 import { BarraFiltros } from "./BarraFiltros";
 import { Kanban } from "./Kanban";
@@ -21,12 +23,15 @@ export function VistaOportunidades({
   filas,
   catalogos,
   hayAlguna,
+  cifras,
   accionVacia,
 }: {
   filas: OportunidadCompleta[];
   catalogos: Catalogos;
   /** Si existe al menos una oportunidad sin filtros (para el estado vacío). */
   hayAlguna: boolean;
+  /** Totales de lo abierto, para la cabecera. */
+  cifras: { etiqueta: string; valor: string }[];
   accionVacia?: React.ReactNode;
 }) {
   const router = useRouter();
@@ -49,8 +54,20 @@ export function VistaOportunidades({
   return (
     <ProveedorAcciones catalogos={catalogos}>
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="-mx-4 flex items-end gap-4 border-b border-linea px-4 lg:-mx-8 lg:px-8">
-          <nav className="flex gap-1" aria-label="Vista">
+        {/* Cabecera compacta: título y totales a la izquierda, la vista a la derecha. */}
+        <header className="flex flex-wrap items-center gap-x-8 gap-y-3">
+          <h1 className="rotulo text-[1.9rem] text-tinta">Oportunidades</h1>
+          <dl className="flex items-center gap-6">
+            {cifras.map((c) => (
+              <div key={c.etiqueta} className="flex flex-col">
+                <dt className="text-[0.7rem] font-semibold uppercase tracking-[0.06em] text-tinta-2">{c.etiqueta}</dt>
+                <dd className="cifra text-xl text-tinta">{c.valor}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="ml-auto flex items-center gap-2">
+          <nav className="flex rounded-lg bg-placa-2 p-0.5" aria-label="Vista">
             {PESTANAS.map(({ vista, texto, Icono }) => {
               const activa = filtros.vista === vista;
               return (
@@ -59,28 +76,29 @@ export function VistaOportunidades({
                   type="button"
                   onClick={() => cambiar({ vista })}
                   aria-pressed={activa}
-                  className={`relative flex h-10 items-center gap-1.5 px-2.5 text-sm font-medium transition-colors ${
-                    activa ? "text-tinta" : "text-tinta-2 hover:text-tinta"
+                  title={vista === "kanban" ? "Arrastra las tarjetas para cambiar de etapa · clic para vista rápida" : undefined}
+                  className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-[0.8125rem] font-medium transition-[background-color,color,box-shadow] duration-150 ${
+                    activa ? "bg-placa text-tinta shadow-placa" : "text-tinta-2 hover:text-tinta"
                   }`}
                 >
                   <Icono className="size-4" weight={activa ? "fill" : "regular"} aria-hidden />
-                  Vista {texto.toLowerCase()}
-                  {activa && <span className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-tinta" aria-hidden />}
+                  {texto}
                 </button>
               );
             })}
           </nav>
-          {filtros.vista === "kanban" && (
-            <p className="ml-auto hidden pb-2.5 text-xs text-tinta-2 md:block">
-              Arrastra las tarjetas para cambiar de etapa u ordenar · clic para vista rápida
-            </p>
-          )}
-        </div>
+            {/* En escritorio esta fila sustituye a la barra superior. */}
+            <span className="hidden items-center gap-2 md:flex">
+              <BotonPaleta compacto />
+              <MenuCrear />
+            </span>
+          </div>
+        </header>
 
         <BarraFiltros filtros={filtros} cambiar={cambiar} catalogos={catalogos} />
 
         <div
-          className={`min-h-0 flex-1 transition-opacity ${pendiente ? "opacity-70" : ""}`}
+          className={`flex min-h-0 flex-1 flex-col transition-opacity ${pendiente ? "opacity-70" : ""}`}
           aria-busy={pendiente}
         >
           {!hayAlguna ? (

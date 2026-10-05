@@ -24,12 +24,12 @@ import type { Catalogos } from "@/lib/datos/b2b";
 import { ORDENES_CONTACTOS, hayFiltrosActivos, type FiltrosContactos } from "./filtros";
 
 const clasePildora =
-  "flex h-8 items-stretch overflow-hidden rounded-lg border bg-placa text-[0.8125rem] transition-colors hover:border-tinta-2/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento";
+  "flex h-8 items-stretch overflow-hidden rounded-lg text-[0.8125rem] shadow-placa transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta";
 
 function Cuerpo({ etiqueta, texto, activo }: { etiqueta: string; texto: string; activo: boolean }) {
   return (
     <>
-      <span className="flex items-center border-r border-linea px-2.5 text-tinta-2">{etiqueta}</span>
+      <span className="flex items-center pl-2.5 text-tinta-2">{etiqueta}</span>
       <span className={`flex max-w-40 items-center gap-1.5 px-2.5 font-medium ${activo ? "text-acento-tinta" : "text-tinta"}`}>
         <span className="truncate">{texto}</span>
         <CaretDown className="size-3 shrink-0 text-tinta-2" weight="bold" aria-hidden />
@@ -57,7 +57,7 @@ function Pildora({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button type="button" className={`${clasePildora} ${valor && todos !== null ? "border-acento/50" : "border-linea"}`}>
+        <button type="button" className={`${clasePildora} ${valor && todos !== null ? "bg-acento-suave" : "bg-placa hover:bg-placa-2"}`}>
           <Cuerpo etiqueta={etiqueta} texto={actual} activo={!!valor && todos !== null} />
         </button>
       </DropdownMenuTrigger>
@@ -101,7 +101,7 @@ function PildoraEmpresa({
   return (
     <Popover open={abierto} onOpenChange={setAbierto}>
       <PopoverTrigger asChild>
-        <button type="button" className={`${clasePildora} ${valor ? "border-acento/50" : "border-linea"}`}>
+        <button type="button" className={`${clasePildora} ${valor ? "bg-acento-suave" : "bg-placa hover:bg-placa-2"}`}>
           <Cuerpo etiqueta="Empresa" texto={elegida?.nombre ?? "Todas"} activo={!!valor} />
         </button>
       </PopoverTrigger>
@@ -115,7 +115,7 @@ function PildoraEmpresa({
           }}
           placeholder="Buscar empresa…"
           aria-label="Buscar empresa"
-          className="h-8 w-full rounded-md border border-linea bg-placa px-2.5 text-sm text-tinta outline-none placeholder:text-tinta-2 focus:border-acento"
+          className="h-8 w-full rounded-md border border-linea bg-placa px-2.5 text-sm text-tinta outline-none placeholder:text-tinta-2 focus:border-acento-tinta"
         />
         <ul className="max-h-64 overflow-y-auto" role="listbox" aria-label="Empresas">
           <li>
@@ -188,7 +188,7 @@ export function BarraFiltrosContactos({
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           placeholder="Nombre, email, cargo o empresa…"
-          className="h-8 w-full rounded-lg border border-linea bg-placa pl-8 pr-2 text-[0.8125rem] text-tinta outline-none placeholder:text-tinta-2 focus:border-acento focus:ring-2 focus:ring-acento/25"
+          className="h-8 w-full rounded-lg border border-linea bg-placa pl-8 pr-2 text-[0.8125rem] text-tinta outline-none placeholder:text-tinta-2 focus:border-acento-tinta focus:ring-2 focus:ring-acento-tinta/20"
         />
       </label>
 
@@ -272,7 +272,7 @@ export function BarraFiltrosContactos({
           type="button"
           onClick={() => cambiar({ dir: filtros.dir === "asc" ? "desc" : "asc" })}
           aria-label={filtros.dir === "asc" ? "Orden ascendente; cambiar a descendente" : "Orden descendente; cambiar a ascendente"}
-          className="grid size-8 place-items-center rounded-lg border border-linea bg-placa text-tinta-2 transition-colors hover:text-tinta"
+          className="grid size-8 place-items-center rounded-lg bg-placa text-tinta-2 shadow-placa transition-colors hover:bg-placa-2 hover:text-tinta"
         >
           <Dir className="size-4" aria-hidden />
         </button>

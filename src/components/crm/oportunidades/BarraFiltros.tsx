@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { CaretDown, Check, MagnifyingGlass, X } from "@phosphor-icons/react";
+import { CaretDown, Check, FunnelSimple, MagnifyingGlass, X } from "@phosphor-icons/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,15 +25,15 @@ import { LogoEmpresa } from "@/components/crm/b2b/Piezas";
 import { CAMPOS_FECHA, DEFECTO, cuantosFiltros, normalizar, type FiltrosOportunidad } from "./filtros";
 
 const clasePildora = (activa: boolean) =>
-  `flex h-8 items-stretch overflow-hidden rounded-lg border bg-placa text-[0.8125rem] transition-colors hover:border-tinta-2/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento ${
-    activa ? "border-acento/60" : "border-linea"
+  `flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[0.8125rem] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta ${
+    activa ? "bg-acento-suave" : "bg-placa shadow-placa hover:bg-placa-2"
   }`;
 
 function Cara({ etiqueta, valor, activa }: { etiqueta: string; valor: ReactNode; activa: boolean }) {
   return (
     <>
-      <span className="flex items-center border-r border-linea px-2.5 text-tinta-2">{etiqueta}</span>
-      <span className={`flex max-w-40 items-center gap-1.5 px-2.5 font-medium ${activa ? "text-acento-tinta" : "text-tinta"}`}>
+      <span className="text-tinta-2">{etiqueta}</span>
+      <span className={`flex max-w-40 items-center gap-1.5 font-medium ${activa ? "text-acento-tinta" : "text-tinta"}`}>
         <span className="truncate">{valor}</span>
         <CaretDown className="size-3 shrink-0 text-tinta-2" weight="bold" aria-hidden />
       </span>
@@ -318,10 +318,17 @@ export function BarraFiltros({
       extra: catalogos.empresas.find((e) => e.id === c.empresa_id)?.nombre,
     }));
   const n = cuantosFiltros(filtros);
+  // Lo esencial siempre a la vista; empresa, contacto, etapa, fechas y valor,
+  // detrás de «Más filtros» (abierto solo si alguno está en uso).
+  const extras =
+    [filtros.empresa, filtros.contacto, filtros.desde, filtros.hasta, filtros.vmin, filtros.vmax].filter(Boolean).length +
+    (filtros.etapa !== DEFECTO.etapa ? 1 : 0);
+  const [mas, setMas] = useState(false);
+  const verMas = mas || extras > 0;
 
   return (
     <div className="flex flex-wrap items-center gap-2" role="search" aria-label="Filtrar oportunidades">
-      <label className="relative flex h-8 w-full items-center sm:w-60">
+      <label className="relative flex h-8 w-full items-center sm:w-72">
         <span className="sr-only">Buscar oportunidades</span>
         <MagnifyingGlass className="pointer-events-none absolute left-2.5 size-4 text-tinta-2" aria-hidden />
         <input
@@ -329,35 +336,10 @@ export function BarraFiltros({
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           placeholder="Buscar oportunidad, empresa, contacto…"
-          className="h-8 w-full rounded-lg border border-linea bg-placa pl-8 pr-2 text-[0.8125rem] text-tinta outline-none placeholder:text-tinta-2 focus:border-acento focus:ring-2 focus:ring-acento/25"
+          className="h-8 w-full rounded-lg bg-placa pl-8 pr-2 text-[0.8125rem] text-tinta shadow-placa outline-none placeholder:text-tinta-2 focus:ring-2 focus:ring-acento-tinta/40"
         />
       </label>
 
-      <PildoraBusqueda
-        etiqueta="Empresa"
-        valor={filtros.empresa}
-        opciones={empresas}
-        onCambio={(empresa) => cambiar({ empresa, contacto: "" })}
-      />
-      <PildoraBusqueda etiqueta="Contacto" valor={filtros.contacto} opciones={contactos} onCambio={(contacto) => cambiar({ contacto })} />
-      <Pildora
-        etiqueta="Tipo"
-        valor={filtros.tipo}
-        neutro=""
-        opciones={[{ valor: "", texto: "Todos" }, ...TIPOS_OPORTUNIDAD.map((t) => ({ valor: t, texto: ETIQUETA_TIPO_OPORTUNIDAD[t] }))]}
-        onCambio={(tipo) => cambiar({ tipo })}
-      />
-      <Pildora
-        etiqueta="Etapa"
-        valor={filtros.etapa}
-        neutro="todas"
-        opciones={[
-          { valor: "todas", texto: "Todas" },
-          { valor: "abiertas", texto: "Abiertas" },
-          ...ETAPAS.map((e) => ({ valor: e, texto: ETIQUETA_ETAPA[e] })),
-        ]}
-        onCambio={(etapa) => cambiar({ etapa })}
-      />
       <Pildora
         etiqueta="Responsable"
         valor={filtros.responsable}
@@ -376,8 +358,51 @@ export function BarraFiltros({
         opciones={[{ valor: "", texto: "Todas" }, ...PRIORIDADES.map((p) => ({ valor: p, texto: ETIQUETA_PRIORIDAD[p] }))]}
         onCambio={(prioridad) => cambiar({ prioridad })}
       />
-      <PildoraFechas f={filtros} cambiar={cambiar} />
-      <PildoraValor key={`${filtros.vmin}-${filtros.vmax}`} f={filtros} cambiar={cambiar} />
+      <Pildora
+        etiqueta="Tipo"
+        valor={filtros.tipo}
+        neutro=""
+        opciones={[{ valor: "", texto: "Todos" }, ...TIPOS_OPORTUNIDAD.map((t) => ({ valor: t, texto: ETIQUETA_TIPO_OPORTUNIDAD[t] }))]}
+        onCambio={(tipo) => cambiar({ tipo })}
+      />
+      <button
+        type="button"
+        onClick={() => setMas((m) => !m)}
+        aria-expanded={verMas}
+        className={`flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[0.8125rem] font-medium transition-colors duration-150 ${
+          verMas ? "bg-placa-2 text-tinta" : "text-tinta-2 hover:bg-placa-2 hover:text-tinta"
+        }`}
+      >
+        <FunnelSimple className="size-4" aria-hidden />
+        {verMas ? "Menos filtros" : "Más filtros"}
+        {extras > 0 && (
+          <span className="rounded bg-acento px-1 text-[0.7rem] font-semibold leading-4 text-sobre-campo">{extras}</span>
+        )}
+      </button>
+      {verMas && (
+        <>
+        <PildoraBusqueda
+          etiqueta="Empresa"
+          valor={filtros.empresa}
+          opciones={empresas}
+          onCambio={(empresa) => cambiar({ empresa, contacto: "" })}
+        />
+        <PildoraBusqueda etiqueta="Contacto" valor={filtros.contacto} opciones={contactos} onCambio={(contacto) => cambiar({ contacto })} />
+        <Pildora
+          etiqueta="Etapa"
+          valor={filtros.etapa}
+          neutro="todas"
+          opciones={[
+            { valor: "todas", texto: "Todas" },
+            { valor: "abiertas", texto: "Abiertas" },
+            ...ETAPAS.map((e) => ({ valor: e, texto: ETIQUETA_ETAPA[e] })),
+          ]}
+          onCambio={(etapa) => cambiar({ etapa })}
+        />
+        <PildoraFechas f={filtros} cambiar={cambiar} />
+        <PildoraValor key={`${filtros.vmin}-${filtros.vmax}`} f={filtros} cambiar={cambiar} />
+        </>
+      )}
 
       {n > 0 && (
         <button

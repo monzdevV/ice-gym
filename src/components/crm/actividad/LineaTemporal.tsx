@@ -96,7 +96,7 @@ export function IconoInteraccion({ tipo, apagado = false }: { tipo: TipoInteracc
   const Icono = ICONO_INTERACCION[tipo];
   return (
     <span
-      className={`relative z-10 grid size-8 shrink-0 place-items-center rounded-full text-white ring-4 ring-fondo ${apagado ? "opacity-50" : ""}`}
+      className={`relative z-10 grid size-8 shrink-0 place-items-center rounded-full text-sobre-relleno ring-4 ring-fondo ${apagado ? "opacity-50" : ""}`}
       style={{ background: TONO_INTERACCION[tipo] } as CSSProperties}
       title={ETIQUETA_INTERACCION[tipo]}
     >
@@ -155,7 +155,7 @@ function Elemento({
                 <BadgePrioridad prioridad={i.prioridad} />
               )}
               {vencida && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-alarma-tinta">
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-critico">
                   <ClockCountdown className="size-3.5" aria-hidden />
                   Vencida {relativo(i.fecha)}
                 </span>
@@ -173,7 +173,7 @@ function Elemento({
           </div>
           <time
             dateTime={i.fecha}
-            className={`shrink-0 pt-0.5 text-xs tabular-nums ${vencida ? "font-medium text-alarma-tinta" : "text-tinta-2"}`}
+            className={`shrink-0 pt-0.5 text-xs tabular-nums ${vencida ? "font-medium text-critico" : "text-tinta-2"}`}
           >
             {hora(i.fecha)}
           </time>
@@ -220,7 +220,7 @@ export function LineaTemporal({
 
   if (lista.length === 0) {
     return (
-      <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed border-linea px-4 py-8">
+      <div className="flex flex-col items-start gap-3 rounded-2xl bg-placa-2/60 px-4 py-8">
         <p className="text-sm font-medium text-tinta">{vacio}</p>
         <p className="max-w-md text-sm text-tinta-2">
           Anota llamadas, emails, reuniones y notas, o deja una tarea con fecha para no perder el hilo.
@@ -231,8 +231,8 @@ export function LineaTemporal({
   }
 
   const chip = (activo: boolean) =>
-    `inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento ${
-      activo ? "border-tinta bg-tinta text-fondo" : "border-linea bg-placa text-tinta-2 hover:text-tinta"
+    `inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta ${
+      activo ? "bg-acento-suave text-acento-tinta" : "bg-placa-2 text-tinta-2 hover:text-tinta"
     }`;
 
   return (

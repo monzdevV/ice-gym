@@ -36,7 +36,7 @@ export function Logotipo({
   return (
     <span className={`inline-flex items-baseline gap-[0.22em] leading-none ${className}`} aria-label="Ice Gym">
       <span className={`cifra ${ice}`}>ICE</span>
-      <span className={`cifra tracking-[0.12em] ${sobrePlaca ? "text-acento" : "text-acento-tinta"}`}>GYM</span>
+      <span className={`cifra tracking-[0.12em] ${sobrePlaca ? "text-acento" : "text-[var(--marca-gym,var(--acento-tinta))]"}`}>GYM</span>
     </span>
   );
 }

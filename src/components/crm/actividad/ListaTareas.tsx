@@ -51,7 +51,7 @@ function FilaTarea({
   const Icono = ICONO_INTERACCION[t.tipo];
 
   return (
-    <li className="group flex items-start gap-3 border-b border-linea/70 px-4 py-3 last:border-0 hover:bg-placa-2/40">
+    <li className="group flex items-start gap-3 px-4 py-3 transition-colors hover:bg-placa-2/40">
       {t.estado === "cancelada" ? (
         <span className="mt-0.5 size-[18px] shrink-0 rounded-full border-[1.5px] border-dashed border-tinta-2/50" title="Cancelada" />
       ) : (
@@ -87,7 +87,7 @@ function FilaTarea({
         <time
           dateTime={t.fecha}
           className={`inline-flex min-w-16 items-center justify-end gap-1 text-xs tabular-nums ${
-            pasada ? "font-medium text-alarma-tinta" : "text-tinta-2"
+            pasada ? "font-medium text-critico" : "text-tinta-2"
           }`}
         >
           {pasada && <ClockCountdown className="size-3.5" aria-hidden />}
@@ -160,7 +160,7 @@ export function ListaTareas({
 
   return (
     <div className={`flex flex-col gap-4 transition-opacity ${pendiente ? "opacity-80" : ""}`}>
-      <nav className="-mx-4 flex gap-1 overflow-x-auto border-b border-linea px-4 lg:-mx-8 lg:px-8" aria-label="Tareas">
+      <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 lg:-mx-8 lg:px-8" aria-label="Tareas">
         {VISTAS_TAREAS.map((v) => {
           const { texto, Icono } = PESTANAS[v];
           const activa = v === vista;
@@ -175,16 +175,16 @@ export function ListaTareas({
                 activa ? "text-tinta" : "text-tinta-2 hover:text-tinta"
               }`}
             >
-              <Icono className={`size-4 ${v === "vencidas" && n > 0 ? "text-alarma-tinta" : ""}`} weight={activa ? "fill" : "regular"} aria-hidden />
+              <Icono className={`size-4 ${v === "vencidas" && n > 0 ? "text-critico" : ""}`} weight={activa ? "fill" : "regular"} aria-hidden />
               {texto}
               <span
                 className={`min-w-5 rounded-full px-1.5 text-center text-xs tabular-nums ${
-                  v === "vencidas" && n > 0 ? "bg-alarma/15 text-alarma-tinta" : "bg-placa-2 text-tinta-2"
+                  v === "vencidas" && n > 0 ? "bg-critico-suave text-critico" : "bg-placa-2 text-tinta-2"
                 }`}
               >
                 {v === "completadas" && n >= 60 ? "60+" : n}
               </span>
-              {activa && <span className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-tinta" aria-hidden />}
+              {activa && <span className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-acento-tinta" aria-hidden />}
             </button>
           );
         })}
@@ -192,7 +192,7 @@ export function ListaTareas({
 
       <div className="flex flex-wrap items-center gap-2">
         {miembroId && (
-          <div className="flex rounded-lg border border-linea bg-placa-2 p-0.5" role="group" aria-label="Alcance">
+          <div className="flex rounded-lg bg-placa-2 p-0.5" role="group" aria-label="Alcance">
             {(["mias", "todas"] as const).map((d) => (
               <button
                 key={d}
@@ -232,18 +232,18 @@ export function ListaTareas({
       </div>
 
       {actuales.length === 0 ? (
-        <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-linea px-5 py-10">
+        <div className="flex flex-col items-start gap-3 rounded-2xl bg-placa px-5 py-10 shadow-placa">
           <p className="text-sm font-medium text-tinta">{PESTANAS[vista].vacio}</p>
           {vista !== "completadas" && nueva}
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           {grupos.map((g) => (
-            <section key={g.clave} className="overflow-hidden rounded-xl border border-linea bg-placa" aria-label={g.clave === "hoy" ? "Hoy" : etiquetaDia(g.clave)}>
+            <section key={g.clave} className="overflow-hidden rounded-2xl bg-placa shadow-placa" aria-label={g.clave === "hoy" ? "Hoy" : etiquetaDia(g.clave)}>
               {g.clave !== "hoy" && (
                 <h2
-                  className={`flex items-center justify-between border-b border-linea bg-placa-2/50 px-4 py-2 text-xs font-semibold ${
-                    vista === "vencidas" ? "text-alarma-tinta" : "text-tinta-2"
+                  className={`flex items-center justify-between bg-placa-2/60 px-4 py-2 text-xs font-semibold ${
+                    vista === "vencidas" ? "text-critico" : "text-tinta-2"
                   }`}
                 >
                   {vista === "completadas" ? `Completadas · ${etiquetaDia(g.clave)}` : etiquetaDia(g.clave)}

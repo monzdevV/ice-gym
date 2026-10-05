@@ -243,7 +243,7 @@ export function AccionesFicha({ o, catalogos }: { o: OportunidadCompleta; catalo
               type="button"
               onClick={borrar}
               disabled={borrandoAhora}
-              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-alarma px-4 text-sm font-medium text-white hover:brightness-110 disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-critico px-4 text-sm font-medium text-sobre-critico hover:brightness-110 disabled:opacity-50"
             >
               <Trash className="size-4" aria-hidden />
               {borrandoAhora ? "Borrando…" : "Borrar"}

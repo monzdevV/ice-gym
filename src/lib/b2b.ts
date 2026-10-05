@@ -101,7 +101,7 @@ export const TONO_ESTADO_EMPRESA: Catalogo<EstadoEmpresa> = {
   activa: "var(--relleno-verde)",
   en_evaluacion: "var(--relleno-ambar)",
   inactiva: "var(--relleno-gris)",
-  bloqueada: "var(--relleno-rosa)",
+  bloqueada: "var(--relleno-rojo)",
 };
 
 export type Empresa = {
@@ -185,13 +185,23 @@ export const ETIQUETA_ETAPA: Catalogo<Etapa> = {
   ganada: "Ganada",
   perdida: "Perdida",
 };
+/** Marca de etapa (puntos, barras, progreso): tono apagado pero visible. */
 export const TONO_ETAPA: Catalogo<Etapa> = {
+  prospeccion: "var(--tag-gris)",
+  cualificacion: "var(--tag-azul)",
+  propuesta: "var(--tag-violeta)",
+  negociacion: "var(--tag-cian)",
+  ganada: "var(--tag-verde)",
+  perdida: "var(--critico)",
+};
+/** Fondo pastel de la etiqueta de etapa (texto oscuro encima). */
+export const RELLENO_ETAPA: Catalogo<Etapa> = {
   prospeccion: "var(--relleno-gris)",
   cualificacion: "var(--relleno-azul)",
   propuesta: "var(--relleno-violeta)",
-  negociacion: "var(--relleno-ambar)",
+  negociacion: "var(--relleno-cian)",
   ganada: "var(--relleno-verde)",
-  perdida: "var(--relleno-rosa)",
+  perdida: "var(--relleno-rojo)",
 };
 /** Probabilidad por defecto de cada etapa, en %. */
 export const PROBABILIDAD_POR_ETAPA: Record<Etapa, number> = {
@@ -248,7 +258,7 @@ export const DIRECCION_TIPO: Record<TipoOportunidad, "venta" | "compra" | "alian
   otros: "alianza",
 };
 export const TONO_DIRECCION = {
-  venta: "var(--relleno-verde)",
+  venta: "var(--relleno-cian)",
   compra: "var(--relleno-azul)",
   alianza: "var(--relleno-violeta)",
 } as const;
@@ -261,7 +271,7 @@ export const TONO_PRIORIDAD: Catalogo<Prioridad> = {
   baja: "var(--relleno-gris)",
   media: "var(--relleno-azul)",
   alta: "var(--relleno-ambar)",
-  urgente: "var(--relleno-rosa)",
+  urgente: "var(--relleno-rojo)",
 };
 
 export const ESTADOS_OPORTUNIDAD = ["abierta", "en_pausa", "ganada", "perdida"] as const;
@@ -348,11 +358,11 @@ export const ETIQUETA_INTERACCION: Catalogo<TipoInteraccion> = {
   cambio_etapa: "Cambio de etapa",
 };
 export const TONO_INTERACCION: Catalogo<TipoInteraccion> = {
-  llamada: "var(--relleno-verde)",
+  llamada: "var(--relleno-cian)",
   email: "var(--relleno-azul)",
   reunion: "var(--relleno-violeta)",
   nota: "var(--relleno-gris)",
-  tarea: "var(--relleno-ambar)",
+  tarea: "var(--relleno-rosa)",
   seguimiento: "var(--relleno-rosa)",
   cambio_etapa: "var(--relleno-gris)",
 };

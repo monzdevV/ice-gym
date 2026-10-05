@@ -56,7 +56,7 @@ function Fechas({ desde, hasta, cambiar }: { desde: string; hasta: string; cambi
     >
       <PopoverTrigger asChild>
         <button type="button" className={clasePildora}>
-          <span className="flex items-center gap-1.5 border-r border-linea px-2.5 text-tinta-2">
+          <span className="flex items-center gap-1.5 pl-2.5 text-tinta-2">
             <CalendarBlank className="size-3.5" aria-hidden />
             Fechas
           </span>
@@ -66,14 +66,14 @@ function Fechas({ desde, hasta, cambiar }: { desde: string; hasta: string; cambi
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-72 border border-linea bg-placa p-3 text-tinta">
+      <PopoverContent align="start" className="w-72 bg-placa p-3 text-tinta shadow-lg">
         <div className="grid grid-cols-2 gap-1.5">
           {presets.map((p) => (
             <button
               key={p.texto}
               type="button"
               onClick={() => aplicar(p.desde, "")}
-              className="rounded-md border border-linea px-2 py-1.5 text-left text-[0.8125rem] text-tinta transition-colors hover:bg-placa-2"
+              className="rounded-md bg-placa-2 px-2 py-1.5 text-left text-[0.8125rem] text-tinta transition-colors hover:bg-linea"
             >
               {p.texto}
             </button>
@@ -190,7 +190,7 @@ export function FiltrosActividad({
         </button>
       )}
 
-      <div className="ml-auto flex rounded-lg border border-linea bg-placa-2 p-0.5" role="group" aria-label="Vista">
+      <div className="ml-auto flex rounded-lg bg-placa-2 p-0.5" role="group" aria-label="Vista">
         {vistas.map(({ valor, texto, Icono }) => {
           const activa = valores.vista === valor;
           return (

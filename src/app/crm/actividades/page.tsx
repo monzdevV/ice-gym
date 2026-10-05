@@ -62,7 +62,7 @@ export default async function PaginaActividades({
         <NuevaInteraccion catalogos={cat} oportunidades={oportunidades} tipo="tarea">
           <button
             type="button"
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-linea bg-placa px-3 text-sm font-medium text-tinta transition-colors hover:bg-placa-2"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-placa px-3 text-sm font-medium text-tinta shadow-placa transition-colors hover:bg-placa-2"
           >
             Nueva tarea
           </button>

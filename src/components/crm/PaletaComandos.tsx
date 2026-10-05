@@ -322,14 +322,23 @@ export function PaletaComandos() {
 }
 
 /** Botón de búsqueda de la barra superior; `compacto` es sólo la lupa (móvil). */
+/**
+ * Pantallas con cabecera y buscador propios: en escritorio llevan «Crear» y la
+ * búsqueda global en su propia fila y la barra superior desaparece.
+ */
+export const CON_CABECERA_PROPIA = ["/crm/oportunidades"];
+export const tieneCabeceraPropia = (pathname: string) => CON_CABECERA_PROPIA.some((r) => pathname.startsWith(r));
+
 export function BotonPaleta({ compacto = false }: { compacto?: boolean }) {
+  const pathname = usePathname();
   const abrir = () => window.dispatchEvent(new Event(EVENTO_PALETA));
-  if (compacto) {
+  if (compacto || tieneCabeceraPropia(pathname)) {
     return (
       <button
         type="button"
         onClick={abrir}
-        aria-label="Buscar"
+        aria-label="Buscar en todo el CRM (Ctrl K)"
+        title="Buscar en todo el CRM (Ctrl K)"
         className="grid size-8 place-items-center rounded-md text-tinta-2 transition-colors hover:bg-placa-2 hover:text-tinta"
       >
         <MagnifyingGlass className="size-[18px]" aria-hidden />
