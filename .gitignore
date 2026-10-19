@@ -50,3 +50,7 @@ next-env.d.ts
 agente/.env
 agente/.venv/
 !agente/.env.example
+
+# python
+__pycache__/
+*.pyc
