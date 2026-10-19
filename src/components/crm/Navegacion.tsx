@@ -12,6 +12,7 @@ import {
   DotsThreeOutline,
   GearSix,
   Lightning,
+  Receipt,
   SidebarSimple,
   SignOut,
   Target,
@@ -41,6 +42,10 @@ const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
       { href: "/crm/actividades", texto: "Actividades", Icono: Lightning },
       { href: "/crm/tareas", texto: "Tareas", Icono: CheckSquare, contador: "tareas" },
     ],
+  },
+  {
+    titulo: "Administración",
+    secciones: [{ href: "/crm/facturas", texto: "Facturas", Icono: Receipt }],
   },
 ];
 

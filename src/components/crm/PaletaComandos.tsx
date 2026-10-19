@@ -12,6 +12,7 @@ import {
   Lightning,
   MagnifyingGlass,
   Plus,
+  Receipt,
   Target,
   User,
   type Icon,
@@ -158,6 +159,7 @@ export function PaletaComandos() {
       { id: "contactos", grupo: "Ir a", texto: "Contactos", Icono: AddressBook, claves: "personas", ir: ir(ruta.contactos) },
       { id: "actividades", grupo: "Ir a", texto: "Actividades", Icono: Lightning, claves: "historial llamadas reuniones", ir: ir(ruta.actividades) },
       { id: "tareas", grupo: "Ir a", texto: "Tareas", Icono: CheckSquare, claves: "pendientes agenda", ir: ir(ruta.tareas) },
+      { id: "facturas", grupo: "Ir a", texto: "Facturas", Icono: Receipt, claves: "proveedores gastos leer factura subir iva", ir: ir("/crm/facturas") },
       { id: "configuracion", grupo: "Ir a", texto: "Configuración", Icono: GearSix, claves: "ajustes equipo", ir: ir(ruta.configuracion) },
       { id: "web", grupo: "Ir a", texto: "Web pública", Icono: ArrowSquareOut, ir: ir("/") },
     ];
