@@ -25,12 +25,14 @@ export function FormularioAcceso({ siguiente }: { siguiente?: string }) {
       <input type="hidden" name="siguiente" value={siguiente ?? ""} />
 
       <label className="flex flex-col gap-1.5">
-        <span className="condensada text-[0.85rem] text-tinta">Email</span>
+        <span className="condensada text-[0.85rem] text-tinta">Email o usuario</span>
         <input
           name="email"
-          type="email"
+          type="text"
           required
-          autoComplete="email"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
           autoFocus
           placeholder="tu@icegym.com"
           className={claseCampo}

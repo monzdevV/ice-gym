@@ -5,16 +5,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   AddressBook,
+  AirplaneTilt,
   ArrowSquareOut,
   Buildings,
+  CalendarCheck,
   ChartBar,
   CheckSquare,
+  Clock,
   DotsThreeOutline,
+  FileText,
+  Funnel,
   GearSix,
+  Handshake,
+  IdentificationBadge,
   Lightning,
+  ListChecks,
   SidebarSimple,
   SignOut,
+  SlidersHorizontal,
+  Star,
   Target,
+  UsersThree,
   type Icon,
 } from "@phosphor-icons/react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -22,8 +33,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Logotipo } from "@/components/marca/Logotipo";
 import { FilaTema } from "@/components/crm/InterruptorTema";
 import { salir } from "@/app/crm/acciones/sesion";
+import { URL_WEB } from "@/lib/enlaces";
 
-type Contador = "oportunidades" | "tareas";
+type Contador = "oportunidades" | "tareas" | "vacaciones" | "ventas";
 export type Contadores = Record<Contador, number>;
 type Seccion = { href: string; texto: string; corto?: string; Icono: Icon; contador?: Contador };
 
@@ -40,6 +52,27 @@ const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
       { href: "/crm/contactos", texto: "Contactos", Icono: AddressBook },
       { href: "/crm/actividades", texto: "Actividades", Icono: Lightning },
       { href: "/crm/tareas", texto: "Tareas", Icono: CheckSquare, contador: "tareas" },
+    ],
+  },
+  {
+    titulo: "Ventas",
+    secciones: [
+      { href: "/crm/ventas", texto: "Mi flujo", Icono: Funnel },
+      { href: "/crm/ventas/actividades", texto: "Mis actividades", Icono: CalendarCheck, contador: "ventas" },
+      { href: "/crm/ventas/equipos", texto: "Equipos", Icono: UsersThree },
+      { href: "/crm/ventas/clientes", texto: "Clientes", Icono: Handshake },
+      { href: "/crm/ventas/configuracion", texto: "Ajustes de ventas", corto: "Ajustes", Icono: SlidersHorizontal },
+    ],
+  },
+  {
+    titulo: "RRHH",
+    secciones: [
+      { href: "/crm/rrhh/empleados", texto: "Empleados", Icono: IdentificationBadge },
+      { href: "/crm/rrhh/horarios", texto: "Horarios", Icono: Clock },
+      { href: "/crm/rrhh/vacaciones", texto: "Vacaciones", Icono: AirplaneTilt, contador: "vacaciones" },
+      { href: "/crm/rrhh/incorporacion", texto: "Tareas de incorporación", corto: "Incorporación", Icono: ListChecks },
+      { href: "/crm/rrhh/evaluaciones", texto: "Evaluaciones", Icono: Star },
+      { href: "/crm/rrhh/nominas", texto: "Nóminas", Icono: FileText },
     ],
   },
 ];
@@ -247,8 +280,8 @@ export function BarraLateral({
       <div className="mt-auto flex flex-col gap-0.5 px-3 pt-3">
         <Enlace s={CONFIGURACION} on={activa === CONFIGURACION.href} plegado={plegado} />
         <ConPista texto="Web pública" plegado={plegado}>
-          <Link
-            href="/"
+          <a
+            href={URL_WEB}
             aria-label={plegado ? "Web pública" : undefined}
             className={`${claseFila} text-tinta-2 hover:bg-placa-2 hover:text-tinta`}
           >
@@ -256,7 +289,7 @@ export function BarraLateral({
               <ArrowSquareOut className="size-[18px]" aria-hidden />
             </span>
             <span className="etiqueta-menu flex-1 truncate">Web pública</span>
-          </Link>
+          </a>
         </ConPista>
         <FilaTema plegado={plegado} />
 
@@ -362,13 +395,13 @@ export function NavegacionInferior({ contadores }: { contadores: Contadores }) {
             <Grupos contadores={contadores} activa={activa} onNavegar={() => setMas(false)} />
             <div className="flex flex-col gap-0.5 border-t border-linea pt-3">
               <Enlace s={CONFIGURACION} on={activa === CONFIGURACION.href} onClick={() => setMas(false)} />
-              <Link
-                href="/"
+              <a
+                href={URL_WEB}
                 className="flex h-8 items-center gap-2.5 rounded-md px-2.5 text-sm font-medium text-tinta-2 hover:bg-placa-2/60 hover:text-tinta"
               >
                 <ArrowSquareOut className="size-[18px]" aria-hidden />
                 Web pública
-              </Link>
+              </a>
               <FilaTema />
             </div>
           </nav>

@@ -12,6 +12,8 @@ import { DialogosCrear, MenuCrear } from "@/components/crm/dashboard/BotonCrear"
 import { CabeceraApp } from "@/components/crm/CabeceraApp";
 import { ETAPAS_ABIERTAS_B2B } from "@/lib/b2b";
 import { catalogos as cargarCatalogos } from "@/lib/datos/b2b";
+import { contarVacacionesPorAprobar } from "@/lib/datos/rrhh";
+import { contarActividadesVentasUrgentes } from "@/lib/datos/ventas";
 import { salir } from "./acciones/sesion";
 
 // Texto: una grotesca con carácter propio (no la Inter de siempre).
@@ -32,14 +34,16 @@ export default async function LayoutCrm({ children }: { children: React.ReactNod
   if (!user) return <div className={raiz}>{children}</div>;
 
   // Contadores del menú y catálogos del botón «Crear», todo a la vez.
-  const [oportunidades, tareas, catalogos, galletas] = await Promise.all([
+  const [oportunidades, tareas, catalogos, galletas, vacaciones, ventas] = await Promise.all([
     supabase.from("oportunidades").select("id", { count: "exact", head: true }).in("etapa", [...ETAPAS_ABIERTAS_B2B]),
     supabase.from("interacciones").select("id", { count: "exact", head: true }).eq("estado", "pendiente"),
     cargarCatalogos(),
     cookies(),
+    contarVacacionesPorAprobar(),
+    contarActividadesVentasUrgentes(),
   ]);
   const plegado = galletas.get("crm-menu")?.value === "plegado";
-  const contadores = { oportunidades: oportunidades.count ?? 0, tareas: tareas.count ?? 0 };
+  const contadores = { oportunidades: oportunidades.count ?? 0, tareas: tareas.count ?? 0, vacaciones, ventas };
 
   const nombre = String(user.email ?? "").split("@")[0];
 

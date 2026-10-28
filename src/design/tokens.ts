@@ -269,8 +269,6 @@ export function cssTemas() {
   return [
     // El CRM es oscuro por defecto; sólo un "claro" elegido a mano lo aclara.
     `.crm{${crmOscuro}}`,
-    // La landing vive de noche, como sus fotos: siempre oscura.
-    `.landing{${oscuro};color-scheme:dark}`,
     `:root[data-tema="claro"] .crm{${crmClaro}}`,
     `:root{${claro};color-scheme:light}`,
     `@media (prefers-color-scheme: dark){:root:not([data-tema="claro"]){${oscuro};color-scheme:dark}}`,

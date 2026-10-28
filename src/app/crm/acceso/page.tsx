@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { URL_WEB } from "@/lib/enlaces";
 import { FormularioAcceso } from "@/components/crm/FormularioAcceso";
 import { InterruptorTema } from "@/components/crm/InterruptorTema";
 
@@ -38,9 +38,9 @@ export default async function PaginaAcceso({
 
         <p className="mt-6 text-center text-xs text-tinta-2">
           {CENTROS.map((c) => c.nombre).join(" · ")} ·{" "}
-          <Link href="/" className="underline-offset-4 hover:text-tinta hover:underline">
+          <a href={URL_WEB} className="underline-offset-4 hover:text-tinta hover:underline">
             Web pública
-          </Link>
+          </a>
         </p>
       </div>
     </main>

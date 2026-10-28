@@ -4,20 +4,34 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   AddressBook,
+  AirplaneTilt,
   ArrowSquareOut,
   Buildings,
+  CalendarCheck,
   ChartBar,
   CheckSquare,
+  Clock,
+  FileText,
+  Funnel,
   GearSix,
+  Handshake,
+  IdentificationBadge,
   Lightning,
+  ListChecks,
   MagnifyingGlass,
   Plus,
+  SlidersHorizontal,
+  Star,
   Target,
   User,
+  UsersThree,
   type Icon,
 } from "@phosphor-icons/react";
+import { rutaRrhh } from "@/lib/rrhh";
+import { rutaVentas } from "@/lib/ventas";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ResultadoBusqueda } from "@/lib/datos/buscar";
+import { URL_WEB } from "@/lib/enlaces";
 import {
   ETIQUETA_ETAPA,
   ETIQUETA_INTERACCION,
@@ -158,8 +172,19 @@ export function PaletaComandos() {
       { id: "contactos", grupo: "Ir a", texto: "Contactos", Icono: AddressBook, claves: "personas", ir: ir(ruta.contactos) },
       { id: "actividades", grupo: "Ir a", texto: "Actividades", Icono: Lightning, claves: "historial llamadas reuniones", ir: ir(ruta.actividades) },
       { id: "tareas", grupo: "Ir a", texto: "Tareas", Icono: CheckSquare, claves: "pendientes agenda", ir: ir(ruta.tareas) },
+      { id: "ventas-flujo", grupo: "Ir a", texto: "Mi flujo de ventas", Icono: Funnel, claves: "ventas pipeline leads oportunidades kanban", ir: ir(rutaVentas.flujo) },
+      { id: "ventas-actividades", grupo: "Ir a", texto: "Mis actividades de ventas", Icono: CalendarCheck, claves: "ventas actividades llamadas reuniones pendientes", ir: ir(rutaVentas.actividades) },
+      { id: "ventas-equipos", grupo: "Ir a", texto: "Equipos de ventas", Icono: UsersThree, claves: "ventas equipos comerciales", ir: ir(rutaVentas.equipos) },
+      { id: "ventas-clientes", grupo: "Ir a", texto: "Clientes de ventas", Icono: Handshake, claves: "ventas clientes cuentas personas", ir: ir(rutaVentas.clientes) },
+      { id: "ventas-ajustes", grupo: "Ir a", texto: "Ajustes de ventas", Icono: SlidersHorizontal, claves: "ventas etapas etiquetas razones perdida tipos actividad planes", ir: ir(rutaVentas.configuracion) },
+      { id: "rrhh-empleados", grupo: "Ir a", texto: "Empleados", Icono: IdentificationBadge, claves: "rrhh plantilla personal trabajadores", ir: ir(rutaRrhh.empleados) },
+      { id: "rrhh-horarios", grupo: "Ir a", texto: "Horarios", Icono: Clock, claves: "rrhh fichar fichajes entrada salida", ir: ir(rutaRrhh.horarios) },
+      { id: "rrhh-vacaciones", grupo: "Ir a", texto: "Vacaciones", Icono: AirplaneTilt, claves: "rrhh ausencias permisos", ir: ir(rutaRrhh.vacaciones) },
+      { id: "rrhh-incorporacion", grupo: "Ir a", texto: "Tareas de incorporación", Icono: ListChecks, claves: "rrhh onboarding", ir: ir(rutaRrhh.incorporacion) },
+      { id: "rrhh-evaluaciones", grupo: "Ir a", texto: "Evaluaciones", Icono: Star, claves: "rrhh trimestral desempeño", ir: ir(rutaRrhh.evaluaciones) },
+      { id: "rrhh-nominas", grupo: "Ir a", texto: "Nóminas", Icono: FileText, claves: "rrhh sueldo pdf firma", ir: ir(rutaRrhh.nominas) },
       { id: "configuracion", grupo: "Ir a", texto: "Configuración", Icono: GearSix, claves: "ajustes equipo", ir: ir(ruta.configuracion) },
-      { id: "web", grupo: "Ir a", texto: "Web pública", Icono: ArrowSquareOut, ir: ir("/") },
+      { id: "web", grupo: "Ir a", texto: "Web pública", Icono: ArrowSquareOut, ir: () => window.location.assign(URL_WEB) },
     ];
     const palabras = sinTildes(q.trim()).split(/\s+/).filter(Boolean);
     const filtrados = palabras.length

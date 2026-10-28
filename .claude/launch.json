@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "ice-gym",
+      "name": "ice-gym-crm",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3210,
+      "port": 3211,
       "autoPort": true
     }
   ]
