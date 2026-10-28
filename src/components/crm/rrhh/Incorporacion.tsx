@@ -47,7 +47,7 @@ function CamposTarea({ empleadoId, tarea, responsables }: { empleadoId: string; 
     <>
       <input type="hidden" name="empleado_id" value={empleadoId} />
       {tarea && <input type="hidden" name="id" value={tarea.id} />}
-      <CampoRrhh etiqueta="Tarea">
+      <CampoRrhh etiqueta="Tarea" obligatorio>
         <input name="nombre" required minLength={2} defaultValue={tarea?.nombre ?? ""} placeholder="Entregar tarjeta de acceso" className={claseCampo} autoFocus />
       </CampoRrhh>
       <CampoRrhh etiqueta="Descripción">
@@ -73,7 +73,7 @@ function CamposTarea({ empleadoId, tarea, responsables }: { empleadoId: string; 
           <span className="block text-sm font-medium text-tinta">Obligatoria</span>
           <span className="block text-xs text-tinta-2">La incorporación se completa cuando están hechas todas las obligatorias.</span>
         </span>
-        <Switch checked={obligatoria} onCheckedChange={setObligatoria} />
+        <Switch checked={obligatoria} onCheckedChange={setObligatoria} aria-label="Tarea obligatoria" />
       </label>
       <input type="hidden" name="obligatoria" value={obligatoria ? "si" : "no"} />
     </>
@@ -133,7 +133,7 @@ function CamposPaso({ paso }: { paso?: PasoPlantilla }) {
   return (
     <>
       {paso && <input type="hidden" name="id" value={paso.id} />}
-      <CampoRrhh etiqueta="Tarea">
+      <CampoRrhh etiqueta="Tarea" obligatorio>
         <input name="nombre" required minLength={2} defaultValue={paso?.nombre ?? ""} className={claseCampo} autoFocus />
       </CampoRrhh>
       <CampoRrhh etiqueta="Descripción">
@@ -152,7 +152,7 @@ function CamposPaso({ paso }: { paso?: PasoPlantilla }) {
       </div>
       <label className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium text-tinta">Obligatoria</span>
-        <Switch checked={obligatoria} onCheckedChange={setObligatoria} />
+        <Switch checked={obligatoria} onCheckedChange={setObligatoria} aria-label="Paso obligatorio" />
       </label>
       <input type="hidden" name="obligatoria" value={obligatoria ? "si" : "no"} />
     </>

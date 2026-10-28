@@ -124,12 +124,11 @@ function PildoraBusqueda({
             className="h-8 w-full rounded-md border border-linea bg-placa px-2 text-sm text-tinta outline-none focus:border-acento"
           />
         </div>
-        <ul className="max-h-72 overflow-y-auto p-1" role="listbox" aria-label={etiqueta}>
+        <ul className="max-h-72 overflow-y-auto p-1" aria-label={etiqueta}>
           <li>
             <button
               type="button"
-              role="option"
-              aria-selected={!valor}
+              aria-pressed={!valor}
               onClick={() => elegir("")}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-tinta-2 hover:bg-placa-2 focus-visible:bg-placa-2 focus-visible:outline-none"
             >
@@ -141,8 +140,7 @@ function PildoraBusqueda({
             <li key={o.valor}>
               <button
                 type="button"
-                role="option"
-                aria-selected={o.valor === valor}
+                aria-pressed={o.valor === valor}
                 onClick={() => elegir(o.valor)}
                 className="flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-tinta hover:bg-placa-2 focus-visible:bg-placa-2 focus-visible:outline-none"
               >
@@ -153,7 +151,7 @@ function PildoraBusqueda({
               </button>
             </li>
           ))}
-          {visibles.length === 0 && <li className="px-3 py-4 text-center text-sm text-tinta-2">Sin resultados</li>}
+          {visibles.length === 0 && <li role="status" className="px-3 py-4 text-center text-sm text-tinta-2">Sin resultados</li>}
         </ul>
       </PopoverContent>
     </Popover>

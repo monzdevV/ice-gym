@@ -22,25 +22,30 @@ export async function entrar(_anterior: EstadoAccion, formData: FormData): Promi
     const { data } = admin
       ? await admin.from("empleados").select("email").eq("usuario", identificador.toLowerCase()).maybeSingle()
       : { data: null };
-    if (!data) return { ok: false, mensaje: "Usuario o contraseña incorrectos." };
-    email = data.email;
+    // Si el usuario no existe se intenta igualmente con una dirección imposible:
+    // misma respuesta y tiempo parecido, para no revelar qué usuarios existen.
+    email = data?.email ?? `${crypto.randomUUID()}@usuario.invalid`;
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    // Nunca se reenvía el mensaje de Supabase tal cual: «Email not confirmed»
+    // u otros revelarían que la cuenta existe (y van en inglés).
+    const demasiados = error.status === 429 || /rate limit|too many/i.test(error.message);
     return {
       ok: false,
-      mensaje:
-        error.message === "Invalid login credentials"
-          ? "Usuario o contraseña incorrectos."
-          : error.message,
+      mensaje: demasiados
+        ? "Demasiados intentos seguidos. Espera un minuto y vuelve a probar."
+        : "Usuario o contraseña incorrectos. Revisa los dos campos y vuelve a probar.",
     };
   }
 
   revalidatePath("/crm", "layout");
-  redirect(siguiente.startsWith("/crm") ? siguiente : "/crm");
+  // Sólo rutas internas del CRM: nada de «//otro-dominio» ni «/crm.evil».
+  const destinoValido = /^\/crm(\/|\?|$)/.test(siguiente) && !siguiente.includes("//") && !siguiente.includes("\\");
+  redirect(destinoValido ? siguiente : "/crm");
 }
 
 export async function salir() {

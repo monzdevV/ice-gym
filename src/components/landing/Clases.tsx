@@ -67,10 +67,11 @@ export function Clases({ datos }: { datos: DatosLanding }) {
   const porId = useMemo(() => new Map(centros.map((c) => [c.id, c])), [centros]);
   const pestanas = useMemo(
     () => [
-      { id: "todos", etiqueta: "Todos", total: clases.length },
+      { id: "todos", etiqueta: "Todos", ciudad: null as string | null, total: clases.length },
       ...centros.map((c) => ({
         id: c.id,
         etiqueta: codigoCentro(c.slug),
+        ciudad: c.ciudad as string | null,
         total: clases.filter((x) => x.centro_id === c.id).length,
       })),
     ],
@@ -154,7 +155,11 @@ export function Clases({ datos }: { datos: DatosLanding }) {
                         ) : null}
                         <span className="relative flex items-center gap-2">
                           {p.etiqueta}
-                          <span className="cifra text-xs opacity-70">{p.total}</span>
+                          {p.ciudad ? <span className="sr-only"> ({p.ciudad})</span> : null}
+                          <span className="cifra text-xs opacity-80">
+                            {p.total}
+                            <span className="sr-only"> {p.total === 1 ? "clase" : "clases"}</span>
+                          </span>
                         </span>
                       </button>
                     );
@@ -176,7 +181,13 @@ export function Clases({ datos }: { datos: DatosLanding }) {
                 <span className="text-right">Plazas</span>
               </div>
 
-              <div aria-live="polite" className="mt-4 md:mt-0">
+              {/* Anuncio corto al filtrar, en vez de releer toda la lista. */}
+              <p role="status" className="sr-only">
+                {filtradas.length === 0
+                  ? `Sin clases publicadas en ${centroFiltro?.ciudad ?? "este centro"}.`
+                  : `${filtradas.length} ${filtradas.length === 1 ? "clase" : "clases"}${centroFiltro ? ` en ${centroFiltro.ciudad}` : ""}, se muestran ${visibles.length}.`}
+              </p>
+              <div className="mt-4 md:mt-0">
                 {filtradas.length === 0 ? (
                   <p className="border-b border-linea py-10 text-tinta-2">
                     <span className="condensada text-tinta">Sin clases publicadas en {centroFiltro?.ciudad ?? "este centro"}.</span>{" "}
@@ -188,10 +199,9 @@ export function Clases({ datos }: { datos: DatosLanding }) {
                       const relativo =
                         relativos?.hoy === g.clave ? "Hoy" : relativos?.manana === g.clave ? "Mañana" : null;
                       return (
-                        <motion.section
+                        <motion.div
                           key={g.clave}
                           layout={!reducido}
-                          aria-label={`${g.semana} ${g.fecha}`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
@@ -216,7 +226,7 @@ export function Clases({ datos }: { datos: DatosLanding }) {
                               ))}
                             </AnimatePresence>
                           </ul>
-                        </motion.section>
+                        </motion.div>
                       );
                     })}
                   </AnimatePresence>
@@ -302,10 +312,20 @@ function FilaClase({
         <span className="cifra">{clase.plazas} plazas</span>
       </span>
 
-      <span className="cifra hidden text-2xl text-acento-tinta md:block">{codigo}</span>
-      <span className="hidden truncate text-tinta-2 md:block">{clase.sala ?? "—"}</span>
-      <span className="hidden truncate text-tinta-2 md:block">{clase.monitor ?? "—"}</span>
+      <span className="cifra hidden text-2xl text-acento-tinta md:block">
+        <span className="sr-only">Centro </span>
+        {codigo}
+      </span>
+      <span className="hidden truncate text-tinta-2 md:block">
+        <span className="sr-only">Sala: </span>
+        {clase.sala ?? "—"}
+      </span>
+      <span className="hidden truncate text-tinta-2 md:block">
+        <span className="sr-only">Monitor: </span>
+        {clase.monitor ?? "—"}
+      </span>
       <span className="hidden text-right md:block">
+        <span className="sr-only">Dura </span>
         <span className="cifra text-2xl text-tinta">{clase.duracion_min}</span>
         <span className="text-xs text-tinta-2"> min</span>
       </span>

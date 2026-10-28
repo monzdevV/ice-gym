@@ -36,6 +36,8 @@ export function NuevaOportunidad({
   const [abierto, setAbierto] = useState(() => params.get("nueva") === "1");
   // Cada apertura monta un formulario limpio.
   const [vez, setVez] = useState(0);
+  // El error sólo vale para el formulario que lo provocó, no para la siguiente apertura.
+  const [vezEnvio, setVezEnvio] = useState(-1);
 
   const [estado, accion, pendiente] = useActionState(async (prev: Resultado | null, fd: FormData) => {
     const r = await crearOportunidad(prev, fd);
@@ -89,12 +91,12 @@ export function NuevaOportunidad({
             Venta, compra a proveedor, colaboración… Si la empresa o el contacto no existen, créalos aquí mismo.
           </DialogDescription>
         </DialogHeader>
-        <form key={vez} action={accion} className="flex min-h-0 flex-1 flex-col">
+        <form key={vez} action={accion} onSubmit={() => setVezEnvio(vez)} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
             <CamposOportunidad catalogos={catalogos} empresaId={empresaId} contactoId={contactoId} />
           </div>
           <div className="flex flex-col gap-3 border-t border-linea px-5 py-3">
-            {estado?.ok === false && (
+            {estado?.ok === false && vezEnvio === vez && (
               <p role="alert" className={claseError}>
                 {estado.mensaje}
               </p>

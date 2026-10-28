@@ -230,7 +230,7 @@ function Tarjeta({ e, r, comerciales, onEditar }: { e: EquipoVentas; r: ResumenE
     <li
       onClick={(ev) => !esControl(ev) && router.push(flujoDe(e.id))}
       className={`group relative flex cursor-pointer flex-col gap-4 overflow-hidden rounded-2xl bg-placa p-4 pl-5 shadow-placa transition-[background-color,transform] duration-150 hover:bg-placa-2/40 active:scale-[0.99] ${
-        e.activo ? "" : "opacity-60"
+        e.activo ? "" : "border border-dashed border-linea"
       }`}
     >
       <span className="absolute inset-y-0 left-0 w-1.5" style={{ background: tonoColor(e.color) }} aria-hidden />

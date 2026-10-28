@@ -20,15 +20,15 @@ export function TablaNominas({
   enSeccion?: boolean;
 }) {
   return (
-    <MarcoTabla enSeccion={enSeccion} minimo="min-w-[820px]">
+    <MarcoTabla titulo="Nóminas y estado de firma" enSeccion={enSeccion} minimo="min-w-[820px]">
       <thead>
         <tr className={claseCabeceraTabla}>
-          {conEmpleado && <th className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>}
-          <th className={`py-2.5 pr-3 font-normal ${conEmpleado ? "" : "pl-4"}`}>Periodo</th>
-          <th className="py-2.5 pr-3 font-normal">Archivo</th>
-          <th className="py-2.5 pr-3 font-normal">Subida</th>
-          <th className="py-2.5 pr-3 font-normal">Firma</th>
-          <th className="py-2.5 pr-4 text-right font-normal">
+          {conEmpleado && <th scope="col" className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>}
+          <th scope="col" className={`py-2.5 pr-3 font-normal ${conEmpleado ? "" : "pl-4"}`}>Periodo</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Archivo</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Subida</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Firma</th>
+          <th scope="col" className="py-2.5 pr-4 text-right font-normal">
             <span className="sr-only">Acciones</span>
           </th>
         </tr>
@@ -66,7 +66,7 @@ export function TablaNominas({
               </td>
               <td className="py-2.5 pr-4">
                 <span className="flex items-center justify-end gap-2 whitespace-nowrap">
-                  <AbrirNomina id={n.id} />
+                  <AbrirNomina id={n.id} periodo={periodoNomina(n.mes, n.anio)} />
                   {propia && !n.firmada_at && <FirmarNomina nomina={n} />}
                   {esAdmin && !n.firmada_at && <AccionesNomina nomina={n} nombre={nombreEmpleado(persona)} />}
                 </span>

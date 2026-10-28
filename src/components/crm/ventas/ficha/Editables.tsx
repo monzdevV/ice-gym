@@ -229,7 +229,7 @@ export function EstrellasEditables({ n, onCambio, disabled = false }: { n: numbe
           onClick={() => onCambio(n === i ? 0 : i)}
           className="grid size-7 place-items-center rounded-md transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta active:scale-90"
         >
-          <Star className={`size-5 ${i <= visibles ? "text-aviso" : "text-tinta-2/50"}`} weight={i <= visibles ? "fill" : "regular"} aria-hidden />
+          <Star className={`size-5 ${i <= visibles ? "text-aviso" : "text-tinta-2/80"}`} weight={i <= visibles ? "fill" : "regular"} aria-hidden />
         </button>
       ))}
     </span>

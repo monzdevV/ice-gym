@@ -81,7 +81,7 @@ export const TarjetaFactura = forwardRef<
           vinculo.empresa_id ? (
             <Link
               href={`/crm/empresas/${vinculo.empresa_id}`}
-              className="inline-flex items-center gap-1.5 text-acento-tinta underline-offset-4 hover:underline"
+              className="inline-flex items-center gap-1.5 text-acento-tinta underline underline-offset-4 hover:decoration-2"
             >
               <Buildings className="size-4 shrink-0" aria-hidden />
               {vinculo.empresa_nombre ?? "Abrir ficha"}

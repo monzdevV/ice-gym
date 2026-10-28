@@ -23,7 +23,7 @@ function CampoEtiquetas({ valor, onCambio }: { valor: string[]; onCambio: (v: st
       {valor.map((v) => (
         <span key={v} className="inline-flex items-center gap-1 rounded-md bg-placa-2 py-0.5 pl-2 pr-1 text-xs text-tinta">
           {v}
-          <button type="button" onClick={() => onCambio(valor.filter((x) => x !== v))} className="rounded p-0.5 text-tinta-2 hover:text-tinta" aria-label={`Quitar ${v}`}>
+          <button type="button" onClick={() => onCambio(valor.filter((x) => x !== v))} className="grid size-6 place-items-center rounded text-tinta-2 hover:bg-placa hover:text-tinta" aria-label={`Quitar la etiqueta ${v}`}>
             <X className="size-3" weight="bold" aria-hidden />
           </button>
         </span>

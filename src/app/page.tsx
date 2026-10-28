@@ -17,8 +17,14 @@ export default async function Inicio() {
   return (
     <ScrollSuave>
       <div className="landing ruido min-h-dvh bg-fondo text-tinta">
+        <a
+          href="#contenido"
+          className="condensada sr-only z-[60] bg-acento px-5 py-3 text-base tracking-[0.1em] text-sobre-campo focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        >
+          Saltar al contenido
+        </a>
         <Cabecera datos={datos} />
-        <main>
+        <main id="contenido" tabIndex={-1} className="outline-none">
           <Portada datos={datos} />
           <Manifiesto />
           <Instalaciones />

@@ -11,7 +11,7 @@ export default function ErrorCrm({ error, retry }: { error: Error & { digest?: s
 
   return (
     <main className="grid min-h-[60dvh] place-items-center px-4">
-      <div className="flex max-w-md flex-col items-start gap-3 rounded-xl border border-linea bg-placa p-6">
+      <div role="alert" className="flex max-w-md flex-col items-start gap-3 rounded-xl border border-linea bg-placa p-6">
         <WarningCircle className="size-7 text-critico" aria-hidden />
         <h1 className="text-lg font-semibold text-tinta">No se pudieron cargar los datos</h1>
         <p className="text-sm leading-relaxed text-tinta-2">

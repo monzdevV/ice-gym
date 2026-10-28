@@ -188,5 +188,6 @@ export function descargarCsv(nombre: string, filas: string[][]) {
   a.href = url;
   a.download = nombre;
   a.click();
-  URL.revokeObjectURL(url);
+  // Revocar en el mismo tick puede cortar la descarga (Firefox, Safari): se deja un momento.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

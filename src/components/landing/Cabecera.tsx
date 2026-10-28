@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "@phosphor-icons/react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DatosLanding } from "@/lib/datos/publico";
 import { Logotipo } from "@/components/marca/Logotipo";
 import { curva } from "./Movimiento";
@@ -22,6 +22,10 @@ export function Cabecera(_: { datos: DatosLanding }) {
   const [oculta, setOculta] = useState(false);
   const [arriba, setArriba] = useState(true);
   const [abierto, setAbierto] = useState(false);
+  const boton = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  /** Al cerrar con Esc o con el botón, el foco vuelve al botón; al elegir un enlace, va a la sección. */
+  const devolverFoco = useRef(true);
 
   useMotionValueEvent(scrollY, "change", (y) => {
     const previo = scrollY.getPrevious() ?? 0;
@@ -34,9 +38,47 @@ export function Cabecera(_: { datos: DatosLanding }) {
   useEffect(() => {
     bloquearScroll(abierto);
     if (!abierto) return;
-    const alPulsar = (e: KeyboardEvent) => e.key === "Escape" && setAbierto(false);
+    devolverFoco.current = true;
+    const botonMenu = boton.current;
+    // Lo de detrás del menú queda fuera del alcance del teclado y del lector mientras está abierto.
+    const fondo = Array.from(document.querySelectorAll<HTMLElement>(".landing > main, .landing > footer"));
+    fondo.forEach((el) => (el.inert = true));
+    // Foco al primer enlace del menú.
+    const t = requestAnimationFrame(() => menu.current?.querySelector<HTMLElement>("a[href]")?.focus());
+
+    const alPulsar = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setAbierto(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      // Foco atrapado entre el botón de cerrar y los enlaces del menú.
+      const enfocables = [botonMenu, ...Array.from(menu.current?.querySelectorAll<HTMLElement>("a[href]") ?? [])].filter(
+        (el): el is HTMLElement => !!el,
+      );
+      if (!enfocables.length) return;
+      const primero = enfocables[0];
+      const ultimo = enfocables[enfocables.length - 1];
+      const actual = document.activeElement as HTMLElement | null;
+      if (!actual || !enfocables.includes(actual)) {
+        e.preventDefault();
+        primero.focus();
+      } else if (e.shiftKey && actual === primero) {
+        e.preventDefault();
+        ultimo.focus();
+      } else if (!e.shiftKey && actual === ultimo) {
+        e.preventDefault();
+        primero.focus();
+      }
+    };
     window.addEventListener("keydown", alPulsar);
-    return () => window.removeEventListener("keydown", alPulsar);
+    return () => {
+      cancelAnimationFrame(t);
+      window.removeEventListener("keydown", alPulsar);
+      fondo.forEach((el) => (el.inert = false));
+      if (devolverFoco.current) botonMenu?.focus();
+    };
   }, [abierto]);
 
   useEffect(() => () => bloquearScroll(false), []);
@@ -44,6 +86,7 @@ export function Cabecera(_: { datos: DatosLanding }) {
   function ir(e: React.MouseEvent, id: string) {
     e.preventDefault();
     if (abierto) {
+      devolverFoco.current = false;
       setAbierto(false);
       bloquearScroll(false);
       requestAnimationFrame(() => irA(id));
@@ -57,6 +100,8 @@ export function Cabecera(_: { datos: DatosLanding }) {
           arriba && !abierto ? "border-transparent bg-transparent" : "border-linea bg-fondo"
         }`}
         animate={{ y: oculta && !abierto ? "-100%" : "0%" }}
+        // Si el foco de teclado entra en la barra escondida, la barra vuelve a verse.
+        onFocusCapture={() => setOculta(false)}
         transition={{ duration: 0.32, ease: curva }}
       >
         <div className="flex h-16 items-center justify-between gap-6 px-4 sm:px-6 lg:px-10">
@@ -95,6 +140,7 @@ export function Cabecera(_: { datos: DatosLanding }) {
               Reserva tu visita
             </a>
             <button
+              ref={boton}
               type="button"
               onClick={() => setAbierto((v) => !v)}
               aria-expanded={abierto}
@@ -123,9 +169,7 @@ export function Cabecera(_: { datos: DatosLanding }) {
         {abierto && (
           <motion.div
             id="menu-movil"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menú"
+            ref={menu}
             className="fixed inset-0 z-40 flex flex-col bg-fondo px-4 pb-8 pt-24 sm:px-6 md:hidden"
             initial={{ clipPath: "inset(0 0 100% 0)" }}
             animate={{ clipPath: "inset(0 0 0% 0)" }}

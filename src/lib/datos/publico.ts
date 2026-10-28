@@ -37,5 +37,9 @@ export async function datosLanding(): Promise<DatosLanding> {
       .limit(24)
       .returns<ClasePublica[]>(),
   ]);
+  // Si una consulta falla, la landing se pinta sin esa sección, pero que quede rastro en el log.
+  for (const [tabla, r] of [["centros", centros], ["tarifas", tarifas], ["clases", clases]] as const) {
+    if (r.error) console.error(`[landing] no se pudo leer ${tabla}`, r.error);
+  }
   return { centros: centros.data ?? [], tarifas: tarifas.data ?? [], clases: clases.data ?? [] };
 }

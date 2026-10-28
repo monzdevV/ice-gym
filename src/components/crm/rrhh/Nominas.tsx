@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FilePdf, Signature, Trash, UploadSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
@@ -12,6 +12,51 @@ import { CampoRrhh, ConfirmarBorrado, DialogoFormulario, MenuFila } from "./Comu
 import { claseBotonAccionRrhh, claseBotonSecundarioRrhh, claseEnlaceSeccion } from "./Piezas";
 
 const select = `${claseCampo} appearance-none`;
+const MAX_PDF = 10 * 1024 * 1024;
+
+/** Selector del PDF: avisa junto al campo si no es un PDF o pasa de 10 MB, antes de enviarlo. */
+function ArchivoPdf() {
+  const id = useId();
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <label htmlFor={`${id}-pdf`} className="text-[0.8125rem] font-medium text-tinta">
+        Archivo PDF <span className="font-normal text-tinta-2">(obligatorio)</span>
+      </label>
+      <input
+        id={`${id}-pdf`}
+        type="file"
+        name="archivo"
+        required
+        accept="application/pdf,.pdf"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-error` : `${id}-ayuda`}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          const fallo = !f
+            ? null
+            : f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")
+              ? "El archivo no es un PDF. Elige el PDF de la nómina."
+              : f.size > MAX_PDF
+                ? "El PDF pasa de 10 MB. Comprímelo o elige otro."
+                : null;
+          setError(fallo);
+          if (fallo) e.target.value = "";
+        }}
+        className="block w-full text-sm text-tinta file:mr-3 file:h-9 file:rounded-md file:border file:border-linea file:bg-placa file:px-3 file:text-sm file:font-medium file:text-tinta hover:file:bg-placa-2"
+      />
+      {error ? (
+        <span id={`${id}-error`} role="alert" className="text-xs font-medium text-alarma-tinta">
+          {error}
+        </span>
+      ) : (
+        <span id={`${id}-ayuda`} className="text-xs text-tinta-2">
+          Sólo PDF, de hasta 10 MB.
+        </span>
+      )}
+    </div>
+  );
+}
 
 /** Subida del PDF de una nómina (administración). Si el mes ya tiene una sin firmar, la sustituye. */
 export function SubirNomina({ empleados, empleadoId, enlace = false }: { empleados: EmpleadoMini[]; empleadoId?: string; enlace?: boolean }) {
@@ -42,7 +87,7 @@ export function SubirNomina({ empleados, empleadoId, enlace = false }: { emplead
       {empleadoId ? (
         <input type="hidden" name="empleado_id" value={empleadoId} />
       ) : (
-        <CampoRrhh etiqueta="Empleado">
+        <CampoRrhh etiqueta="Empleado" obligatorio>
           <select name="empleado_id" required defaultValue="" className={select}>
             <option value="" disabled>
               Elige a quién
@@ -65,25 +110,17 @@ export function SubirNomina({ empleados, empleadoId, enlace = false }: { emplead
             ))}
           </select>
         </CampoRrhh>
-        <CampoRrhh etiqueta="Año">
+        <CampoRrhh etiqueta="Año" obligatorio>
           <input type="number" name="anio" min={2000} max={2100} required defaultValue={ref.getUTCFullYear()} className={claseCampo} />
         </CampoRrhh>
       </div>
-      <CampoRrhh etiqueta="Archivo PDF">
-        <input
-          type="file"
-          name="archivo"
-          required
-          accept="application/pdf,.pdf"
-          className="block w-full text-sm text-tinta file:mr-3 file:h-9 file:rounded-md file:border file:border-linea file:bg-placa file:px-3 file:text-sm file:font-medium file:text-tinta hover:file:bg-placa-2"
-        />
-      </CampoRrhh>
+      <ArchivoPdf />
     </DialogoFormulario>
   );
 }
 
 /** Abre el PDF en otra pestaña. Si es la propia nómina, queda registrado que se ha visto. */
-export function AbrirNomina({ id, compacto = false }: { id: string; compacto?: boolean }) {
+export function AbrirNomina({ id, compacto = false, periodo }: { id: string; compacto?: boolean; periodo?: string }) {
   const router = useRouter();
   const [pendiente, empezar] = useTransition();
   return (
@@ -93,6 +130,8 @@ export function AbrirNomina({ id, compacto = false }: { id: string; compacto?: b
       onClick={() => {
         // La pestaña se abre ya, dentro del clic, para que el navegador no la bloquee.
         const ventana = window.open("", "_blank");
+        // La pestaña nueva no debe poder controlar esta (tabnabbing).
+        if (ventana) ventana.opener = null;
         empezar(async () => {
           const r = await abrirNomina(id);
           if (r.ok && r.url) {
@@ -109,6 +148,7 @@ export function AbrirNomina({ id, compacto = false }: { id: string; compacto?: b
     >
       <FilePdf className="size-4" aria-hidden />
       {pendiente ? "Abriendo…" : "Ver PDF"}
+      {periodo && <span className="sr-only"> de la nómina de {periodo}</span>}
     </button>
   );
 }
@@ -143,7 +183,7 @@ export function FirmarNomina({ nomina }: { nomina: Pick<Nomina, "id" | "mes" | "
         }}
         className={claseBotonAccionRrhh}
       >
-        <Signature className="size-4" aria-hidden /> Firmar
+        <Signature className="size-4" aria-hidden /> Firmar<span className="sr-only"> la nómina de {periodo}</span>
       </button>
       <Dialog open={abierto} onOpenChange={setAbierto}>
         <DialogContent className="sm:max-w-md">
@@ -162,7 +202,11 @@ export function FirmarNomina({ nomina }: { nomina: Pick<Nomina, "id" | "mes" | "
               </div>
               <AbrirNomina id={nomina.id} compacto />
             </div>
-            {!vista && <p className="text-[0.8125rem] text-tinta-2">Abre el PDF antes de firmarlo. Cuando lo hayas revisado, vuelve aquí.</p>}
+            {!vista && (
+              <p id={`aviso-firma-${nomina.id}`} className="text-[0.8125rem] text-tinta-2">
+                Abre el PDF antes de firmarlo. Cuando lo hayas revisado, vuelve aquí.
+              </p>
+            )}
             <label className={`flex items-start gap-2.5 text-sm ${vista ? "text-tinta" : "text-tinta-2"}`}>
               <input
                 type="checkbox"
@@ -182,7 +226,13 @@ export function FirmarNomina({ nomina }: { nomina: Pick<Nomina, "id" | "mes" | "
             >
               Cancelar
             </button>
-            <button type="button" onClick={firmar} disabled={!vista || !conforme || pendiente} className={claseBotonPrincipal}>
+            <button
+              type="button"
+              onClick={firmar}
+              disabled={!vista || !conforme || pendiente}
+              aria-describedby={!vista ? `aviso-firma-${nomina.id}` : undefined}
+              className={claseBotonPrincipal}
+            >
               <Signature className="size-4" aria-hidden />
               {pendiente ? "Firmando…" : "Firmar nómina"}
             </button>

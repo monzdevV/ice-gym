@@ -11,6 +11,8 @@
   --color-placa: var(--placa);
   --color-placa-2: var(--placa-2);
   --color-linea: var(--linea);
+  /* Borde de campos y controles: ≥ 3:1 sobre la placa (WCAG 1.4.11). */
+  --color-linea-campo: var(--linea-campo, var(--linea));
   --color-tinta: var(--tinta);
   --color-tinta-2: var(--tinta-2);
   --color-acento: var(--acento);
@@ -56,7 +58,7 @@
   --color-accent-foreground: var(--tinta);
   --color-destructive: var(--alarma);
   --color-border: var(--linea);
-  --color-input: var(--linea);
+  --color-input: var(--linea-campo, var(--linea));
   --color-ring: var(--acento-tinta);
 
   --font-sans: var(--font-body);
@@ -126,9 +128,25 @@
     color: var(--sobre-campo);
   }
 
+  /* Foco visible en todo lo interactivo (WCAG 2.4.7 / 2.4.11). Va con
+     !important para ganar a los outline-none de los componentes: el anillo
+     translúcido de shadcn no llega a 3:1 y no puede ser la única señal. */
   :focus-visible {
-    outline: 2px solid var(--acento-tinta);
-    outline-offset: 2px;
+    outline: 2px solid var(--acento-tinta) !important;
+    outline-offset: 2px !important;
+  }
+  /* Destinos de foco programático (contenido principal, diálogos): no son
+     controles, el anillo alrededor de toda la región sólo estorba. */
+  main:focus-visible,
+  #contenido:focus-visible,
+  :is(h1, h2)[tabindex="-1"]:focus-visible,
+  [role="dialog"]:focus-visible {
+    outline: none !important;
+  }
+  /* Opciones de menús y listas: el anillo va por dentro para que el
+     contenedor con scroll no lo recorte. */
+  :is([role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="option"], [role="tab"]):focus-visible {
+    outline-offset: -2px !important;
   }
 
   input,
@@ -312,7 +330,58 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
+}
+
+/* Alto contraste del sistema (Windows): los fondos desaparecen, así que los
+   controles y las placas necesitan un borde real para seguir viéndose. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight !important;
+  }
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="switch"],
+  [role="combobox"],
+  input,
+  select,
+  textarea,
+  [data-slot="button"],
+  [data-slot="badge"] {
+    border: 1px solid ButtonText;
+  }
+  [role="dialog"],
+  [role="menu"],
+  [role="listbox"],
+  [data-slot="popover-content"] {
+    border: 1px solid CanvasText;
+  }
+  [aria-current="page"],
+  [aria-selected="true"],
+  [data-state="checked"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+  .crm .tag {
+    border: 1px solid CanvasText;
+  }
+  svg {
+    forced-color-adjust: auto;
+  }
+}
+
+/* Enlace «Saltar al contenido»: fuera de pantalla hasta que recibe el foco. */
+.saltar-contenido {
+  position: fixed;
+  left: 0.75rem;
+  top: -100px;
+  z-index: 100;
+}
+.saltar-contenido:focus {
+  top: 0.75rem;
 }
 
 /* ---------------------------------------------------------------

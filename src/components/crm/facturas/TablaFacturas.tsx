@@ -51,7 +51,7 @@ function Proveedor({ f }: { f: Factura }) {
       <span className="flex flex-wrap items-center gap-x-2 text-xs text-tinta-2">
         {f.nif && <span className="font-mono">{f.nif}</span>}
         {f.empresa_id && (
-          <Link href={`/crm/empresas/${f.empresa_id}`} className="text-acento-tinta underline-offset-4 hover:underline">
+          <Link href={`/crm/empresas/${f.empresa_id}`} className="text-acento-tinta underline underline-offset-4 hover:decoration-2">
             {f.empresa_nombre ?? "Ficha de la empresa"}
           </Link>
         )}
@@ -142,7 +142,9 @@ function BorrarFactura({ f }: { f: Factura }) {
           <DialogDescription>
             {f.proveedor ? `${f.proveedor}, ` : ""}
             {f.total != null ? `${dineroExacto(f.total)}. ` : ""}
-            Se borran la fila y el archivo original. No se puede deshacer.
+            {f.origen === "crm"
+              ? "Se borran la fila y el archivo original. No se puede deshacer."
+              : "Se borra la fila; el archivo original sigue en la carpeta del servidor. No se puede deshacer."}
           </DialogDescription>
         </DialogHeader>
         {error && (

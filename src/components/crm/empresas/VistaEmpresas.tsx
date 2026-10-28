@@ -114,7 +114,7 @@ function ChipsTipo({
   ];
   return (
     <div
-      role="radiogroup"
+      role="group"
       aria-label="Tipo de empresa"
       className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:px-0"
     >
@@ -124,8 +124,7 @@ function ChipsTipo({
           <button
             key={c.valor}
             type="button"
-            role="radio"
-            aria-checked={activo}
+            aria-pressed={activo}
             onClick={() => onCambio(c.valor)}
             className={`flex h-8 shrink-0 items-center gap-2 rounded-full px-3 text-[0.8125rem] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta ${
               activo
@@ -189,11 +188,12 @@ function Cabecera({
   ordenar: (o: OrdenEmpresa) => void;
   className?: string;
 }) {
-  if (!clave) return <th className={`py-2.5 pr-4 font-normal ${className}`}>{texto}</th>;
+  if (!clave) return <th scope="col" className={`py-2.5 pr-4 font-normal ${className}`}>{texto}</th>;
   const activa = filtros.orden === clave;
   const Flecha = filtros.dir === "asc" ? ArrowUp : ArrowDown;
   return (
     <th
+      scope="col"
       className={`py-2.5 pr-4 font-normal ${className}`}
       aria-sort={activa ? (filtros.dir === "asc" ? "ascending" : "descending") : "none"}
     >
@@ -204,7 +204,14 @@ function Cabecera({
           activa ? "font-medium text-tinta" : ""
         }`}
       >
-        {texto}
+        {texto === "Oport." ? (
+          <>
+            <span aria-hidden>Oport.</span>
+            <span className="sr-only">Oportunidades</span>
+          </>
+        ) : (
+          texto
+        )}
         {activa && <Flecha className="size-3" weight="bold" aria-hidden />}
       </button>
     </th>
@@ -228,6 +235,7 @@ function Tabla({
     <div className="overflow-hidden rounded-2xl bg-placa shadow-placa">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
+          <caption className="sr-only">Empresas. Los botones de las cabeceras ordenan la tabla.</caption>
           <thead className="bg-placa">
             <tr className="text-[0.8125rem] text-tinta-2">
               <Cabecera texto="Empresa" clave={COLUMNAS_ORDENABLES.Empresa} {...props} className="pl-4" />
@@ -241,7 +249,7 @@ function Tabla({
               <Cabecera texto="Oport." clave={COLUMNAS_ORDENABLES.Oport} {...props} className="text-right" />
               <Cabecera texto="Valor" clave={COLUMNAS_ORDENABLES.Valor} {...props} className="text-right" />
               <Cabecera texto="Última actividad" clave={COLUMNAS_ORDENABLES.Actividad} {...props} />
-              <th className="w-12 py-2.5 pr-3 font-normal">
+              <th scope="col" className="w-12 py-2.5 pr-3 font-normal">
                 <span className="sr-only">Acciones</span>
               </th>
             </tr>
@@ -271,6 +279,7 @@ function Tabla({
                           className="block truncate text-[0.8125rem] text-tinta-2 hover:text-tinta hover:underline"
                         >
                           {webLimpia(e.web)}
+                          <span className="sr-only"> (se abre en otra pestaña)</span>
                         </a>
                       ) : (
                         <span className="block text-[0.8125rem] text-tinta-2">Sin web</span>
@@ -310,7 +319,7 @@ function Tabla({
                 <td className="py-2.5 pr-4 text-right tabular-nums text-tinta">{e.n_contactos || <span className="text-tinta-2">0</span>}</td>
                 <td className="py-2.5 pr-4 text-right tabular-nums">
                   <span className="text-tinta">{e.n_oportunidades}</span>
-                  {e.n_abiertas > 0 && <span className="text-xs text-tinta-2"> · {e.n_abiertas} ab.</span>}
+                  {e.n_abiertas > 0 && <span className="text-xs text-tinta-2"> · {e.n_abiertas} <abbr title="abiertas" className="no-underline">ab.</abbr></span>}
                 </td>
                 <td className="py-2.5 pr-4 text-right">
                   <Valor e={e} />
@@ -360,6 +369,7 @@ function Tarjeta({ e, lanzar }: { e: EmpresaConResumen; lanzar: (a: AccionRapida
             <Globe className="size-3.5 shrink-0" aria-hidden />
             <a href={urlWeb(e.web)} target="_blank" rel="noopener noreferrer" className="truncate hover:text-tinta hover:underline">
               {webLimpia(e.web)}
+              <span className="sr-only"> (se abre en otra pestaña)</span>
             </a>
           </li>
         )}
@@ -392,7 +402,7 @@ function Tarjeta({ e, lanzar }: { e: EmpresaConResumen; lanzar: (a: AccionRapida
           <dd className="font-semibold tabular-nums text-tinta">{e.n_contactos}</dd>
         </div>
         <div>
-          <dt className="text-xs text-tinta-2">Oport.</dt>
+          <dt className="text-xs text-tinta-2"><abbr title="Oportunidades" className="no-underline">Oport.</abbr></dt>
           <dd className="font-semibold tabular-nums text-tinta">{e.n_oportunidades}</dd>
         </div>
         <div>
@@ -579,7 +589,7 @@ export function VistaEmpresas({
           </button>
         )}
 
-        <div role="radiogroup" aria-label="Vista" className="ml-auto flex h-8 rounded-lg bg-placa p-0.5 shadow-placa">
+        <div role="group" aria-label="Vista" className="ml-auto flex h-8 rounded-lg bg-placa p-0.5 shadow-placa">
           {(
             [
               { v: "tabla", texto: "Tabla", Icono: Rows },
@@ -591,20 +601,23 @@ export function VistaEmpresas({
               <button
                 key={v}
                 type="button"
-                role="radio"
-                aria-checked={activa}
+                aria-pressed={activa}
                 onClick={() => cambiar({ vista: v })}
                 className={`flex items-center gap-1.5 rounded-md px-2.5 text-[0.8125rem] font-medium transition-colors ${
                   activa ? "bg-placa-2 text-tinta" : "text-tinta-2 hover:text-tinta"
                 }`}
               >
                 <Icono className="size-4" weight={activa ? "fill" : "regular"} aria-hidden />
-                <span className="hidden sm:inline">{t}</span>
+                <span className="sr-only sm:not-sr-only">{t}</span>
               </button>
             );
           })}
         </div>
       </div>
+
+      <p className="sr-only" role="status">
+        {filas.length === 1 ? "1 empresa" : `${numero(filas.length)} empresas`}
+      </p>
 
       <div className={`transition-opacity ${pendiente ? "opacity-70" : ""}`} aria-busy={pendiente}>
         {filas.length === 0 ? (

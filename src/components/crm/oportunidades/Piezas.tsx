@@ -24,11 +24,14 @@ function tonoProbabilidad(p: number) {
 export function Probabilidad({ o, ancho = "w-12" }: { o: Pick<Oportunidad, "etapa" | "probabilidad">; ancho?: string }) {
   const p = probabilidadB2B(o);
   return (
-    <span className="inline-flex items-center gap-1.5" aria-label={`Probabilidad ${p} %`}>
+    <span className="inline-flex items-center gap-1.5">
       <span className={`h-1.5 ${ancho} overflow-hidden rounded-full bg-linea`} aria-hidden>
         <span className="block h-full rounded-full" style={{ width: `${p}%`, backgroundColor: tonoProbabilidad(p) }} />
       </span>
-      <span className="text-xs tabular-nums text-tinta-2">{p}%</span>
+      <span className="text-xs tabular-nums text-tinta-2">
+        <span className="sr-only">Probabilidad </span>
+        {p}%
+      </span>
     </span>
   );
 }

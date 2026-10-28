@@ -82,6 +82,19 @@ const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
   },
 ];
 
+/** Cómo lee el lector de pantalla cada contador: «3 tareas pendientes». */
+const LECTURA: Record<Contador, [string, string]> = {
+  oportunidades: ["oportunidad abierta", "oportunidades abiertas"],
+  tareas: ["tarea pendiente", "tareas pendientes"],
+  vacaciones: ["solicitud de vacaciones por aprobar", "solicitudes de vacaciones por aprobar"],
+  ventas: ["actividad urgente", "actividades urgentes"],
+};
+function leerContador(c: Contador | undefined, n: number | null | undefined) {
+  if (!c || n == null || n <= 0) return "";
+  const [uno, varios] = LECTURA[c];
+  return `${n} ${n === 1 ? uno : varios}`;
+}
+
 const CONFIGURACION: Seccion = { href: "/crm/configuracion", texto: "Configuración", Icono: GearSix };
 const TODAS = [...GRUPOS.flatMap((g) => g.secciones), CONFIGURACION];
 
@@ -129,13 +142,14 @@ function Enlace({
 }) {
   const { href, texto, Icono } = s;
   const hay = n != null && n > 0;
+  const lectura = leerContador(s.contador, n);
   return (
     <ConPista texto={hay ? `${texto} · ${n}` : texto} plegado={plegado}>
       <Link
         href={href}
         onClick={onClick}
         aria-current={on ? "page" : undefined}
-        aria-label={plegado ? texto : undefined}
+        aria-label={plegado ? (lectura ? `${texto}, ${lectura}` : texto) : undefined}
         className={`${claseFila} ${on ? "bg-acento-suave text-tinta" : "text-tinta-2 hover:bg-placa-2 hover:text-tinta"}`}
       >
         <span className="relative grid size-5 shrink-0 place-items-center">
@@ -149,8 +163,8 @@ function Enlace({
               on ? "bg-acento text-sobre-campo" : "bg-placa-2 text-tinta-2"
             }`}
           >
-            {n}
-            <span className="sr-only"> pendientes</span>
+            <span aria-hidden>{n}</span>
+            <span className="sr-only">, {lectura}</span>
           </span>
         )}
       </Link>
@@ -172,12 +186,12 @@ function Grupos({
   return (
     <>
       {GRUPOS.map((g) => (
-        <div key={g.titulo}>
+        <div key={g.titulo} role="group" aria-label={g.titulo}>
           <p
-            className={`mb-1.5 h-4 truncate px-2.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-tinta-2/80 transition-opacity duration-150 ${
+            className={`mb-1.5 h-4 truncate px-2.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-tinta-2 transition-opacity duration-150 ${
               plegado ? "opacity-0" : ""
             }`}
-            aria-hidden={plegado}
+            aria-hidden
           >
             {g.titulo}
           </p>
@@ -340,19 +354,35 @@ export function TituloSeccion() {
   );
 }
 
-function PestanaMovil({ Icono, texto, on, n }: { Icono: Icon; texto: string; on: boolean; n?: number | null }) {
+function PestanaMovil({
+  Icono,
+  texto,
+  on,
+  n,
+  lectura,
+}: {
+  Icono: Icon;
+  texto: string;
+  on: boolean;
+  n?: number | null;
+  lectura?: string;
+}) {
   return (
     <>
       {on && <span className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-acento" aria-hidden />}
       <span className="relative">
         <Icono className="size-[22px]" weight={on ? "fill" : "regular"} aria-hidden />
         {n != null && n > 0 && (
-          <span className="absolute -right-2.5 -top-1.5 min-w-4 rounded-full bg-acento px-1 text-center text-[0.6rem] font-semibold leading-4 tabular-nums text-sobre-campo">
+          <span
+            className="absolute -right-2.5 -top-1.5 min-w-4 rounded-full bg-acento px-1 text-center text-[0.6rem] font-semibold leading-4 tabular-nums text-sobre-campo"
+            aria-hidden
+          >
             {n > 99 ? "99+" : n}
           </span>
         )}
       </span>
       <span className="max-w-full truncate px-0.5 text-[0.68rem] font-medium">{texto}</span>
+      {lectura && <span className="sr-only">, {lectura}</span>}
     </>
   );
 }
@@ -375,7 +405,13 @@ export function NavegacionInferior({ contadores }: { contadores: Contadores }) {
           const on = activa === s.href;
           return (
             <Link key={s.href} href={s.href} aria-current={on ? "page" : undefined} className={`${clase} ${on ? "text-tinta" : "text-tinta-2"}`}>
-              <PestanaMovil Icono={s.Icono} texto={s.corto ?? s.texto} on={on} n={s.contador ? contadores[s.contador] : null} />
+              <PestanaMovil
+                Icono={s.Icono}
+                texto={s.corto ?? s.texto}
+                on={on}
+                n={s.contador ? contadores[s.contador] : null}
+                lectura={leerContador(s.contador, s.contador ? contadores[s.contador] : null)}
+              />
             </Link>
           );
         })}
@@ -384,6 +420,7 @@ export function NavegacionInferior({ contadores }: { contadores: Contadores }) {
           onClick={() => setMas(true)}
           aria-haspopup="dialog"
           aria-expanded={mas}
+          aria-label={enMas ? "Más secciones (estás en una de ellas)" : "Más secciones"}
           className={`${clase} ${enMas ? "text-tinta" : "text-tinta-2"}`}
         >
           <PestanaMovil Icono={DotsThreeOutline} texto="Más" on={enMas} />

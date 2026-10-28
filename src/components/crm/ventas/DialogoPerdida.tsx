@@ -62,21 +62,24 @@ export function DialogoPerdida({
         </DialogHeader>
         <form onSubmit={confirmar} className="flex flex-col gap-3">
           {motivos.length > 0 && (
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Razón de pérdida">
-              {motivos.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMotivo((actual) => (actual === m.id ? null : m.id))}
-                  aria-pressed={motivo === m.id}
-                  className={`h-7 rounded-full border px-2.5 text-xs transition-colors ${
-                    motivo === m.id ? "border-acento bg-acento/10 text-acento-tinta" : "border-linea text-tinta-2 hover:text-tinta"
-                  }`}
-                >
-                  {m.nombre}
-                </button>
-              ))}
-            </div>
+            <fieldset className="flex flex-col gap-1.5">
+              <legend className="mb-1.5 text-[0.8125rem] font-medium text-tinta">Razón de pérdida (opcional)</legend>
+              <div className="flex flex-wrap gap-1.5">
+                {motivos.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setMotivo((actual) => (actual === m.id ? null : m.id))}
+                    aria-pressed={motivo === m.id}
+                    className={`h-7 rounded-full border px-2.5 text-xs transition-colors ${
+                      motivo === m.id ? "border-acento bg-acento/10 text-acento-tinta" : "border-linea text-tinta-2 hover:text-tinta"
+                    }`}
+                  >
+                    {m.nombre}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
           )}
           <label className="flex flex-col gap-1.5">
             <span className="text-[0.8125rem] font-medium text-tinta">Nota de cierre</span>

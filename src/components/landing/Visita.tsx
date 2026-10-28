@@ -15,6 +15,11 @@ const INICIAL: EstadoVisita = { ok: null, mensaje: "" };
 
 const sinMarca = (nombre: string) => nombre.replace(/^Ice Gym\s+/i, "");
 
+/** Ref estable: el foco se pone una sola vez, cuando el elemento aparece. */
+const enfocarAlMontar = (el: HTMLElement | null) => {
+  el?.focus({ preventScroll: true });
+};
+
 export function Visita({ datos }: { datos: DatosLanding }) {
   const { centros, tarifas } = datos;
   const [centroId, setCentroId] = useState("");
@@ -131,7 +136,7 @@ function Fachada({ centros, centroId }: { centros: DatosLanding["centros"]; cent
       </motion.div>
 
       {/* Marcador de centros: el elegido se enciende. */}
-      <div className="absolute inset-x-0 bottom-0 bg-fondo/80 px-4 py-5 md:px-8 md:py-7" aria-hidden>
+      <div className="absolute inset-x-0 bottom-0 bg-fondo/90 px-4 py-5 md:px-8 md:py-7" aria-hidden>
         <div className="flex items-end justify-between gap-4">
           <div className="flex items-end gap-3 md:gap-5">
             {centros.map((c) => {
@@ -140,7 +145,7 @@ function Fachada({ centros, centroId }: { centros: DatosLanding["centros"]; cent
                 <span
                   key={c.id}
                   className={`cifra transition-[color,font-size] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-                    activo ? "text-[clamp(3rem,7vw,5.5rem)] text-acento-tinta" : "text-[clamp(1.4rem,2.6vw,2rem)] text-tinta-2/60"
+                    activo ? "text-[clamp(3rem,7vw,5.5rem)] text-acento-tinta" : "text-[clamp(1.4rem,2.6vw,2rem)] text-tinta-2"
                   }`}
                 >
                   {codigoCentro(c.slug)}
@@ -192,16 +197,13 @@ function Formulario({
 }) {
   const [estado, accion, enviando] = useActionState(pedirVisita, INICIAL);
   const formRef = useRef<HTMLFormElement>(null);
-  const confirmRef = useRef<HTMLHeadingElement>(null);
   const reducido = useReducedMotion();
   const errores = estado.errores ?? {};
 
-  // Tras responder el servidor: foco al primer campo con error, o a la confirmación.
+  // Tras responder el servidor: foco al primer campo con error. (La confirmación toma el foco
+  // al montarse, con su ref: con AnimatePresence en "wait" aparece después de la salida del formulario.)
   useEffect(() => {
-    if (estado.ok === true) {
-      confirmRef.current?.focus({ preventScroll: true });
-      return;
-    }
+    if (estado.ok === true) return;
     const primero = Object.keys(estado.errores ?? {})[0];
     if (primero) formRef.current?.querySelector<HTMLElement>(`[name="${primero}"]`)?.focus();
   }, [estado]);
@@ -232,7 +234,9 @@ function Formulario({
             >
               <Check weight="bold" className="size-7" aria-hidden />
             </motion.span>
-            <p className="condensada text-sm tracking-[0.2em] text-tinta-2">Solicitud recibida</p>
+            <p className="condensada text-sm tracking-[0.2em] text-tinta-2" aria-hidden>
+              Solicitud recibida
+            </p>
           </div>
 
           <div className="mt-8 overflow-hidden">
@@ -248,10 +252,11 @@ function Formulario({
           </div>
 
           <h3
-            ref={confirmRef}
+            ref={enfocarAlMontar}
             tabIndex={-1}
             className="rotulo mt-6 text-[clamp(2rem,5vw,3.5rem)] text-tinta outline-none"
           >
+            <span className="sr-only">Solicitud recibida. </span>
             Te esperamos en {estado.centro || "tu centro"}
           </h3>
           <p className="mt-4 max-w-[46ch] text-base text-tinta-2">
@@ -277,6 +282,7 @@ function Formulario({
           exit={{ opacity: 0, height: 0, transition: { duration: 0.5, ease: curva } }}
         >
           <h3 className="condensada text-sm tracking-[0.2em] text-tinta-2">Pide tu visita</h3>
+          <p className="mt-2 text-sm text-tinta-2">Los campos marcados como «Obligatorio» hay que rellenarlos.</p>
 
           {/* Honeypot: invisible para personas, tentador para bots. */}
           <div className="absolute -left-[9999px] size-px overflow-hidden" aria-hidden>
@@ -376,7 +382,7 @@ type PropsControl = {
 };
 
 const CONTROL =
-  "peer block w-full appearance-none rounded-none border-0 border-b border-linea bg-transparent px-0 py-3 text-base text-tinta outline-none transition-colors duration-300 placeholder:text-tinta-2/50 focus:border-acento-tinta aria-[invalid=true]:border-alarma-tinta md:text-lg [color-scheme:dark] [&>option]:bg-placa [&>option]:text-tinta";
+  "peer block w-full appearance-none rounded-none border-0 border-b border-tinta-2 bg-transparent px-0 py-3 text-base text-tinta transition-colors duration-300 placeholder:text-tinta-2/50 focus:border-acento-tinta aria-[invalid=true]:border-alarma-tinta md:text-lg [color-scheme:dark] [&>option]:bg-placa [&>option]:text-tinta";
 
 function Campo({
   nombre,
@@ -408,9 +414,11 @@ function Campo({
       viewport={{ once: true, margin: "0px 0px -8% 0px" }}
       transition={{ duration: 0.7, ease: curva, delay: indice * 0.05 }}
     >
-      <label htmlFor={id} className="condensada flex items-baseline justify-between text-xs tracking-[0.18em] text-tinta-2">
+      <label htmlFor={id} className="condensada flex items-baseline justify-between text-sm tracking-[0.16em] text-tinta-2">
         {etiqueta}
-        {opcional && <span className="font-sans text-[11px] font-normal normal-case tracking-normal text-tinta-2/70">Opcional</span>}
+        <span className="font-sans text-xs font-normal normal-case tracking-normal text-tinta-2">
+          {opcional ? "Opcional" : "Obligatorio"}
+        </span>
       </label>
       <div className="relative">
         {children({
@@ -467,7 +475,7 @@ function Consentimiento({ error }: { error?: string }) {
             required
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? idError : undefined}
-            className="peer size-6 cursor-pointer appearance-none rounded-none border border-linea bg-transparent outline-none transition-colors duration-150 checked:border-acento checked:bg-acento focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acento-tinta aria-[invalid=true]:border-alarma-tinta"
+            className="peer size-6 cursor-pointer appearance-none rounded-none border border-tinta-2 bg-transparent outline-none transition-colors duration-150 checked:border-acento checked:bg-acento focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acento-tinta aria-[invalid=true]:border-alarma-tinta"
           />
           <Check
             weight="bold"
@@ -476,7 +484,8 @@ function Consentimiento({ error }: { error?: string }) {
           />
         </span>
         <span className="text-sm leading-relaxed text-tinta-2">
-          Acepto que Ice Gym use estos datos solo para contactarme sobre mi visita. Puedo pedir que los borren cuando quiera.
+          Acepto que Ice Gym use estos datos solo para contactarme sobre mi visita. Puedo pedir que los borren cuando quiera.{" "}
+          <span className="text-tinta">(Obligatorio)</span>
         </span>
       </label>
       {error && (

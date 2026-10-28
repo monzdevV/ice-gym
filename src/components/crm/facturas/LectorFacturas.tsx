@@ -90,6 +90,8 @@ export function LectorFacturas({ guardadas }: { guardadas: Factura[] }) {
       intento.current = null;
       router.refresh();
     } else {
+      // Si el servidor ha quitado el original del bucket, Reintentar lo vuelve a subir.
+      if (r.archivoBorrado && intento.current) intento.current = { ...intento.current, ruta: null };
       setErrorAgente(r.mensaje);
       setAnuncio("");
       setFase("error");
@@ -100,7 +102,9 @@ export function LectorFacturas({ guardadas }: { guardadas: Factura[] }) {
     const fallo = validarArchivo(archivo);
     setErrorArchivo(fallo);
     if (fallo || !esTipoFactura(archivo.type)) {
-      setAnuncio(fallo ?? "");
+      // Se vacía antes para que el lector lo anuncie aunque el mensaje se repita.
+      setAnuncio("");
+      requestAnimationFrame(() => setAnuncio(fallo ?? ""));
       return;
     }
 
@@ -121,8 +125,12 @@ export function LectorFacturas({ guardadas }: { guardadas: Factura[] }) {
       .upload(ruta, archivo, { contentType: archivo.type, upsert: false });
 
     if (error) {
-      setPasos((p) => ({ ...p, disco: { estado: "error", detalle: `No se pudo subir: ${error.message}` } }));
-      setErrorAgente("El archivo no llegó al almacenamiento, así que Claude no lo ha leído. Vuelve a intentarlo.");
+      setPasos((p) => ({ ...p, disco: { estado: "error", detalle: "No se pudo subir el archivo." } }));
+      setErrorAgente(
+        /exceed|size|large/i.test(error.message)
+          ? "El archivo pesa demasiado para el almacén (máximo 10 MB). Reduce la foto o el PDF."
+          : "El archivo no llegó al almacenamiento, así que Claude no lo ha leído. Comprueba la conexión y pulsa Reintentar.",
+      );
       setAnuncio("");
       setFase("error");
       return;
@@ -135,7 +143,7 @@ export function LectorFacturas({ guardadas }: { guardadas: Factura[] }) {
 
   function reintentar() {
     const i = intento.current;
-    if (!i) return;
+    if (!i || fase === "trabajando") return;
     setErrorAgente(null);
     setFase("trabajando");
     if (i.ruta) {

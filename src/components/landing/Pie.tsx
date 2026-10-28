@@ -100,7 +100,7 @@ export function Pie({ datos }: { datos: DatosLanding }) {
             © <span className="cifra">{new Date().getFullYear()}</span> Ice Gym · Madrid, Barcelona y Valencia
           </p>
           <div className="flex items-center gap-6">
-            <Link href="/crm" className="inline-flex min-h-11 items-center text-xs text-tinta-2/70 transition-colors hover:text-tinta">
+            <Link href="/crm" className="inline-flex min-h-11 items-center text-sm text-tinta-2 underline underline-offset-4 transition-colors hover:text-tinta">
               Acceso equipo
             </Link>
             <button

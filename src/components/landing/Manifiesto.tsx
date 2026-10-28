@@ -11,7 +11,8 @@ import {
   useVelocity,
   type MotionValue,
 } from "motion/react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { Pause, Play } from "@phosphor-icons/react";
 
 /** Frase del manifiesto. La palabra marcada con * se enciende en azul hielo. */
 const FRASE =
@@ -30,7 +31,8 @@ export function Manifiesto() {
   return (
     <section aria-label="Manifiesto" className="relative overflow-hidden bg-fondo py-28 md:py-44">
       <div ref={ref} className="mx-auto max-w-[1400px] px-4 md:px-10">
-        <p className="rotulo text-[clamp(2.6rem,7.4vw,8.5rem)] leading-[0.92]" aria-label={FRASE.replace("*", "")}>
+        <p className="rotulo text-[clamp(2.6rem,7.4vw,8.5rem)] leading-[0.92]">
+          <span className="sr-only">{FRASE.replace("*", "")}</span>
           {palabras.map((cruda, i) => {
             const clave = cruda.startsWith("*");
             const palabra = clave ? cruda.slice(1) : cruda;
@@ -86,8 +88,12 @@ function envolver(min: number, max: number, v: number) {
   return ((((v - min) % rango) + rango) % rango) + min;
 }
 
-/** Marquesina infinita y lenta; acelera y cambia de sentido con la velocidad del scroll. */
+/**
+ * Marquesina infinita y lenta; acelera y cambia de sentido con la velocidad del scroll.
+ * Se mueve sola más de 5 s, así que lleva botón de pausa (WCAG 2.2.2).
+ */
 function Marquesina({ reducido }: { reducido: boolean }) {
+  const [pausada, setPausada] = useState(false);
   const base = useMotionValue(0);
   const { scrollY } = useScroll();
   const velocidad = useSpring(useVelocity(scrollY), { damping: 50, stiffness: 400 });
@@ -96,7 +102,7 @@ function Marquesina({ reducido }: { reducido: boolean }) {
   const x = useTransform(base, (v) => `${envolver(-50, 0, v)}%`);
 
   useAnimationFrame((_, delta) => {
-    if (reducido) return;
+    if (reducido || pausada) return;
     const f = factor.get();
     if (f < 0) sentido.current = 1;
     else if (f > 0) sentido.current = -1;
@@ -120,14 +126,26 @@ function Marquesina({ reducido }: { reducido: boolean }) {
     ));
 
   return (
-    <div aria-hidden className="mt-24 border-y border-linea py-5 md:mt-36 md:py-7">
-      <motion.div
-        className="flex w-max whitespace-nowrap text-[clamp(3.5rem,9vw,9rem)] leading-none will-change-transform"
-        style={{ x }}
-      >
-        {serie(0)}
-        {serie(1)}
-      </motion.div>
+    <div className="relative mt-24 md:mt-36">
+      <div aria-hidden className="overflow-hidden border-y border-linea py-5 md:py-7">
+        <motion.div
+          className="flex w-max whitespace-nowrap text-[clamp(3.5rem,9vw,9rem)] leading-none will-change-transform"
+          style={{ x }}
+        >
+          {serie(0)}
+          {serie(1)}
+        </motion.div>
+      </div>
+      {!reducido && (
+        <button
+          type="button"
+          onClick={() => setPausada((v) => !v)}
+          className="condensada mt-3 ml-auto mr-4 flex min-h-11 items-center gap-2 px-2 text-sm tracking-[0.14em] text-tinta-2 transition-colors hover:text-tinta md:mr-10"
+        >
+          {pausada ? <Play weight="bold" aria-hidden className="size-4" /> : <Pause weight="bold" aria-hidden className="size-4" />}
+          {pausada ? "Mover la cinta" : "Parar la cinta"}
+        </button>
+      )}
     </div>
   );
 }

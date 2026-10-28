@@ -90,8 +90,8 @@ export function Portada({ datos }: { datos: DatosLanding }) {
         </motion.div>
       </motion.div>
 
-      {/* Oscurecido sólido para que el texto se lea; más denso a la izquierda en escritorio. */}
-      <div aria-hidden className="absolute inset-0 bg-fondo/60" />
+      {/* Oscurecido sólido para que el texto se lea (≥ 4,5:1 aun sobre la zona más clara de la foto). */}
+      <div aria-hidden className="absolute inset-0 bg-fondo/70" />
       <div aria-hidden className="absolute inset-y-0 left-0 hidden w-[55%] bg-fondo/35 lg:block" />
 
       <motion.div
@@ -99,7 +99,7 @@ export function Portada({ datos }: { datos: DatosLanding }) {
         style={reducido ? undefined : { y: textoY, opacity: textoOpacidad }}
       >
         <motion.p
-          className="condensada mb-5 flex items-center gap-3 text-sm tracking-[0.22em] text-tinta-2"
+          className="condensada mb-5 flex items-center gap-3 text-sm tracking-[0.22em] text-tinta"
           initial={{ opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: curva, delay: 0.15 }}
@@ -163,7 +163,7 @@ export function Portada({ datos }: { datos: DatosLanding }) {
                 e.preventDefault();
                 irA("tarifas");
               }}
-              className="condensada inline-flex min-h-13 items-center border-b border-linea px-1 text-lg tracking-[0.1em] text-tinta transition-colors duration-150 hover:border-acento active:scale-[0.97]"
+              className="condensada inline-flex min-h-13 items-center border-b-2 border-tinta/60 px-1 text-lg tracking-[0.1em] text-tinta transition-colors duration-150 hover:border-acento active:scale-[0.97]"
             >
               Ver tarifas
             </a>
@@ -206,15 +206,16 @@ export function Portada({ datos }: { datos: DatosLanding }) {
         type="button"
         onClick={() => irA("instalaciones")}
         aria-label="Bajar a instalaciones"
-        className="absolute bottom-24 right-4 z-10 hidden size-11 items-center justify-center text-tinta-2 transition-colors hover:text-tinta sm:right-6 md:flex lg:right-10"
+        className="absolute bottom-24 right-4 z-10 hidden size-11 items-center justify-center text-tinta transition-colors hover:text-tinta sm:right-6 md:flex lg:right-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.7, delay: pausaTitulo + 1.1 }}
       >
         <motion.span
           className="flex"
+          // Dos rebotes y para: nada se mueve solo más de 5 s (WCAG 2.2.2).
           animate={reducido ? undefined : { y: [0, 6, 0] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 1.6, repeat: 2, ease: "easeInOut", delay: pausaTitulo + 1.1 }}
         >
           <ArrowDown size={22} weight="light" aria-hidden />
         </motion.span>

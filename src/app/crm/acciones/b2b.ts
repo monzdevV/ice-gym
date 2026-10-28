@@ -83,9 +83,6 @@ export async function crearContacto(_: Resultado | null, fd: FormData): Promise<
   const principal = textoDe(fd, "principal") === "on" || textoDe(fd, "principal") === "true";
 
   const supabase = await createClient();
-  if (principal && empresaId) {
-    await supabase.from("contactos").update({ principal: false }).eq("empresa_id", empresaId);
-  }
   const { data, error } = await supabase
     .from("contactos")
     .insert({
@@ -100,13 +97,20 @@ export async function crearContacto(_: Resultado | null, fd: FormData): Promise<
       pais: textoDe(fd, "pais") || "España",
       tipo: incluye(TIPOS_CONTACTO, tipo) ? tipo : "otro",
       rol: nulo(textoDe(fd, "rol")),
-      principal,
+      // Sin empresa no puede ser «principal» de nadie.
+      principal: principal && !!empresaId,
       responsable_id: nulo(textoDe(fd, "responsable_id")),
       notas: nulo(textoDe(fd, "notas")),
     })
     .select("id")
     .single();
   if (error) return { ok: false, mensaje: `No se pudo crear el contacto: ${error.message}` };
+
+  // Sólo un principal por empresa: se quita a los demás una vez creado el nuevo,
+  // así un alta fallida no deja la empresa sin principal.
+  if (principal && empresaId) {
+    await supabase.from("contactos").update({ principal: false }).eq("empresa_id", empresaId).neq("id", data.id);
+  }
 
   refrescar("/crm/contactos", "/crm/oportunidades");
   if (empresaId) revalidatePath(`/crm/empresas/${empresaId}`);

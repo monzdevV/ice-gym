@@ -16,9 +16,9 @@ import { Antetitulo, curva, Revelar, TituloPartido } from "./Movimiento";
 type Foto = { src: string; alt: string; posicion: string };
 
 const FOTOS: Foto[] = [
-  { src: "/landing/fachada-frontal.jpg", alt: "Fachada de Ice Gym de noche, con la entrada iluminada en azul", posicion: "50% 50%" },
-  { src: "/landing/fachada-esquina.jpg", alt: "Esquina del edificio de Ice Gym iluminada de noche", posicion: "50% 50%" },
-  { src: "/landing/sala-funcional.jpg", alt: "Sala de entrenamiento funcional con kettlebells y balones medicinales", posicion: "22% 50%" },
+  { src: "/landing/fachada-frontal.jpg", alt: "Fachada acristalada de Ice Gym al anochecer: rótulo luminoso sobre la entrada y, detrás del cristal, cintas y máquinas de musculación", posicion: "50% 50%" },
+  { src: "/landing/fachada-esquina.jpg", alt: "Edificio de dos plantas de Ice Gym en una esquina, con rótulos iluminados y la sala de bicis visible tras los ventanales", posicion: "50% 50%" },
+  { src: "/landing/sala-funcional.jpg", alt: "Zona funcional del centro con pista de césped, balones medicinales, kettlebells y esterillas", posicion: "22% 50%" },
 ];
 
 const FOTO_POR_CODIGO: Record<string, number> = { CHA: 0, POB: 1, RUZ: 2 };
@@ -100,7 +100,8 @@ function useEstados(centros: Centro[]) {
 
 function EstadoApertura({ estado, montado }: { estado: Estado | null | undefined; montado: boolean }) {
   return (
-    <p className="condensada flex min-h-5 items-center gap-2 text-sm text-tinta-2" aria-live="polite">
+    // Sin aria-live: se recalcula cada minuto y el lector lo leería sin que nadie lo pida.
+    <p className="condensada flex min-h-5 items-center gap-2 text-sm text-tinta-2">
       {montado && estado ? (
         <motion.span
           className="flex items-center gap-2"
@@ -165,7 +166,7 @@ function PanelImagen({ centros, activo, previo }: { centros: Centro[]; activo: n
           </motion.div>
         );
       })}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-4 bg-fondo/80 px-5 py-4">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-4 bg-fondo/90 px-5 py-4">
         <span className="condensada text-sm tracking-[0.2em] text-tinta-2">Centro</span>
         <span className="cifra text-5xl text-tinta">{codigoCentro(centros[activo]?.slug)}</span>
       </div>

@@ -22,7 +22,10 @@ import { moverOportunidad, type Resultado } from "./b2b";
 
 const nulo = (v: string) => (v === "" ? null : v);
 const numeroDe = (fd: FormData, campo: string) => {
-  const v = textoDe(fd, campo).replace(",", ".");
+  // Admite «1.234,56» y «1234.56»: con coma, los puntos son de miles.
+  const crudo = textoDe(fd, campo).replace(/\s|€|%/g, "");
+  const miles = crudo.includes(",") || /^\d{1,3}(\.\d{3})+$/.test(crudo);
+  const v = miles ? crudo.replace(/\./g, "").replace(",", ".") : crudo;
   if (v === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
@@ -189,8 +192,10 @@ export async function guardarNotas(id: string, notas: string): Promise<Resultado
  */
 export async function borrarOportunidad(id: string): Promise<Resultado> {
   const supabase = await createClient();
-  await supabase.from("interacciones").delete().eq("oportunidad_id", id).eq("tipo", "cambio_etapa");
-  await supabase.from("interacciones").update({ oportunidad_id: null }).eq("oportunidad_id", id);
+  const limpieza = await supabase.from("interacciones").delete().eq("oportunidad_id", id).eq("tipo", "cambio_etapa");
+  if (limpieza.error) return { ok: false, mensaje: `No se pudo borrar: ${limpieza.error.message}` };
+  const desvincular = await supabase.from("interacciones").update({ oportunidad_id: null }).eq("oportunidad_id", id);
+  if (desvincular.error) return { ok: false, mensaje: `No se pudo borrar: ${desvincular.error.message}` };
   const { error } = await supabase.from("oportunidades").delete().eq("id", id);
   if (error) return { ok: false, mensaje: `No se pudo borrar: ${error.message}` };
   refrescar();

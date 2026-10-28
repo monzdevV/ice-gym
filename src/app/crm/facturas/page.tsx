@@ -13,8 +13,11 @@ export default async function PaginaFacturas() {
   const facturas = await listarFacturas();
 
   // El bucket es privado: cada original se abre con una URL firmada y temporal.
+  // Las de origen «carpeta» guardan una ruta del disco del servidor, no del bucket: no tienen enlace.
   const firmadas = await Promise.all(
-    facturas.map(async (f) => [f.id, f.archivo ? await urlFirmadaFactura(f.archivo) : null] as const),
+    facturas.map(
+      async (f) => [f.id, f.origen === "crm" && f.archivo ? await urlFirmadaFactura(f.archivo) : null] as const,
+    ),
   );
   const urls = Object.fromEntries(firmadas) as Record<number, string | null>;
 

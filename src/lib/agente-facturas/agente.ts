@@ -166,15 +166,26 @@ export async function ejecutarAgente(archivo: ArchivoFactura): Promise<Resultado
       throw new Error(`Claude ha tardado más de ${TIMEOUT_MS / 1000} s en responder. Prueba otra vez.`);
     }
     if (e instanceof Anthropic.APIConnectionError) throw new Error("No se pudo conectar con Claude. Revisa la conexión a internet.");
+    if (e instanceof Anthropic.NotFoundError) {
+      throw new Error(`El modelo «${modelo}» no existe o la clave no tiene acceso. Revisa ANTHROPIC_MODEL en .env.local.`);
+    }
     if (e instanceof Anthropic.APIError) {
-      if (e.status === 413) throw new Error("El archivo es demasiado grande para mandarlo a Claude.");
-      throw new Error(`Claude ha devuelto un error (${e.status ?? "?"}): ${e.message}.`);
+      if (e.status === 413) throw new Error("El archivo es demasiado grande para mandarlo a Claude. Reduce la foto o el PDF.");
+      if (e.status === 529 || e.status === 503) throw new Error("Claude está saturado ahora mismo. Espera un minuto y pulsa Reintentar.");
+      if (e.status === 400) {
+        throw new Error("Claude no ha podido abrir el archivo. Comprueba que la foto se ve bien o que el PDF no tiene contraseña y prueba otra vez.");
+      }
+      if ((e.status ?? 0) >= 500) throw new Error("Claude ha tenido un fallo interno. Pulsa Reintentar en un momento.");
+      throw new Error(`Claude ha devuelto un error (${e.status ?? "?"}). Pulsa Reintentar; si se repite, avisa a quien mantiene el CRM.`);
     }
     throw e;
   }
 
   if (respuesta.stop_reason === "refusal") {
     throw new Error("Claude se ha negado a leer este archivo.");
+  }
+  if (respuesta.stop_reason === "max_tokens") {
+    throw new Error("Claude se ha quedado sin espacio antes de terminar de leer la factura. Prueba otra vez.");
   }
 
   const llamada = respuesta.content.find(

@@ -88,7 +88,7 @@ export default async function LayoutCrm({ children }: { children: React.ReactNod
             </div>
           </CabeceraApp>
 
-          <div id="contenido" className="flex-1 pb-20 md:pb-0">
+          <div id="contenido" tabIndex={-1} className="flex-1 pb-20 md:pb-0">
             {children}
           </div>
         </div>

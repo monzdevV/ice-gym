@@ -199,13 +199,14 @@ export function Cifras({ datos }: { datos: DatosLanding }) {
               animate={marcadorVisto ? { opacity: 1, y: 0 } : undefined}
               transition={{ duration: 0.7, ease: curva, delay: i * 0.06 }}
             >
-              <dd className="order-1">
-                <Contador cifra={c} activo={marcadorVisto} />
-              </dd>
+              {/* dt antes que dd en el HTML (lo pide <dl>); el orden visual lo pone CSS. */}
               <dt className="order-2 flex items-baseline justify-between gap-3 border-t border-linea pt-3">
                 <span className="condensada text-base tracking-[0.12em] text-tinta">{c.etiqueta}</span>
                 {c.nota && <span className="condensada text-xs tracking-[0.12em] text-tinta-2">{c.nota}</span>}
               </dt>
+              <dd className="order-1">
+                <Contador cifra={c} activo={marcadorVisto} />
+              </dd>
             </motion.div>
           ))}
         </dl>

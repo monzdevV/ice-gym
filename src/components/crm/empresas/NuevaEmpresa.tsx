@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
-import { useFormStatus } from "react-dom";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "@phosphor-icons/react";
 import { toast } from "sonner";
@@ -17,10 +16,10 @@ import { crearEmpresa, type Resultado } from "@/app/crm/acciones/b2b";
 import { ruta } from "@/lib/b2b";
 import type { Catalogos } from "@/lib/datos/b2b";
 import { claseBotonPrincipal, claseError } from "@/components/crm/Primitivas";
+import { useFormularioAccion } from "@/components/crm/b2b/useFormularioAccion";
 import { CamposEmpresa } from "./CamposEmpresa";
 
-function Enviar() {
-  const { pending } = useFormStatus();
+function Enviar({ pending }: { pending: boolean }) {
   return (
     <button type="submit" disabled={pending} className={claseBotonPrincipal}>
       {pending ? "Creando…" : "Crear empresa"}
@@ -30,7 +29,7 @@ function Enviar() {
 
 function Formulario({ catalogos, alCrear }: { catalogos: Catalogos; alCrear: () => void }) {
   const router = useRouter();
-  const [estado, accion] = useActionState<Resultado | null, FormData>(crearEmpresa, null);
+  const { estado, onSubmit, pendiente } = useFormularioAccion<Resultado>(crearEmpresa);
 
   const tratado = useRef<Resultado | null>(null);
 
@@ -44,7 +43,7 @@ function Formulario({ catalogos, alCrear }: { catalogos: Catalogos; alCrear: () 
   }, [estado, router, alCrear]);
 
   return (
-    <form action={accion} className="flex min-h-0 flex-col">
+    <form onSubmit={onSubmit} className="flex min-h-0 flex-col">
       <div className="max-h-[65dvh] overflow-y-auto px-1 pb-2">
         <CamposEmpresa equipo={catalogos.equipo} />
       </div>
@@ -54,7 +53,7 @@ function Formulario({ catalogos, alCrear }: { catalogos: Catalogos; alCrear: () 
         </p>
       )}
       <div className="mt-5 flex items-center justify-end gap-2">
-        <Enviar />
+        <Enviar pending={pendiente} />
       </div>
     </form>
   );

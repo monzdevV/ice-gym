@@ -10,6 +10,9 @@ import type { Resultado } from "./b2b";
 
 const nulo = (v: string) => (v === "" ? null : v);
 
+/** Con RLS, un update o delete sin permiso no da error: simplemente no toca ninguna fila. */
+const SIN_FILA = "No se ha guardado: la empresa ya no existe o no tienes permiso para cambiarla.";
+
 function refrescar(id?: string) {
   revalidatePath("/crm");
   revalidatePath("/crm/empresas");
@@ -25,7 +28,7 @@ export async function actualizarEmpresa(_: Resultado | null, fd: FormData): Prom
   const estado = textoDe(fd, "estado");
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("empresas")
     .update({
       nombre,
@@ -44,8 +47,10 @@ export async function actualizarEmpresa(_: Resultado | null, fd: FormData): Prom
       responsable_id: nulo(textoDe(fd, "responsable_id")),
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) return { ok: false, mensaje: `No se pudo guardar: ${error.message}` };
+  if (!data?.length) return { ok: false, mensaje: SIN_FILA };
 
   refrescar(id);
   revalidatePath("/crm/oportunidades");
@@ -56,11 +61,13 @@ export async function actualizarEmpresa(_: Resultado | null, fd: FormData): Prom
 export async function cambiarEstadoEmpresa(id: string, estado: EstadoEmpresa): Promise<Resultado> {
   if (!incluye(ESTADOS_EMPRESA, estado)) return { ok: false, mensaje: "Estado no válido." };
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("empresas")
     .update({ estado, updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) return { ok: false, mensaje: `No se pudo cambiar: ${error.message}` };
+  if (!data?.length) return { ok: false, mensaje: SIN_FILA };
   refrescar(id);
   return { ok: true, mensaje: "Estado actualizado." };
 }
@@ -68,8 +75,9 @@ export async function cambiarEstadoEmpresa(id: string, estado: EstadoEmpresa): P
 /** Borra la empresa. Sus contactos y oportunidades se quedan sin empresa; su actividad se borra. */
 export async function borrarEmpresa(id: string): Promise<Resultado> {
   const supabase = await createClient();
-  const { error } = await supabase.from("empresas").delete().eq("id", id);
+  const { data, error } = await supabase.from("empresas").delete().eq("id", id).select("id");
   if (error) return { ok: false, mensaje: `No se pudo borrar: ${error.message}` };
+  if (!data?.length) return { ok: false, mensaje: "No se ha borrado: la empresa ya no existe o no tienes permiso para borrarla." };
   refrescar();
   revalidatePath("/crm/oportunidades");
   revalidatePath("/crm/contactos");
@@ -80,11 +88,13 @@ export async function guardarNotasEmpresa(_: Resultado | null, fd: FormData): Pr
   const id = textoDe(fd, "id");
   if (!id) return { ok: false, mensaje: "Falta la empresa." };
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("empresas")
     .update({ notas: nulo(textoDe(fd, "notas")), updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) return { ok: false, mensaje: `No se pudieron guardar las notas: ${error.message}` };
+  if (!data?.length) return { ok: false, mensaje: SIN_FILA };
   refrescar(id);
   return { ok: true, mensaje: "Notas guardadas." };
 }
@@ -92,18 +102,21 @@ export async function guardarNotasEmpresa(_: Resultado | null, fd: FormData): Pr
 /** Marca un contacto como principal de su empresa (y desmarca al resto). */
 export async function marcarContactoPrincipal(empresaId: string, contactoId: string): Promise<Resultado> {
   const supabase = await createClient();
+  // Primero el nuevo: si falla (ya no es de la empresa, sin permiso) no se deja a la empresa sin principal.
+  const { data, error } = await supabase
+    .from("contactos")
+    .update({ principal: true })
+    .eq("id", contactoId)
+    .eq("empresa_id", empresaId)
+    .select("id");
+  if (error) return { ok: false, mensaje: `No se pudo cambiar: ${error.message}` };
+  if (!data?.length) return { ok: false, mensaje: "Ese contacto ya no pertenece a la empresa o no tienes permiso para cambiarlo." };
   const quitar = await supabase
     .from("contactos")
     .update({ principal: false })
     .eq("empresa_id", empresaId)
     .neq("id", contactoId);
-  if (quitar.error) return { ok: false, mensaje: `No se pudo cambiar: ${quitar.error.message}` };
-  const { error } = await supabase
-    .from("contactos")
-    .update({ principal: true })
-    .eq("id", contactoId)
-    .eq("empresa_id", empresaId);
-  if (error) return { ok: false, mensaje: `No se pudo cambiar: ${error.message}` };
+  if (quitar.error) return { ok: false, mensaje: `No se pudo quitar el principal anterior: ${quitar.error.message}` };
   refrescar(empresaId);
   revalidatePath("/crm/contactos");
   revalidatePath(`/crm/contactos/${contactoId}`);

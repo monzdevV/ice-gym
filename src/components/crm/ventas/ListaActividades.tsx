@@ -10,7 +10,7 @@ import { cancelarActividadVentas, hechaYSiguiente, marcarActividadHecha } from "
 import type { Miembro } from "@/lib/b2b";
 import {
   ETIQUETA_PLAZO,
-  TONO_PLAZO,
+  TINTA_PLAZO,
   hoyISO,
   plazoDe,
   rutaVentas,
@@ -122,12 +122,13 @@ export function ListaActividades({
       <ul className="flex flex-col divide-y divide-linea/70">
         {actividades.map((a) => {
           const plazo = plazoDe(a.vence, hoy);
+          const nombre = a.resumen || a.tipo?.nombre || "actividad";
           return (
             <li key={a.id} className="flex items-start gap-3 py-2.5">
               <IconoActividad icono={a.tipo?.icono} plazo={plazo} className="mt-0.5" />
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
-                  <span className="font-semibold" style={{ color: TONO_PLAZO[plazo] }}>
+                  <span className="font-semibold" style={{ color: TINTA_PLAZO[plazo] }}>
                     {textoPlazo(a.vence, hoy)}
                     <span className="sr-only"> ({ETIQUETA_PLAZO[plazo]})</span>
                   </span>
@@ -156,7 +157,7 @@ export function ListaActividades({
               </span>
               <span className="flex shrink-0 items-center">
                 <MarcarHecha a={a} />
-                <button type="button" onClick={() => setEditando(a)} className={claseIcono} aria-label="Editar actividad" title="Editar">
+                <button type="button" onClick={() => setEditando(a)} className={claseIcono} aria-label={`Editar: ${nombre}`} title="Editar">
                   <PencilSimple className="size-4" aria-hidden />
                 </button>
                 <button
@@ -164,7 +165,7 @@ export function ListaActividades({
                   onClick={() => cancelar(a)}
                   disabled={pendiente}
                   className={`${claseIcono} hover:text-critico`}
-                  aria-label="Cancelar actividad"
+                  aria-label={`Cancelar: ${nombre}`}
                   title="Cancelar"
                 >
                   <X className="size-4" weight="bold" aria-hidden />

@@ -26,16 +26,20 @@ export function Campo({
   children,
   className = "",
   htmlFor,
+  obligatorio = false,
 }: {
   etiqueta: string;
   children: React.ReactNode;
   className?: string;
   htmlFor?: string;
+  /** Lo dice con palabras, no sólo con un asterisco. */
+  obligatorio?: boolean;
 }) {
   return (
     <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
       <label htmlFor={htmlFor} className="text-[0.8125rem] font-medium text-tinta">
         {etiqueta}
+        {obligatorio && <span className="font-normal text-tinta-2"> (obligatorio)</span>}
       </label>
       {children}
     </div>
@@ -177,8 +181,8 @@ export function SelectorEmpresa({
   );
 }
 
-function Enviar({ texto, pendienteTexto }: { texto: string; pendienteTexto: string }) {
-  const { pending } = useFormStatus();
+function Enviar({ texto, pendienteTexto, pendiente }: { texto: string; pendienteTexto: string; pendiente: boolean }) {
+  const pending = useFormStatus().pending || pendiente;
   return (
     <button type="submit" disabled={pending} className={claseBotonPrincipal}>
       {pending ? pendienteTexto : texto}
@@ -195,6 +199,7 @@ export function CamposContacto({
   textoEnviar,
   textoPendiente,
   onCancelar,
+  pendiente = false,
 }: {
   catalogos: Catalogos;
   inicial?: Partial<Contacto>;
@@ -204,8 +209,12 @@ export function CamposContacto({
   textoEnviar: string;
   textoPendiente: string;
   onCancelar?: () => void;
+  /** Envío en curso (el formulario se envía con onSubmit). */
+  pendiente?: boolean;
 }) {
   const id = useId();
+  const error = estado?.ok === false ? estado.mensaje : null;
+  const errorNombre = !!error && /nombre/i.test(error);
   const [empresa, setEmpresa] = useState(inicial?.empresa_id ?? empresaId ?? "");
   const [principal, setPrincipal] = useState(!!inicial?.principal);
   const select = `${claseCampo} appearance-none`;
@@ -213,8 +222,18 @@ export function CamposContacto({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Campo etiqueta="Nombre" htmlFor={`${id}-nombre`}>
-          <input id={`${id}-nombre`} name="nombre" required autoComplete="off" defaultValue={inicial?.nombre} className={claseCampo} autoFocus />
+        <Campo etiqueta="Nombre" htmlFor={`${id}-nombre`} obligatorio>
+          <input
+            id={`${id}-nombre`}
+            name="nombre"
+            required
+            autoComplete="off"
+            defaultValue={inicial?.nombre}
+            aria-invalid={errorNombre || undefined}
+            aria-describedby={errorNombre ? `${id}-error` : undefined}
+            className={claseCampo}
+            autoFocus
+          />
         </Campo>
         <Campo etiqueta="Apellidos" htmlFor={`${id}-apellidos`}>
           <input id={`${id}-apellidos`} name="apellidos" autoComplete="off" defaultValue={inicial?.apellidos} className={claseCampo} />
@@ -232,7 +251,7 @@ export function CamposContacto({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Campo etiqueta="Email" htmlFor={`${id}-email`}>
-          <input id={`${id}-email`} name="email" type="email" autoComplete="off" defaultValue={inicial?.email ?? ""} className={claseCampo} />
+          <input id={`${id}-email`} name="email" type="email" inputMode="email" autoComplete="off" defaultValue={inicial?.email ?? ""} className={claseCampo} />
         </Campo>
         <Campo etiqueta="Teléfono" htmlFor={`${id}-telefono`}>
           <input id={`${id}-telefono`} name="telefono" type="tel" autoComplete="off" defaultValue={inicial?.telefono ?? ""} className={claseCampo} />
@@ -310,13 +329,14 @@ export function CamposContacto({
       <div className="flex items-center justify-between gap-4 rounded-xl bg-placa-2 px-3 py-2.5">
         <label htmlFor={`${id}-principal`} className="flex min-w-0 flex-col">
           <span className="text-[0.8125rem] font-medium text-tinta">Contacto principal</span>
-          <span className="text-xs text-tinta-2">
+          <span id={`${id}-principal-ayuda`} className="text-xs text-tinta-2">
             {empresa ? "El interlocutor de referencia de la empresa. Sólo hay uno." : "Elige antes una empresa."}
           </span>
         </label>
         <input type="hidden" name="principal" value={principal && empresa ? "true" : "false"} />
         <Switch
           id={`${id}-principal`}
+          aria-describedby={`${id}-principal-ayuda`}
           checked={principal && !!empresa}
           disabled={!empresa}
           onCheckedChange={setPrincipal}
@@ -335,9 +355,9 @@ export function CamposContacto({
         />
       </Campo>
 
-      {estado?.ok === false && (
-        <p role="alert" className={claseError}>
-          {estado.mensaje}
+      {error && (
+        <p id={`${id}-error`} role="alert" className={claseError}>
+          {error}
         </p>
       )}
 
@@ -351,7 +371,7 @@ export function CamposContacto({
             Cancelar
           </button>
         )}
-        <Enviar texto={textoEnviar} pendienteTexto={textoPendiente} />
+        <Enviar texto={textoEnviar} pendienteTexto={textoPendiente} pendiente={pendiente} />
       </div>
     </div>
   );

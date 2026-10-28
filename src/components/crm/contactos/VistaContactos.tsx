@@ -63,7 +63,7 @@ export function VistaContactos({
   return (
     <ProveedorAcciones catalogos={catalogos}>
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <nav className="-mx-4 flex gap-1 px-4 lg:-mx-8 lg:px-8" aria-label="Vistas">
+        <div role="group" className="-mx-4 flex gap-1 px-4 lg:-mx-8 lg:px-8" aria-label="Vista de contactos">
           {PESTANAS.map(({ vista, texto, Icono }) => {
             const activa = filtros.vista === vista;
             return (
@@ -71,7 +71,7 @@ export function VistaContactos({
                 key={vista}
                 type="button"
                 onClick={() => cambiar({ vista })}
-                aria-current={activa ? "page" : undefined}
+                aria-pressed={activa}
                 className={`relative flex h-10 items-center gap-1.5 px-2.5 text-sm font-medium transition-colors ${
                   activa ? "text-tinta" : "text-tinta-2 hover:text-tinta"
                 }`}
@@ -86,7 +86,7 @@ export function VistaContactos({
             {numero(contactos.length)} {contactos.length === 1 ? "contacto" : "contactos"}
             {limitado && " (primeros)"}
           </span>
-        </nav>
+        </div>
 
         <BarraFiltrosContactos filtros={filtros} cambiar={cambiar} catalogos={catalogos} paises={paises} />
 
@@ -131,33 +131,45 @@ export function VistaContactos({
 
 function Cabecera({
   texto,
+  titulo,
   orden,
   filtros,
   ordenarPor,
   className = "",
 }: {
   texto: string;
+  /** Nombre completo cuando el texto visible es una abreviatura. */
+  titulo?: string;
   orden?: OrdenContactos;
   filtros: FiltrosContactos;
   ordenarPor: (o: OrdenContactos) => void;
   className?: string;
 }) {
-  if (!orden) return <th className={`py-2.5 pr-4 font-normal ${className}`}>{texto}</th>;
+  if (!orden) return <th scope="col" className={`py-2.5 pr-4 font-normal ${className}`}>{texto}</th>;
   const activa = filtros.orden === orden;
   const Flecha = filtros.dir === "asc" ? CaretUp : CaretDown;
   return (
     <th
+      scope="col"
       className={`py-2.5 pr-4 font-normal ${className}`}
       aria-sort={activa ? (filtros.dir === "asc" ? "ascending" : "descending") : "none"}
     >
       <button
         type="button"
         onClick={() => ordenarPor(orden)}
+        title={titulo}
         className={`inline-flex items-center gap-1 rounded transition-colors hover:text-tinta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento ${
           activa ? "font-medium text-tinta" : ""
         }`}
       >
-        {texto}
+        {titulo ? (
+          <>
+            <span aria-hidden>{texto}</span>
+            <span className="sr-only">{titulo}</span>
+          </>
+        ) : (
+          texto
+        )}
         {activa && <Flecha className="size-3" weight="bold" aria-hidden />}
       </button>
     </th>
@@ -180,6 +192,7 @@ function Tabla({
     <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl bg-placa shadow-placa md:h-full">
       <div className="relative min-h-0 flex-1 overflow-auto">
         <table className="w-full min-w-[1180px] border-collapse text-left">
+          <caption className="sr-only">Contactos. Los botones de las cabeceras ordenan la tabla.</caption>
           <thead className="sticky top-0 z-10 bg-placa">
             <tr className="border-b border-linea text-[0.8125rem] text-tinta-2">
               <Cabecera texto="Contacto" orden="nombre" {...cab} className="pl-4" />
@@ -188,9 +201,9 @@ function Tabla({
               <Cabecera texto="Tipo" {...cab} />
               <Cabecera texto="Estado" {...cab} />
               <Cabecera texto="Responsable" {...cab} />
-              <Cabecera texto="Oport." orden="oportunidades" {...cab} className="text-right" />
+              <Cabecera texto="Oport." titulo="Oportunidades" orden="oportunidades" {...cab} className="text-right" />
               <Cabecera texto="Última actividad" orden="actividad" {...cab} />
-              <th className="w-12 py-2.5 pr-3 font-normal">
+              <th scope="col" className="w-12 py-2.5 pr-3 font-normal">
                 <span className="sr-only">Acciones</span>
               </th>
             </tr>

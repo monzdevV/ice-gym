@@ -331,7 +331,7 @@ begin
   if not (v_fila.empleado_id = public.rrhh_yo() or public.rrhh_es_admin()) then
     raise exception 'Sólo puedes cancelar tus propias solicitudes.';
   end if;
-  if v_fila.estado = 'pendiente' or (v_fila.estado = 'aprobada' and v_fila.inicio > current_date) then
+  if v_fila.estado = 'pendiente' or (v_fila.estado = 'aprobada' and v_fila.inicio > (now() at time zone 'Europe/Madrid')::date) then
     update vacaciones set estado = 'cancelada', cancelada_at = now() where id = p_id returning * into v_fila;
     return v_fila;
   end if;

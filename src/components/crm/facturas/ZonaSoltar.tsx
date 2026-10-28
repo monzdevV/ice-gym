@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState, type DragEvent } from "react";
 import { UploadSimple, WarningCircle } from "@phosphor-icons/react";
-import { ACEPTA, LIMITE } from "./utilidades";
+import { MAX_BYTES_FOTO } from "@/lib/facturas";
+import { ACEPTA, LIMITE, tamano } from "./utilidades";
 
 /**
  * Entrada de la factura: un botón real que abre el selector de archivos,
@@ -134,7 +135,7 @@ export function ZonaSoltar({
             )}
           </span>
           <span id={idPista} className="text-[0.8125rem] text-tinta-2">
-            Foto (JPG, PNG o WEBP) o PDF, hasta {LIMITE}.
+            Foto (JPG, PNG o WEBP) de hasta {tamano(MAX_BYTES_FOTO)} o PDF de hasta {LIMITE}.
             <span className="pointer-coarse:hidden"> También puedes pegar una captura con Ctrl+V.</span>
           </span>
         </span>

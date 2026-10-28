@@ -28,12 +28,7 @@ export async function actualizarContacto(_: Resultado | null, fd: FormData): Pro
   const { data: antes } = await supabase.from("contactos").select("empresa_id").eq("id", id).maybeSingle();
   if (!antes) return { ok: false, mensaje: "Ese contacto ya no existe." };
 
-  // Sólo puede haber un contacto principal por empresa.
-  if (principal && empresaId) {
-    await supabase.from("contactos").update({ principal: false }).eq("empresa_id", empresaId).neq("id", id);
-  }
-
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("contactos")
     .update({
       nombre,
@@ -54,8 +49,17 @@ export async function actualizarContacto(_: Resultado | null, fd: FormData): Pro
       notas: nulo(textoDe(fd, "notas")),
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) return { ok: false, mensaje: `No se pudo guardar: ${error.message}` };
+  // Con RLS, un update sin permiso no da error: no toca ninguna fila.
+  if (!data?.length) return { ok: false, mensaje: "No se ha guardado: no tienes permiso para cambiar este contacto." };
+
+  // Sólo puede haber un contacto principal por empresa (se quita a los demás después de guardar,
+  // para no dejar la empresa sin principal si el guardado falla).
+  if (principal && empresaId) {
+    await supabase.from("contactos").update({ principal: false }).eq("empresa_id", empresaId).neq("id", id);
+  }
 
   refrescar(id, antes.empresa_id, empresaId);
   return { ok: true, mensaje: "Contacto actualizado.", id };
@@ -65,11 +69,13 @@ export async function guardarNotasContacto(_: Resultado | null, fd: FormData): P
   const id = textoDe(fd, "id");
   if (!id) return { ok: false, mensaje: "Falta el contacto." };
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("contactos")
     .update({ notas: nulo(textoDe(fd, "notas")), updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) return { ok: false, mensaje: `No se pudieron guardar las notas: ${error.message}` };
+  if (!data?.length) return { ok: false, mensaje: "No se han guardado las notas: el contacto ya no existe o no tienes permiso." };
   revalidatePath(ruta.contacto(id));
   return { ok: true, mensaje: "Notas guardadas.", id };
 }
@@ -79,7 +85,7 @@ export async function borrarContacto(id: string): Promise<Resultado> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("contactos").delete().eq("id", id).select("empresa_id").maybeSingle();
   if (error) return { ok: false, mensaje: `No se pudo borrar: ${error.message}` };
-  if (!data) return { ok: false, mensaje: "Ese contacto ya no existe." };
+  if (!data) return { ok: false, mensaje: "No se ha borrado: el contacto ya no existe o no tienes permiso para borrarlo." };
   refrescar(id, data.empresa_id);
   return { ok: true, mensaje: "Contacto borrado." };
 }

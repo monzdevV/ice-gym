@@ -1,4 +1,4 @@
-import { MAX_BYTES_FACTURA, TIPOS_FACTURA, type DatosFactura } from "@/lib/facturas";
+import { MAX_BYTES_FACTURA, MAX_BYTES_FOTO, TIPOS_FACTURA, type DatosFactura } from "@/lib/facturas";
 
 /** Extensión con la que se guarda cada tipo admitido en el bucket. */
 const EXTENSION: Record<(typeof TIPOS_FACTURA)[number], string> = {
@@ -28,12 +28,15 @@ export const LIMITE = tamano(MAX_BYTES_FACTURA);
 /** Devuelve el motivo por el que no se puede leer el archivo, o null si vale. */
 export function validarArchivo(archivo: File): string | null {
   if (!esTipoFactura(archivo.type)) {
-    return `«${archivo.name}» no es una foto ni un PDF. Sube un JPG, PNG, WEBP o PDF.`;
+    return `«${archivo.name || "El archivo"}» no es una foto ni un PDF. Sube un JPG, PNG, WEBP o PDF.`;
   }
   if (archivo.size > MAX_BYTES_FACTURA) {
     return `«${archivo.name}» pesa ${tamano(archivo.size)} y el máximo es ${LIMITE}. Reduce la foto o exporta el PDF más ligero.`;
   }
-  if (archivo.size === 0) return `«${archivo.name}» está vacío.`;
+  if (archivo.type !== "application/pdf" && archivo.size > MAX_BYTES_FOTO) {
+    return `«${archivo.name}» pesa ${tamano(archivo.size)} y Claude solo lee fotos de hasta ${tamano(MAX_BYTES_FOTO)}. Hazla más pequeña o súbela en PDF.`;
+  }
+  if (archivo.size === 0) return `«${archivo.name}» está vacío. Elige otro archivo.`;
   return null;
 }
 

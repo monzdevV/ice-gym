@@ -22,12 +22,18 @@ function ListaBuscable({
   onCrear,
   creando,
   vacio,
+  etiqueta,
+  multiple = false,
 }: {
   opciones: Opcion[];
   onElegir: (valor: string) => void;
   onCrear?: (texto: string) => void;
   creando?: boolean;
   vacio: string;
+  /** Nombre de la lista para el lector de pantalla («Clientes», «Etiquetas»). */
+  etiqueta: string;
+  /** Se pueden marcar varias (etiquetas). */
+  multiple?: boolean;
 }) {
   const [q, setQ] = useState("");
   const [activo, setActivo] = useState(0);
@@ -47,7 +53,7 @@ function ListaBuscable({
     <>
       <label className="flex items-center gap-2 border-b border-linea px-3">
         <MagnifyingGlass className="size-4 shrink-0 text-tinta-2" aria-hidden />
-        <span className="sr-only">Buscar</span>
+        <span className="sr-only">Buscar {etiqueta.toLowerCase()}</span>
         <input
           autoFocus
           value={q}
@@ -68,12 +74,15 @@ function ListaBuscable({
             }
           }}
           placeholder="Buscar…"
+          role="combobox"
+          aria-expanded
+          aria-autocomplete="list"
           aria-controls={idLista}
           aria-activedescendant={total ? `${idLista}-${activo}` : undefined}
           className="h-9 w-full bg-transparent text-sm text-tinta outline-none placeholder:text-tinta-2"
         />
       </label>
-      <ul id={idLista} role="listbox" className="max-h-64 overflow-y-auto p-1">
+      <ul id={idLista} role="listbox" aria-label={etiqueta} aria-multiselectable={multiple || undefined} className="max-h-64 overflow-y-auto p-1">
         {total === 0 && <li className="px-2 py-3 text-sm text-tinta-2">{vacio}</li>}
         {filtradas.map((o, n) => (
           <li
@@ -164,7 +173,7 @@ export function ElegirCliente({
             type="button"
             onClick={() => onCambio(null)}
             aria-label="Quitar cliente"
-            className="absolute right-1.5 top-1/2 grid size-5 -translate-y-1/2 place-items-center rounded text-tinta-2 hover:bg-placa-2 hover:text-tinta"
+            className="absolute right-1 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded text-tinta-2 hover:bg-placa-2 hover:text-tinta"
           >
             <X className="size-3" aria-hidden />
           </button>
@@ -180,6 +189,7 @@ export function ElegirCliente({
           onCrear={crear}
           creando={creando}
           vacio="No hay clientes con ese nombre."
+          etiqueta="Clientes"
         />
       </PopoverContent>
     </Popover>
@@ -250,7 +260,7 @@ export function ElegirEtiquetas({
             type="button"
             onClick={() => alternar(e.id)}
             aria-label={`Quitar etiqueta ${e.nombre}`}
-            className="-ml-0.5 grid size-5 place-items-center rounded text-tinta-2 hover:text-critico"
+            className="-ml-0.5 grid size-6 place-items-center rounded text-tinta-2 hover:text-critico"
           >
             <X className="size-3" aria-hidden />
           </button>
@@ -261,6 +271,7 @@ export function ElegirEtiquetas({
           <button
             id={id}
             type="button"
+            aria-haspopup="listbox"
             aria-expanded={abierto}
             className="inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[0.8125rem] text-tinta-2 hover:bg-placa-2 hover:text-tinta"
           >
@@ -269,7 +280,7 @@ export function ElegirEtiquetas({
           </button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 gap-0 bg-placa p-0 text-tinta shadow-lg">
-          <ListaBuscable opciones={opciones} onElegir={alternar} onCrear={crear} creando={creando} vacio="Escribe para crear una etiqueta." />
+          <ListaBuscable opciones={opciones} onElegir={alternar} onCrear={crear} creando={creando} vacio="Escribe para crear una etiqueta." etiqueta="Etiquetas" multiple />
         </PopoverContent>
       </Popover>
     </div>

@@ -181,7 +181,8 @@ export function quienVenta(o: Pick<OportunidadVentasCompleta, "cliente" | "conta
 export function leerImporte(valor: unknown): number | null {
   if (typeof valor === "number") return Number.isFinite(valor) ? valor : null;
   if (typeof valor !== "string") return null;
-  let t = valor.replace(/[\s €]|EUR/gi, "");
+  // También «30 %»: las probabilidades de un CSV suelen llevar el signo.
+  let t = valor.replace(/[\s €%]|EUR/gi, "");
   if (!t) return null;
   if (t.includes(",")) t = t.replace(/\./g, "").replace(",", ".");
   else if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");
@@ -238,6 +239,15 @@ export const TONO_PLAZO: Record<Plazo, string> = {
   vencida: "var(--critico)",
   hoy: "var(--aviso)",
   planificada: "var(--exito)",
+};
+/**
+ * El tono del plazo para TEXTO: mezclado con la tinta para pasar 4,5:1 también
+ * sobre placa-2 y columna (en claro el ámbar y el verde puros se quedan en 4,2).
+ */
+export const TINTA_PLAZO: Record<Plazo, string> = {
+  vencida: "color-mix(in oklab, var(--critico) 80%, var(--tinta))",
+  hoy: "color-mix(in oklab, var(--aviso) 80%, var(--tinta))",
+  planificada: "color-mix(in oklab, var(--exito) 80%, var(--tinta))",
 };
 
 const ZONA = "Europe/Madrid";
@@ -431,9 +441,9 @@ export const DEFECTO_VENTAS: FiltrosVentas = {
   dir: "desc",
 };
 
-const FECHA_ISO = /^\d{4}-\d{2}-\d{2}$/;
-const MES_ISO = /^\d{4}-\d{2}$/;
-const UUID = /^[0-9a-f-]{8,40}$/i;
+// Mes 01-12 y uuid completo: un «2026-13» o un id cortado en la URL rompían la página.
+const MES_ISO = /^\d{4}-(0[1-9]|1[0-2])$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Fuente = URLSearchParams | Record<string, string | string[] | undefined>;
 
@@ -463,8 +473,9 @@ export function leerFiltrosVentas(fuente: Fuente): FiltrosVentas {
     etiqueta: id("etiqueta"),
     etapa: id("etapa"),
     fecha: Object.hasOwn(CAMPOS_FECHA_VENTAS, fecha) ? (fecha as CampoFechaVentas) : DEFECTO_VENTAS.fecha,
-    desde: FECHA_ISO.test(get("desde")) ? get("desde") : "",
-    hasta: FECHA_ISO.test(get("hasta")) ? get("hasta") : "",
+    // Una fecha que no existe (2026-02-31) hacía fallar instanteMadrid y la página entera.
+    desde: esFechaValida(get("desde")) ? get("desde") : "",
+    hasta: esFechaValida(get("hasta")) ? get("hasta") : "",
     agrupar: [...new Set(lista("agrupar").filter((x): x is AgrupacionVentas => Object.hasOwn(AGRUPACIONES_VENTAS, x)))].slice(0, 2),
     medida: Object.hasOwn(MEDIDAS_VENTAS, medida) ? (medida as MedidaVentas) : DEFECTO_VENTAS.medida,
     columnas: Object.hasOwn(AGRUPACIONES_VENTAS, columnas) ? (columnas as AgrupacionVentas) : "",

@@ -19,33 +19,33 @@ const SALAS: Sala[] = [
     nombre: "Poleas",
     foto: "/landing/sala-poleas.jpg",
     texto: "Torres de polea doble a cada lado del pasillo para trabajar cada ángulo con carga guiada.",
-    alt: "Pasillo con torres de poleas, bancos y mancuernas bajo luz azul",
+    alt: "Pasillo largo con torres de poleas a ambos lados, bancos planos y mancuernas al fondo; dos personas entrenando con luz azul",
   },
   {
     nombre: "Peso libre",
     foto: "/landing/sala-peso-libre.jpg",
     texto: "Racks de mancuernas, discos, jaulas de sentadilla y bancos regulables en la misma sala.",
-    alt: "Racks de mancuernas y discos en la sala de peso libre",
+    alt: "Sala de peso libre con hileras de mancuernas, discos en soportes, jaulas de sentadilla y bancos regulables",
     encuadre: { escala: 1.9, origen: "0% 100%" },
   },
   {
     nombre: "Cardio",
     foto: "/landing/sala-cardio.jpg",
     texto: "Cintas con pantalla en fila frente al espejo para calentar, caminar o rodar a tu ritmo.",
-    alt: "Fila de cintas de correr con pantalla frente a un espejo",
+    alt: "Fila de cintas de correr con pantalla junto a una pared de espejos, con más máquinas de cardio al fondo",
   },
   {
     nombre: "Ciclo",
     foto: "/landing/sala-ciclo.jpg",
     texto: "Sala de ciclo indoor en semicírculo, con bici de instructor en escenario y luz de estudio.",
-    alt: "Bicicletas de ciclo indoor en la sala de ciclo",
+    alt: "Sala de ciclo indoor con unas treinta bicis en semicírculo mirando a la bici del monitor y a una pantalla",
     encuadre: { escala: 1.9, origen: "0% 100%" },
   },
   {
     nombre: "Funcional",
     foto: "/landing/sala-funcional.jpg",
     texto: "Pista de césped para arrastres, kettlebells, balones medicinales y zona de esterillas.",
-    alt: "Zona funcional con pista de césped, kettlebells y esterillas",
+    alt: "Zona funcional con pista de césped artificial en el centro, estantería de balones medicinales y kettlebells, y esterillas junto al espejo",
   },
 ];
 
@@ -118,7 +118,7 @@ function GaleriaFijada() {
           ))}
         </motion.div>
 
-        <div className="absolute inset-x-[5vw] bottom-8 flex items-center gap-5">
+        <div aria-hidden className="absolute inset-x-[5vw] bottom-8 flex items-center gap-5">
           <span className="condensada text-xs uppercase tracking-[0.2em] text-tinta-2">Recorrido</span>
           <div className="relative h-px flex-1 bg-linea">
             <motion.div
@@ -161,11 +161,12 @@ function PanelSala({ sala, i, progreso }: { sala: Sala; i: number; progreso: Mot
         <motion.div className="absolute inset-y-0 -inset-x-[10%]" style={{ x: paralaje }}>
           <Foto sala={sala} sizes="(min-width: 768px) 80vw, 100vw" />
         </motion.div>
-        <div className="absolute inset-0 bg-fondo/25" aria-hidden />
+        {/* Oscurecido para que el rótulo blanco que pisa la foto mantenga ≥ 3:1. */}
+        <div className="absolute inset-0 bg-fondo/45" aria-hidden />
       </motion.div>
 
       <motion.h3
-        className="rotulo pointer-events-none absolute bottom-[4.5rem] left-[-0.04em] z-10 text-[clamp(4.5rem,10vw,11rem)] text-tinta"
+        className="rotulo pointer-events-none absolute bottom-[4.5rem] left-[-0.04em] z-10 text-[clamp(4.5rem,10vw,11rem)] text-tinta [text-shadow:0_2px_24px_rgb(0_0_0/0.65)]"
         style={{ x: rotuloX }}
       >
         {sala.nombre}

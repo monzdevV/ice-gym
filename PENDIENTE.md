@@ -1,13 +1,13 @@
 # Pendiente
 
-Lo que falta para dar por terminado el CRM de Ice Gym (comercial + ventas + RRHH + agente de facturas). Ordenado de más a menos urgente.
+Lo que falta para dar por terminado Ice Gym (landing + CRM comercial + ventas + RRHH + facturas). Ordenado de más a menos urgente.
 
 ## 1. Poner en marcha la base de datos
 
 Nada de lo nuevo funciona hasta ejecutar estos scripts en el SQL Editor de Supabase. Se pueden volver a ejecutar sin romper nada.
 
 - [ ] `supabase/ventas.sql`: tablas del segmento Ventas, permisos (RLS) y valores por defecto (etapas Nuevo / Calificado / Propuesta / Ganado, razones de pérdida, tipos de actividad y el equipo «Ventas»).
-- [ ] `supabase/facturas.sql`: tabla `facturas` del agente lector de facturas.
+- [ ] `supabase/facturas.sql`: tabla `facturas` (la usan el agente de `agente/` y la pantalla `/crm/facturas`) y bucket privado «facturas». Sustituye a la antigua `supabase/migrations/20261019_facturas.sql`.
 - [ ] Comprobar que `supabase/rrhh.sql` ya está aplicado en el proyecto de producción.
 
 ## 2. Probar en el navegador (no se ha hecho)
@@ -33,7 +33,8 @@ El código compila, pasa el lint y la build de producción, y ha pasado una revi
 - [ ] Crear en el CRM un usuario propio para el agente y rellenar `agente/.env` a partir de `.env.example` (clave de OpenRouter y clave publicable de Supabase).
 - [ ] Probar con facturas reales: primero `python agente.py --dry-run`, después `python agente.py`. Solo se ha probado sin red, con Claude y Supabase falsos (23 comprobaciones).
 - [ ] Dejarlo siempre encendido en el servidor (systemd o el Programador de tareas; ver `agente/README.md`).
-- [ ] Decidir si el CRM necesita una pantalla «Facturas» o una pestaña en la ficha de cada empresa. Hoy las facturas solo están en la tabla de Supabase.
+- [x] Pantalla «Facturas» en el CRM (`/crm/facturas`): subir una foto o PDF, leerla con Claude (Haiku 5.5, `ANTHROPIC_API_KEY`) y ver las del agente. Falta probarla con facturas reales.
+- [ ] Decidir si además hace falta una pestaña de facturas en la ficha de cada empresa.
 
 ## 4. Decisiones pendientes
 
@@ -61,5 +62,6 @@ El código compila, pasa el lint y la build de producción, y ha pasado una revi
 - **Comercial:** la versión nueva de este repositorio (commit `854007d`): dashboard con gráficos, oportunidades, empresas con logos, contactos, actividades, tareas, menú plegable y tipografías nuevas.
 - **RRHH:** sin cambios respecto a la versión anterior del CRM (empleados, horarios, vacaciones, incorporación, evaluaciones y nóminas).
 - **Ventas:** segmento nuevo copiado del apartado Ventas del CRM de Odoo: Mi flujo, Mis actividades, Equipos, Clientes y Ajustes.
-- **Agente de facturas** (`agente/`): vigila las carpetas de facturas del servidor, las lee con Claude vía OpenRouter y las guarda en Supabase.
-- Este proyecto es **solo el CRM**: la web pública vive aparte (`NEXT_PUBLIC_WEB_URL`), por eso no incluye la landing.
+- **Agente de facturas** (`agente/`): vigila las carpetas de facturas del servidor, las lee con Claude vía OpenRouter y las guarda en Supabase (`origen = carpeta`).
+- **Facturas en el CRM** (`/crm/facturas`): subida y lectura desde el navegador (`origen = crm`).
+- **Landing pública** en `/` (con el dominio `crm-…` la raíz sirve el CRM). Si la web vive en otro dominio, se configura con `NEXT_PUBLIC_WEB_URL`.

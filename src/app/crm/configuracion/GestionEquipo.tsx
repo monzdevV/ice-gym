@@ -21,10 +21,13 @@ const NOMBRE_COLOR: Record<ColorEquipo, string> = {
   gris: "Gris",
 };
 
-function Campo({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
+function Campo({ etiqueta, children, obligatorio = false }: { etiqueta: string; children: ReactNode; obligatorio?: boolean }) {
   return (
     <label className="flex min-w-0 flex-col gap-1.5">
-      <span className="text-[0.8125rem] font-medium text-tinta">{etiqueta}</span>
+      <span className="text-[0.8125rem] font-medium text-tinta">
+        {etiqueta}
+        {obligatorio && <span className="font-normal text-tinta-2"> (obligatorio)</span>}
+      </span>
       {children}
     </label>
   );
@@ -56,15 +59,15 @@ function FormularioMiembro({ miembro, alTerminar }: { miembro: Miembro | null; a
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Campo etiqueta="Nombre">
+        <Campo etiqueta="Nombre" obligatorio>
           <input name="nombre" required minLength={2} value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="off" className={claseCampo} />
         </Campo>
         <Campo etiqueta="Apellidos">
           <input name="apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} autoComplete="off" className={claseCampo} />
         </Campo>
       </div>
-      <Campo etiqueta="Email (el mismo con el que entra al CRM)">
-        <input name="email" type="email" required defaultValue={miembro?.email ?? ""} autoComplete="off" className={claseCampo} />
+      <Campo etiqueta="Email (el mismo con el que entra al CRM)" obligatorio>
+        <input name="email" type="email" required autoCapitalize="none" spellCheck={false} defaultValue={miembro?.email ?? ""} autoComplete="off" className={claseCampo} />
       </Campo>
       <Campo etiqueta="Puesto">
         <input name="puesto" defaultValue={miembro?.puesto ?? ""} placeholder="Comercial, Compras, Dirección…" className={claseCampo} />

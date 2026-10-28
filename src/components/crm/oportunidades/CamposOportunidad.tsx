@@ -49,16 +49,19 @@ export function Campo({
   children,
   className = "",
   htmlFor,
+  obligatorio = false,
 }: {
   etiqueta: string;
   children: ReactNode;
   className?: string;
   htmlFor?: string;
+  obligatorio?: boolean;
 }) {
   return (
     <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
       <label htmlFor={htmlFor} className="text-[0.8125rem] font-medium text-tinta">
         {etiqueta}
+        {obligatorio && <span className="font-normal text-tinta-2"> (obligatorio)</span>}
       </label>
       {children}
     </div>
@@ -110,10 +113,8 @@ function ComboEmpresa({
         <button
           id={id}
           type="button"
-          role="combobox"
           aria-expanded={abierta}
-          aria-controls={`${id}-lista`}
-          aria-haspopup="listbox"
+          aria-haspopup="dialog"
           className={`${claseCampo} flex items-center gap-2 text-left`}
         >
           {actual ? (
@@ -144,12 +145,11 @@ function ComboEmpresa({
             className="h-8 w-full rounded-md border border-linea bg-placa px-2 text-sm text-tinta outline-none focus:border-acento"
           />
         </div>
-        <ul id={`${id}-lista`} role="listbox" aria-label="Empresas" className="max-h-64 overflow-y-auto p-1">
+        <ul id={`${id}-lista`} aria-label="Empresas" className="max-h-64 overflow-y-auto p-1">
           <li>
             <button
               type="button"
-              role="option"
-              aria-selected={!valor}
+              aria-pressed={!valor}
               onClick={() => elegir("")}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-tinta-2 hover:bg-placa-2 focus-visible:bg-placa-2 focus-visible:outline-none"
             >
@@ -161,8 +161,7 @@ function ComboEmpresa({
             <li key={e.id}>
               <button
                 type="button"
-                role="option"
-                aria-selected={e.id === valor}
+                aria-pressed={e.id === valor}
                 onClick={() => elegir(e.id)}
                 className="flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-tinta hover:bg-placa-2 focus-visible:bg-placa-2 focus-visible:outline-none"
               >
@@ -173,7 +172,7 @@ function ComboEmpresa({
               </button>
             </li>
           ))}
-          {visibles.length === 0 && <li className="px-3 py-4 text-center text-sm text-tinta-2">Ninguna coincide</li>}
+          {visibles.length === 0 && <li role="status" className="px-3 py-4 text-center text-sm text-tinta-2">Ninguna coincide</li>}
         </ul>
       </PopoverContent>
     </Popover>
@@ -474,7 +473,7 @@ export function CamposOportunidad({
   return (
     <div className="flex flex-col gap-5">
       <Bloque titulo="Oportunidad">
-        <Campo etiqueta="Nombre" htmlFor={`${ids}-nombre`}>
+        <Campo etiqueta="Nombre" htmlFor={`${ids}-nombre`} obligatorio>
           <input
             id={`${ids}-nombre`}
             name="nombre"

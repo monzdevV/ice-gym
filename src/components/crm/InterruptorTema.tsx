@@ -70,7 +70,7 @@ export function FilaTema({ plegado = false }: { plegado?: boolean }) {
       <span className="etiqueta-menu flex-1 truncate text-left">Modo oscuro</span>
       <span
         aria-hidden
-        className="etiqueta-menu relative h-5 w-9 shrink-0 rounded-full bg-acento transition-colors duration-200 [:root[data-tema=claro]_&]:bg-linea"
+        className="etiqueta-menu relative h-5 w-9 shrink-0 rounded-full bg-acento transition-colors duration-200 [:root[data-tema=claro]_&]:bg-linea-campo"
       >
         <span className="absolute top-0.5 left-0.5 size-4 translate-x-4 rounded-full bg-sobre-campo shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] [:root[data-tema=claro]_&]:translate-x-0 [:root[data-tema=claro]_&]:bg-placa" />
       </span>

@@ -6,12 +6,23 @@ import { useEffect } from "react";
 
 let lenis: Lenis | null = null;
 
-/** Desplaza a una sección con la misma inercia que la rueda. */
+const movimientoReducido = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/**
+ * Desplaza a una sección con la misma inercia que la rueda (o de golpe si se pidió
+ * reducir movimiento) y le pasa el foco, como haría un enlace de ancla normal.
+ */
 export function irA(id: string) {
   const el = document.getElementById(id);
   if (!el) return;
   if (lenis) lenis.scrollTo(el, { duration: 1.4 });
-  else el.scrollIntoView({ behavior: "smooth" });
+  else el.scrollIntoView({ behavior: movimientoReducido() ? "auto" : "smooth" });
+  if (!el.matches("a[href], button, input, select, textarea, [tabindex]")) {
+    el.setAttribute("tabindex", "-1");
+    el.classList.add("outline-none");
+  }
+  el.focus({ preventScroll: true });
+  if (history.replaceState) history.replaceState(null, "", `#${id}`);
 }
 
 export function bloquearScroll(bloqueado: boolean) {
@@ -22,7 +33,8 @@ export function bloquearScroll(bloqueado: boolean) {
 
 export function ScrollSuave({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Con «reducir movimiento» no hay scroll con inercia: el del navegador, tal cual.
+    if (movimientoReducido()) return;
     lenis = new Lenis({ autoRaf: false, lerp: 0.1 });
     // Lenis va en el mismo bucle que Motion: scroll y valores ligados al scroll pintan en el mismo frame.
     const actualizar = ({ timestamp }: { timestamp: number }) => lenis?.raf(timestamp);

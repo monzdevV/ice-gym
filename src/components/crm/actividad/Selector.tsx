@@ -75,7 +75,8 @@ export function Selector({
         <div id={id} className={`${caja} bg-placa-2 text-tinta`} aria-readonly>
           {actual?.icono}
           <span className="min-w-0 flex-1 truncate">{actual?.texto ?? "Vinculado"}</span>
-          <LockSimple className="size-3.5 shrink-0 text-tinta-2" aria-label="Fijado" />
+          <LockSimple className="size-3.5 shrink-0 text-tinta-2" aria-hidden />
+          <span className="sr-only">(fijado, no se puede cambiar aquí)</span>
         </div>
       </>
     );
@@ -132,13 +133,20 @@ export function Selector({
               }}
               onKeyDown={teclado}
               placeholder="Buscar…"
+              role="combobox"
+              aria-expanded
+              aria-autocomplete="list"
               aria-controls={idLista}
               aria-activedescendant={filtradas[activo] ? `${idLista}-${activo}` : undefined}
               className="h-9 w-full bg-transparent text-sm text-tinta outline-none placeholder:text-tinta-2"
             />
           </label>
-          <ul ref={lista} id={idLista} role="listbox" className="max-h-64 overflow-y-auto p-1">
-            {filtradas.length === 0 && <li className="px-2 py-3 text-sm text-tinta-2">{vacio}</li>}
+          {filtradas.length === 0 && (
+            <p role="status" className="px-3 py-3 text-sm text-tinta-2">
+              {vacio}
+            </p>
+          )}
+          <ul ref={lista} id={idLista} role="listbox" aria-label={placeholder} className="max-h-64 overflow-y-auto p-1 empty:hidden">
             {filtradas.map((o, n) => (
               <li
                 key={o.valor}

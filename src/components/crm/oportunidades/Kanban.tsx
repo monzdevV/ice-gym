@@ -124,7 +124,7 @@ function Contenido({ o }: { o: OportunidadCompleta }) {
 
 const claseTarjeta = "relative block w-full rounded-2xl bg-tarjeta px-3 py-3 text-left shadow-placa ring-1 ring-linea/70";
 
-function Tarjeta({ o, alAbrir }: { o: OportunidadCompleta; alAbrir: (o: OportunidadCompleta) => void }) {
+function Tarjeta({ o, alAbrir, idAyuda }: { o: OportunidadCompleta; alAbrir: (o: OportunidadCompleta) => void; idAyuda: string }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: o.id,
     data: { etapa: o.etapa },
@@ -140,7 +140,8 @@ function Tarjeta({ o, alAbrir }: { o: OportunidadCompleta; alAbrir: (o: Oportuni
         {...attributes}
         {...listeners}
         aria-roledescription="tarjeta arrastrable"
-        aria-label={`${o.nombre}, ${dinero(o.valor)}. Espacio para mover, clic para vista rápida.`}
+        aria-label={`${o.nombre}, ${dinero(o.valor)}, ${ETIQUETA_ETAPA[o.etapa]}.`}
+        aria-describedby={idAyuda}
         onClick={() => alAbrir(o)}
         className={`${claseTarjeta} cursor-grab transition-[box-shadow,transform] duration-150 hover:-translate-y-px hover:ring-tinta-2/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta active:cursor-grabbing`}
       >
@@ -157,10 +158,12 @@ function Columna({
   etapa,
   items,
   alAbrir,
+  idAyuda,
 }: {
   etapa: Etapa;
   items: OportunidadCompleta[];
   alAbrir: (o: OportunidadCompleta) => void;
+  idAyuda: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: etapa, data: { tipo: "columna" } });
   const valor = items.reduce((s, o) => s + o.valor, 0);
@@ -190,7 +193,7 @@ function Columna({
       <SortableContext id={etapa} items={items.map((o) => o.id)} strategy={verticalListSortingStrategy}>
         <ul ref={setNodeRef} className="flex min-h-[120px] flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-2 pb-2 pt-0.5">
           {items.map((o) => (
-            <Tarjeta key={o.id} o={o} alAbrir={alAbrir} />
+            <Tarjeta key={o.id} o={o} alAbrir={alAbrir} idAyuda={idAyuda} />
           ))}
           {items.length === 0 && (
             <li className="grid min-h-[96px] place-items-center rounded-lg border border-dashed border-linea px-3 text-center text-[0.8125rem] text-tinta-2">
@@ -208,6 +211,7 @@ function Columna({
 export function Kanban({ filas, etapas }: { filas: OportunidadCompleta[]; etapas: Etapa[] }) {
   const { abrir, mover } = useAccionesOportunidad();
   const idDnd = useId();
+  const idAyuda = `${idDnd}-ayuda`;
   const [columnas, setColumnas] = useState(() => agrupar(filas, etapas));
   const [activa, setActiva] = useState<OportunidadCompleta | null>(null);
   const inicio = useRef<{ etapa: Etapa; indice: number; foto: Columnas } | null>(null);
@@ -362,8 +366,12 @@ export function Kanban({ filas, etapas }: { filas: OportunidadCompleta[]; etapas
         role="region"
         aria-label="Tablero de oportunidades"
       >
+        <p id={idAyuda} className="sr-only">
+          Clic para la vista rápida. Con teclado: espacio para coger la tarjeta y flechas para moverla, o el botón de acciones de cada
+          tarjeta para abrirla o moverla a otra etapa.
+        </p>
         {etapas.map((e) => (
-          <Columna key={e} etapa={e} items={columnas[e] ?? []} alAbrir={alAbrir} />
+          <Columna key={e} etapa={e} items={columnas[e] ?? []} alAbrir={alAbrir} idAyuda={idAyuda} />
         ))}
       </div>
 

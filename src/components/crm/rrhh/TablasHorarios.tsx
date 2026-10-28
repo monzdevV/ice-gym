@@ -31,18 +31,18 @@ export function TablaFichajes({
   hoy: string;
 }) {
   return (
-    <MarcoTabla enSeccion={enSeccion} minimo={conEmpleado ? "min-w-[860px]" : "min-w-[620px]"}>
+    <MarcoTabla titulo="Registros de entrada y salida" enSeccion={enSeccion} minimo={conEmpleado ? "min-w-[860px]" : "min-w-[620px]"}>
       <thead>
         <tr className={claseCabeceraTabla}>
-          {conEmpleado && <th className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>}
-          <th className={`py-2.5 pr-3 font-normal ${conEmpleado ? "" : "pl-4"}`}>Fecha</th>
-          <th className="py-2.5 pr-3 font-normal">Entrada</th>
-          <th className="py-2.5 pr-3 font-normal">Salida</th>
-          <th className="py-2.5 pr-3 text-right font-normal">Total</th>
-          <th className="py-2.5 pr-3 font-normal">Estado</th>
-          <th className="py-2.5 pr-4 font-normal">Observaciones</th>
+          {conEmpleado && <th scope="col" className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>}
+          <th scope="col" className={`py-2.5 pr-3 font-normal ${conEmpleado ? "" : "pl-4"}`}>Fecha</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Entrada</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Salida</th>
+          <th scope="col" className="py-2.5 pr-3 text-right font-normal">Total</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Estado</th>
+          <th scope="col" className="py-2.5 pr-4 font-normal">Observaciones</th>
           {editable && (
-            <th className="w-12 py-2.5 pr-3 font-normal">
+            <th scope="col" className="w-12 py-2.5 pr-3 font-normal">
               <span className="sr-only">Acciones</span>
             </th>
           )}
@@ -107,15 +107,15 @@ export function resumirPorMes(fichajes: Fichaje[], hoy: string): FilaResumen[] {
 /** Resumen mensual: días trabajados, horas, media diaria e incidencias. */
 export function TablaResumenMensual({ filas, personas, conEmpleado = true }: { filas: FilaResumen[]; personas: Map<string, EmpleadoMini>; conEmpleado?: boolean }) {
   return (
-    <MarcoTabla minimo="min-w-[760px]">
+    <MarcoTabla titulo="Resumen mensual de horas" minimo="min-w-[760px]">
       <thead>
         <tr className={claseCabeceraTabla}>
-          <th className="py-2.5 pl-4 pr-3 font-normal">Mes</th>
-          {conEmpleado && <th className="py-2.5 pr-3 font-normal">Empleado</th>}
-          <th className="py-2.5 pr-3 text-right font-normal">Días trabajados</th>
-          <th className="py-2.5 pr-3 text-right font-normal">Horas</th>
-          <th className="py-2.5 pr-3 text-right font-normal">Media diaria</th>
-          <th className="py-2.5 pr-4 font-normal">Incidencias</th>
+          <th scope="col" className="py-2.5 pl-4 pr-3 font-normal">Mes</th>
+          {conEmpleado && <th scope="col" className="py-2.5 pr-3 font-normal">Empleado</th>}
+          <th scope="col" className="py-2.5 pr-3 text-right font-normal">Días trabajados</th>
+          <th scope="col" className="py-2.5 pr-3 text-right font-normal">Horas</th>
+          <th scope="col" className="py-2.5 pr-3 text-right font-normal">Media diaria</th>
+          <th scope="col" className="py-2.5 pr-4 font-normal">Incidencias</th>
         </tr>
       </thead>
       <tbody>

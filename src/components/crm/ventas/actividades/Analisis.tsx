@@ -60,6 +60,7 @@ export function AnalisisActividades({
       <Seccion titulo="Por tipo y comercial" id="analisis-comercial">
         <div className="-mx-5 overflow-x-auto">
           <table className="w-full min-w-max text-sm">
+            <caption className="sr-only">Actividades por tipo y comercial, de hace 30 días a dentro de 30 días</caption>
             <thead>
               <tr className="border-b border-linea">
                 <th scope="col" className={`${cabecera} text-left`}>
@@ -85,7 +86,7 @@ export function AnalisisActividades({
                     const n = cuenta((a) => deTipo(t)(a) && deComercial(c)(a));
                     return (
                       <td key={c} className={`${celda} ${n ? "text-tinta" : "text-tinta-2/60"}`}>
-                        {n ? numero(n) : "·"}
+                        {n ? numero(n) : <><span aria-hidden>·</span><span className="sr-only">0</span></>}
                       </td>
                     );
                   })}
@@ -113,6 +114,7 @@ export function AnalisisActividades({
       <Seccion titulo="Hechas y pendientes" id="analisis-estado">
         <div className="-mx-5 overflow-x-auto">
           <table className="w-full min-w-max text-sm">
+            <caption className="sr-only">Actividades hechas, vencidas y próximas por tipo</caption>
             <thead>
               <tr className="border-b border-linea">
                 <th scope="col" className={`${cabecera} text-left`}>

@@ -37,7 +37,7 @@ function BotonMas({ restantes, paso, onClick }: { restantes: number; paso: numbe
       className="mx-auto mt-3 inline-flex h-8 items-center rounded-md border border-linea bg-placa px-3 text-[0.8125rem] font-medium text-tinta-2 transition-colors hover:bg-placa-2 hover:text-tinta"
     >
       Mostrar {numero(Math.min(restantes, paso * 2))} más
-      <span className="ml-1.5 tabular-nums text-tinta-2/70">({numero(restantes)} restantes)</span>
+      <span className="ml-1.5 tabular-nums text-tinta-2">({numero(restantes)} restantes)</span>
     </button>
   );
 }

@@ -22,15 +22,21 @@ export function Campo({
   children,
   className = "",
   ayuda,
+  obligatorio = false,
 }: {
   etiqueta: string;
   children: ReactNode;
   className?: string;
   ayuda?: string;
+  /** Lo dice con palabras, no sólo con un asterisco. */
+  obligatorio?: boolean;
 }) {
   return (
     <label className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
-      <span className="text-[0.8125rem] font-medium text-tinta">{etiqueta}</span>
+      <span className="text-[0.8125rem] font-medium text-tinta">
+        {etiqueta}
+        {obligatorio && <span className="font-normal text-tinta-2"> (obligatorio)</span>}
+      </span>
       {children}
       {ayuda && <span className="text-xs text-tinta-2">{ayuda}</span>}
     </label>
@@ -62,7 +68,7 @@ export function CamposEmpresa({
   return (
     <div className="flex flex-col gap-6">
       <Grupo titulo="Identidad">
-        <Campo etiqueta="Nombre" className="sm:col-span-2">
+        <Campo etiqueta="Nombre" className="sm:col-span-2" obligatorio>
           <input name="nombre" required minLength={2} defaultValue={e.nombre ?? ""} autoComplete="off" className={claseCampo} />
         </Campo>
         <Campo etiqueta="Tipo de relación">
@@ -98,7 +104,7 @@ export function CamposEmpresa({
           <input name="web" defaultValue={e.web ?? ""} placeholder="empresa.com" autoComplete="off" className={claseCampo} />
         </Campo>
         <Campo etiqueta="Email">
-          <input name="email" type="email" defaultValue={e.email ?? ""} autoComplete="off" className={claseCampo} />
+          <input name="email" type="email" defaultValue={e.email ?? ""} autoComplete="off" inputMode="email" className={claseCampo} />
         </Campo>
         <Campo etiqueta="Teléfono">
           <input name="telefono" type="tel" defaultValue={e.telefono ?? ""} autoComplete="off" className={claseCampo} />

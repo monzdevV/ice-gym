@@ -20,6 +20,14 @@ import { claseCasilla, esTarea, esVencida } from "./utiles";
 
 type Columna = "fecha" | "tipo" | "titulo" | "responsable" | "estado";
 
+const ETIQUETA_COLUMNA: Record<Columna, string> = {
+  fecha: "fecha",
+  tipo: "tipo",
+  titulo: "actividad",
+  responsable: "responsable",
+  estado: "estado",
+};
+
 const TONO_ESTADO = { pendiente: "var(--relleno-ambar)", completada: "var(--relleno-verde)", cancelada: "var(--relleno-gris)" };
 
 /** Vista tabla del feed de actividades: densa, ordenable, con acciones por fila. */
@@ -63,6 +71,9 @@ export function TablaActividades({ items }: { items: InteraccionCompleta[] }) {
   return (
     <div className="overflow-x-auto rounded-2xl bg-placa shadow-placa">
       <table className="w-full min-w-[860px] text-sm">
+        <caption className="sr-only">
+          Actividades ({lista.length}), ordenadas por {ETIQUETA_COLUMNA[orden.col]} en orden {orden.asc ? "ascendente" : "descendente"}
+        </caption>
         <thead className="bg-placa-2/60 text-xs text-tinta-2">
           <tr>
             {cabecera("fecha", "Fecha", "w-36")}

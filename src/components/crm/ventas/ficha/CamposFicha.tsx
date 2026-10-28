@@ -17,7 +17,7 @@ const enlaceIcono = "grid size-7 shrink-0 place-items-center rounded-md text-ace
 
 /** Cuerpo de la ficha: título, importes, quién, propiedad, notas e información adicional. */
 export function CamposFicha({ o, catalogos }: { o: OportunidadVentasCompleta; catalogos: CatalogosVentas }) {
-  const { guardar, pendiente } = useGuardar(o.id);
+  const { guardar, pendiente, estado } = useGuardar(o.id);
   const idCliente = useId();
   const idEtiquetas = useId();
   const etapa = catalogos.etapas.find((e) => e.id === o.etapa_id);
@@ -28,6 +28,10 @@ export function CamposFicha({ o, catalogos }: { o: OportunidadVentasCompleta; ca
 
   return (
     <div className={`flex flex-col gap-6 ${pendiente ? "cursor-progress" : ""}`}>
+      {/* Cada campo se guarda al salir de él: el lector de pantalla oye que se ha guardado. */}
+      <p role="status" className="sr-only">
+        {pendiente ? "Guardando…" : estado === "guardado" ? "Cambios guardados." : ""}
+      </p>
       <TextoEnLinea
         etiqueta="Nombre de la oportunidad"
         valor={o.nombre}

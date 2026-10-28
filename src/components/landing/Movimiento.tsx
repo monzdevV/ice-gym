@@ -39,7 +39,7 @@ export function Revelar({
 
 /**
  * Titular que entra palabra a palabra desde detrás de una máscara.
- * El texto completo queda en aria-label para lectores de pantalla.
+ * El texto completo va en un span sr-only (aria-label no se lee bien en <p>).
  */
 export function TituloPartido({
   texto,
@@ -66,7 +66,8 @@ export function TituloPartido({
   let i = 0;
 
   return (
-    <Etiqueta ref={ref} className={className} aria-label={texto.replace(/\n/g, " ")}>
+    <Etiqueta ref={ref} className={className}>
+      <span className="sr-only">{texto.replace(/\n/g, " ")}</span>
       {lineas.map((linea, l) => (
         <span key={l} className="block" aria-hidden>
           {linea.split(" ").map((palabra, p) => {

@@ -59,9 +59,14 @@ export function DialogoFormulario({
   const router = useRouter();
   const [abiertoPropio, setAbiertoPropio] = useState(false);
   const abierto = abiertoExterno ?? abiertoPropio;
+  // Cada apertura (propia o desde fuera) estrena formulario y olvida el error anterior.
   const [vez, setVez] = useState(0);
+  const [abiertoAntes, setAbiertoAntes] = useState(abierto);
+  if (abierto !== abiertoAntes) {
+    setAbiertoAntes(abierto);
+    if (abierto) setVez((n) => n + 1);
+  }
   const setAbierto = (v: boolean) => {
-    if (v) setVez((n) => n + 1);
     if (onAbierto) onAbierto(v);
     else setAbiertoPropio(v);
   };
@@ -72,8 +77,10 @@ export function DialogoFormulario({
       setAbierto(false);
       router.refresh();
     }
-    return r;
+    return { ...r, vez };
   }, null);
+  const errorId = `error-formulario-${vez}`;
+  const hayError = estado?.ok === false && estado.vez === vez;
 
   return (
     <Dialog open={abierto} onOpenChange={setAbierto}>
@@ -83,10 +90,10 @@ export function DialogoFormulario({
           <DialogTitle>{titulo}</DialogTitle>
           {descripcion && <DialogDescription>{descripcion}</DialogDescription>}
         </DialogHeader>
-        <form key={vez} action={enviar} className="flex flex-col gap-4 px-5 py-4">
+        <form key={vez} action={enviar} aria-describedby={hayError ? errorId : undefined} className="flex flex-col gap-4 px-5 py-4">
           {children}
-          {estado?.ok === false && (
-            <p role="alert" className={claseError}>
+          {hayError && (
+            <p id={errorId} role="alert" className={claseError}>
               {estado.mensaje}
             </p>
           )}
@@ -154,7 +161,7 @@ export function ConfirmarBorrado({
             type="button"
             onClick={confirmar}
             disabled={pendiente}
-            className="inline-flex h-9 items-center gap-2 rounded-md bg-alarma px-4 text-sm font-medium text-white shadow-sm transition-[filter] hover:brightness-110 disabled:opacity-50"
+            className="inline-flex h-9 items-center gap-2 rounded-md bg-critico px-4 text-sm font-medium text-sobre-critico shadow-sm transition-[filter] hover:brightness-110 disabled:opacity-50"
           >
             <Trash className="size-4" aria-hidden />
             {pendiente ? "Borrando…" : "Borrar"}
@@ -199,11 +206,26 @@ export function MenuFila({ acciones, etiqueta = "Acciones" }: { acciones: Accion
   );
 }
 
-/** Etiqueta + control, como el `Campo` de los formularios del CRM. */
-export function CampoRrhh({ etiqueta, children, className = "", ayuda }: { etiqueta: string; children: ReactNode; className?: string; ayuda?: ReactNode }) {
+/** Etiqueta + control, como el `Campo` de los formularios del CRM. «Obligatorio» va escrito, no sólo con `required`. */
+export function CampoRrhh({
+  etiqueta,
+  children,
+  className = "",
+  ayuda,
+  obligatorio = false,
+}: {
+  etiqueta: string;
+  children: ReactNode;
+  className?: string;
+  ayuda?: ReactNode;
+  obligatorio?: boolean;
+}) {
   return (
     <label className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
-      <span className="text-[0.8125rem] font-medium text-tinta">{etiqueta}</span>
+      <span className="text-[0.8125rem] font-medium text-tinta">
+        {etiqueta}
+        {obligatorio && <span className="font-normal text-tinta-2"> (obligatorio)</span>}
+      </span>
       {children}
       {ayuda && <span className="text-xs text-tinta-2">{ayuda}</span>}
     </label>

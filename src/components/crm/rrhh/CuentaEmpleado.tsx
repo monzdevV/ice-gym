@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeSlash, Key } from "@phosphor-icons/react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ export function CuentaEmpleado({ empleado }: { empleado: Pick<Empleado, "id" | "
   const [abierto, setAbierto] = useState(false);
   const [vez, setVez] = useState(0);
   const [ver, setVer] = useState(false);
+  const id = useId();
   const tiene = !!empleado.user_id;
   const [estado, accion, enviando] = useActionState(async (prev: Resultado | null, fd: FormData) => {
     const r = await gestionarCuenta(prev, fd);
@@ -25,7 +26,7 @@ export function CuentaEmpleado({ empleado }: { empleado: Pick<Empleado, "id" | "
       setAbierto(false);
       router.refresh();
     }
-    return r;
+    return { ...r, vez };
   }, null);
 
   return (
@@ -53,21 +54,26 @@ export function CuentaEmpleado({ empleado }: { empleado: Pick<Empleado, "id" | "
         <form key={vez} action={accion} className="flex flex-col gap-4">
           <input type="hidden" name="id" value={empleado.id} />
           <label className="flex min-w-0 flex-col gap-1.5">
-            <span className="text-[0.8125rem] font-medium text-tinta">Nombre de usuario</span>
+            <span className="text-[0.8125rem] font-medium text-tinta">
+              Nombre de usuario{!tiene && <span className="font-normal text-tinta-2"> (obligatorio)</span>}
+            </span>
             <input
               name="usuario"
               required={!tiene}
               pattern="[a-z0-9._\-]{3,40}"
               defaultValue={empleado.usuario ?? usuarioSugerido(empleado.email)}
+              title="3 a 40 letras minúsculas, números, puntos o guiones"
               autoComplete="off"
               spellCheck={false}
               className={claseCampo}
             />
           </label>
           <label className="flex min-w-0 flex-col gap-1.5">
-            <span className="text-[0.8125rem] font-medium text-tinta">{tiene ? "Nueva contraseña" : "Contraseña inicial"}</span>
+            <span className="text-[0.8125rem] font-medium text-tinta">
+              {tiene ? "Nueva contraseña" : "Contraseña inicial"} <span className="font-normal text-tinta-2">(obligatorio)</span>
+            </span>
             <span className="relative flex items-center">
-              <input name="password" type={ver ? "text" : "password"} required minLength={8} autoComplete="new-password" className={`${claseCampo} pr-9`} />
+              <input name="password" type={ver ? "text" : "password"} required minLength={8} autoComplete="new-password" aria-describedby={`${id}-ayuda`} className={`${claseCampo} pr-9`} />
               <button
                 type="button"
                 onClick={() => setVer((v) => !v)}
@@ -77,9 +83,11 @@ export function CuentaEmpleado({ empleado }: { empleado: Pick<Empleado, "id" | "
                 {ver ? <EyeSlash className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
               </button>
             </span>
-            <span className="text-xs text-tinta-2">Mínimo 8 caracteres con letras y números.</span>
+            <span id={`${id}-ayuda`} className="text-xs text-tinta-2">
+              Mínimo 8 caracteres con letras y números.
+            </span>
           </label>
-          {estado?.ok === false && (
+          {estado?.ok === false && estado.vez === vez && (
             <p role="alert" className={claseError}>
               {estado.mensaje}
             </p>

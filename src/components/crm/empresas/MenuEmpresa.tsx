@@ -49,18 +49,34 @@ type Peticion = { accion: AccionRapida; empresaId: string; n: number };
 export function useLanzador(catalogos: Catalogos) {
   const [peticion, setPeticion] = useState<Peticion | null>(null);
   const disparador = useRef<HTMLButtonElement>(null);
+  // Botón «…» que lanzó el diálogo: al cerrarse, el foco vuelve a él y no al disparador oculto.
+  const origen = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!peticion) return;
     // Un fotograma de margen para que el menú termine de cerrarse y devuelva el foco.
-    const f = requestAnimationFrame(() => disparador.current?.click());
+    const f = requestAnimationFrame(() => {
+      origen.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      disparador.current?.click();
+    });
     return () => cancelAnimationFrame(f);
   }, [peticion]);
 
   const lanzar = (accion: AccionRapida, empresaId: string) =>
     setPeticion((p) => ({ accion, empresaId, n: (p?.n ?? 0) + 1 }));
 
-  const boton = <button ref={disparador} type="button" tabIndex={-1} aria-hidden className="sr-only" />;
+  const boton = (
+    <button
+      ref={disparador}
+      type="button"
+      tabIndex={-1}
+      aria-hidden
+      className="sr-only"
+      onFocus={() => {
+        if (origen.current?.isConnected) origen.current.focus();
+      }}
+    />
+  );
   const dialogos = peticion ? (
     <div className="contents" key={peticion.n}>
       {peticion.accion === "oportunidad" && (
@@ -141,6 +157,7 @@ export function MenuEmpresa({
               <DropdownMenuItem key={e} disabled={e === empresa.estado} onSelect={() => cambiarEstado(e)}>
                 <span className="size-2 rounded-full" style={{ background: TONO_ESTADO_EMPRESA[e] }} aria-hidden />
                 {ETIQUETA_ESTADO_EMPRESA[e]}
+                {e === empresa.estado && <span className="ml-auto text-xs text-tinta-2">Actual</span>}
               </DropdownMenuItem>
             ))}
           </DropdownMenuSubContent>
@@ -164,6 +181,7 @@ export function MenuEmpresa({
           <DropdownMenuItem asChild>
             <a href={urlWeb(empresa.web)} target="_blank" rel="noopener noreferrer">
               <ArrowSquareOut aria-hidden /> Abrir web
+              <span className="sr-only">(se abre en otra pestaña)</span>
             </a>
           </DropdownMenuItem>
         )}
