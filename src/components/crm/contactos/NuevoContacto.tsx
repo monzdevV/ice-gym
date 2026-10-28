@@ -53,7 +53,7 @@ export function NuevoContacto({
         )}
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto p-0 sm:max-w-xl">
-        <DialogHeader className="border-b border-linea px-5 py-4">
+        <DialogHeader className="px-5 pb-1 pt-5">
           <DialogTitle>Nuevo contacto</DialogTitle>
           <DialogDescription>Una persona de una empresa cliente, proveedora o partner.</DialogDescription>
         </DialogHeader>

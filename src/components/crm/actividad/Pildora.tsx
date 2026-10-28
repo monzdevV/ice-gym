@@ -9,7 +9,7 @@ export type OpcionPildora = { valor: string; texto: string; icono?: ReactNode };
 const normal = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 export const clasePildora =
-  "flex h-8 items-stretch overflow-hidden rounded-lg border border-linea bg-placa text-[0.8125rem] transition-colors hover:border-tinta-2/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento data-[state=open]:border-tinta-2/40";
+  "flex h-8 items-stretch overflow-hidden rounded-lg bg-placa text-[0.8125rem] shadow-placa transition-colors hover:bg-placa-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta data-[state=open]:bg-placa-2";
 
 /** Píldora de filtro «Etiqueta | Valor ▾», con buscador si hay muchas opciones. */
 export function Pildora({
@@ -42,14 +42,14 @@ export function Pildora({
     >
       <PopoverTrigger asChild>
         <button type="button" className={clasePildora}>
-          <span className="flex items-center border-r border-linea px-2.5 text-tinta-2">{etiqueta}</span>
+          <span className="flex items-center pl-2.5 text-tinta-2">{etiqueta}</span>
           <span className={`flex max-w-44 items-center gap-1.5 px-2.5 font-medium ${activa ? "text-acento-tinta" : "text-tinta"}`}>
             <span className="truncate">{actual?.texto ?? opciones[0]?.texto}</span>
             <CaretDown className="size-3 shrink-0 text-tinta-2" weight="bold" aria-hidden />
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-60 gap-0 border border-linea bg-placa p-0 text-tinta">
+      <PopoverContent align="start" className="w-60 gap-0 bg-placa p-0 text-tinta shadow-lg">
         {buscar && (
           <label className="flex items-center gap-2 border-b border-linea px-3">
             <MagnifyingGlass className="size-4 shrink-0 text-tinta-2" aria-hidden />

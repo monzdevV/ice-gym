@@ -42,7 +42,7 @@ function Vacio({ children }: { children: React.ReactNode }) {
 /** Icono redondo con el tono del tipo. */
 function Pastilla({ Icono, tono }: { Icono: Icon; tono: string }) {
   return (
-    <span className="grid size-7 shrink-0 place-items-center rounded-full text-white" style={{ background: tono }} aria-hidden>
+    <span className="grid size-7 shrink-0 place-items-center rounded-full text-sobre-relleno" style={{ background: tono }} aria-hidden>
       <Icono className="size-3.5" weight="bold" />
     </span>
   );
@@ -61,7 +61,7 @@ export function ProximosSeguimientos({ items }: { items: Seguimiento[] }) {
           <li key={s.id}>
             <Link
               href={s.href}
-              className={`flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-placa-2 ${s.vencida ? "bg-alarma/[0.06]" : ""}`}
+              className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-placa-2"
             >
               <Pastilla Icono={Icono} tono={tono} />
               <span className="flex min-w-0 flex-1 flex-col">
@@ -77,7 +77,8 @@ export function ProximosSeguimientos({ items }: { items: Seguimiento[] }) {
                 </span>
               )}
               <span className="flex shrink-0 flex-col items-end gap-0.5">
-                <span className={`text-xs font-medium tabular-nums ${s.vencida ? "text-alarma-tinta" : "text-tinta"}`}>
+                <span className={`inline-flex items-center gap-1.5 text-xs font-medium tabular-nums ${s.vencida ? "text-critico" : "text-tinta"}`}>
+                  {s.vencida && <span className="size-1.5 rounded-full bg-critico" aria-hidden />}
                   {s.vencida ? `Vencida ${relativo(s.fecha)}` : relativo(s.fecha)}
                 </span>
                 <span className="text-[0.7rem] tabular-nums text-tinta-2">{fechaHora(s.fecha)}</span>

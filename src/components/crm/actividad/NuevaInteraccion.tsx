@@ -76,7 +76,7 @@ function Segmentado<T extends string>({
   return (
     <fieldset className="min-w-0">
       <legend className="sr-only">{etiqueta}</legend>
-      <div className="flex flex-wrap gap-1 rounded-lg border border-linea bg-placa-2 p-1">
+      <div className="flex flex-wrap gap-1 rounded-lg bg-placa-2 p-1">
         {opciones.map((o) => (
           <label
             key={o.valor}
@@ -329,7 +329,7 @@ function Formulario({ catalogos, empresaId, contactoId, oportunidadId, tipo: tip
         )}
       </div>
 
-      <fieldset className="flex flex-col gap-3 rounded-lg border border-linea p-3">
+      <fieldset className="flex flex-col gap-3 rounded-xl bg-placa-2/60 p-3">
         <legend className="px-1 text-[0.8125rem] font-medium text-tinta">Relacionado con</legend>
         <Campo etiqueta="Empresa" htmlFor={`${idBase}-empresa`}>
           <Selector
@@ -383,7 +383,7 @@ function Formulario({ catalogos, empresaId, contactoId, oportunidadId, tipo: tip
         <button
           type="button"
           onClick={alTerminar}
-          className="inline-flex h-9 items-center justify-center rounded-md border border-linea px-4 text-sm font-medium text-tinta transition-colors hover:bg-placa-2"
+          className="inline-flex h-9 items-center justify-center rounded-md bg-placa-2 px-4 text-sm font-medium text-tinta transition-colors hover:bg-linea"
         >
           Cancelar
         </button>
@@ -421,7 +421,7 @@ export function NuevaInteraccion(props: Props) {
           </button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-h-[92dvh] overflow-y-auto border border-linea bg-placa p-5 text-tinta sm:max-w-xl">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto bg-placa p-5 text-tinta shadow-lg sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="text-base font-semibold text-tinta">
             {esNuevaTarea ? "Nueva tarea" : "Registrar actividad"}

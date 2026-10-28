@@ -30,7 +30,7 @@ import { CamposContacto } from "./FormularioContacto";
 import { copiar } from "./AccionesContacto";
 
 export const claseBotonSecundario =
-  "inline-flex h-8 items-center gap-1.5 rounded-md border border-linea bg-placa px-3 text-[0.8125rem] font-medium text-tinta transition-colors hover:bg-placa-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento";
+  "inline-flex h-8 items-center gap-1.5 rounded-md bg-placa px-3 text-[0.8125rem] font-medium text-tinta shadow-placa transition-colors hover:bg-placa-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento";
 
 /* ------------------------------ Editar (Sheet) ------------------------------ */
 
@@ -59,7 +59,7 @@ function HojaEditar({
   return (
     <Sheet open={abierto} onOpenChange={onAbierto}>
       <SheetContent className="w-full gap-0 sm:max-w-lg">
-        <SheetHeader className="border-b border-linea">
+        <SheetHeader>
           <SheetTitle>Editar contacto</SheetTitle>
           <SheetDescription>{nombreCompleto(contacto)}</SheetDescription>
         </SheetHeader>
@@ -165,7 +165,7 @@ export function MasAcciones({ contacto }: { contacto: Contacto }) {
               type="button"
               onClick={borrar}
               disabled={pendiente}
-              className="inline-flex h-9 items-center gap-2 rounded-md bg-alarma px-4 text-sm font-medium text-white shadow-sm transition-[filter] hover:brightness-110 disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-2 rounded-md bg-critico px-4 text-sm font-medium text-sobre-critico shadow-sm transition-[filter] hover:brightness-110 disabled:opacity-50"
             >
               <Trash className="size-4" aria-hidden />
               {pendiente ? "Borrando…" : "Borrar"}

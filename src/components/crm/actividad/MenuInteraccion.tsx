@@ -72,7 +72,7 @@ export function MenuInteraccion({
       </DropdownMenu>
 
       <Dialog open={confirmar} onOpenChange={setConfirmar}>
-        <DialogContent className="border border-linea bg-placa text-tinta sm:max-w-sm">
+        <DialogContent className="bg-placa text-tinta shadow-lg sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>¿Borrar «{item.titulo}»?</DialogTitle>
             <DialogDescription className="text-tinta-2">
@@ -83,7 +83,7 @@ export function MenuInteraccion({
             <button
               type="button"
               onClick={() => setConfirmar(false)}
-              className="inline-flex h-9 items-center justify-center rounded-md border border-linea px-4 text-sm font-medium text-tinta transition-colors hover:bg-placa-2"
+              className="inline-flex h-9 items-center justify-center rounded-md bg-placa-2 px-4 text-sm font-medium text-tinta transition-colors hover:bg-linea"
             >
               Mantener
             </button>
@@ -94,7 +94,7 @@ export function MenuInteraccion({
                 setConfirmar(false);
                 onBorrar();
               }}
-              className="inline-flex h-9 items-center justify-center rounded-md bg-alarma px-4 text-sm font-medium text-white transition-[filter] hover:brightness-110"
+              className="inline-flex h-9 items-center justify-center rounded-md bg-critico px-4 text-sm font-medium text-sobre-critico transition-[filter] hover:brightness-110"
             >
               Borrar
             </button>

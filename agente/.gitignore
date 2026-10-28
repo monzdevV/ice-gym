@@ -1,0 +1,8 @@
+.env
+.venv/
+__pycache__/
+
+# Las facturas son datos reales: sólo se versiona la estructura de carpetas.
+facturas/**
+!facturas/*/
+!facturas/*/.gitkeep

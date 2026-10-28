@@ -4,11 +4,11 @@ import { cargarDashboard } from "@/lib/datos/dashboard";
 import { ruta } from "@/lib/b2b";
 import { dinero, numero, porcentaje } from "@/lib/formato";
 import { Encabezado, claseEnlace } from "@/components/crm/Primitivas";
-import { Kpi, Tarjeta } from "@/components/crm/dashboard/Kpi";
+import { Atencion, Metrica, MiniDato, Resumen, Tarjeta } from "@/components/crm/dashboard/Kpi";
 import { FiltrosDashboard } from "@/components/crm/dashboard/FiltrosDashboard";
 import {
   GraficoCreadas,
-  GraficoEtapas,
+  GraficoEmbudo,
   GraficoGanadasPerdidas,
   GraficoPipeline,
   GraficoTipos,
@@ -41,7 +41,7 @@ export default async function PaginaDashboard({
   const responsable = responsableId ? d.equipo.find((m) => m.id === responsableId) : null;
 
   return (
-    <main className="px-4 pb-12 lg:px-8">
+    <main className="px-4 pb-12 md:px-8">
       <Encabezado
         titulo="Dashboard"
         meta={
@@ -50,14 +50,14 @@ export default async function PaginaDashboard({
             {responsable && <> · cartera de {responsable.nombre}</>}
           </span>
         }
-        className="px-0 lg:px-0"
+        className="px-0 md:px-0"
       >
         <FiltrosDashboard periodo={periodo} responsable={responsableId ?? ""} equipo={d.equipo} />
       </Encabezado>
 
       <h2 className="sr-only">Indicadores</h2>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
-        <Kpi
+      <Resumen>
+        <Metrica
           etiqueta="Pipeline abierto"
           valor={dinero(k.valorPipeline)}
           pie={`${numero(k.abiertas)} oportunidades abiertas`}
@@ -65,65 +65,67 @@ export default async function PaginaDashboard({
           delta={k.deltaPipeline}
           serie={d.porMes.map((m) => m.pipeline)}
         />
-        <Kpi
+        <Metrica
           etiqueta="Valor esperado"
           valor={dinero(k.valorEsperado)}
           pie={k.valorPipeline > 0 ? `${porcentaje((k.valorEsperado / k.valorPipeline) * 100)} del pipeline, ponderado` : "Ponderado por probabilidad"}
-          href={`${ruta.oportunidades}`}
+          href={ruta.oportunidades}
         />
-        <Kpi
+        <Metrica
           etiqueta="Ganadas"
           valor={numero(k.ganadas)}
           pie={`${dinero(k.valorGanado)} · ${textoPeriodo}`}
           href={`${ruta.oportunidades}?etapa=ganada`}
           serie={d.porMes.map((m) => m.ganadas)}
         />
-        <Kpi
-          etiqueta="Perdidas"
-          valor={numero(k.perdidas)}
-          pie={`${dinero(k.valorPerdido)} · ${textoPeriodo}`}
-          href={`${ruta.oportunidades}?etapa=perdida`}
-        />
-        <Kpi
+        <Metrica
           etiqueta="Tasa de conversión"
           valor={k.conversion == null ? "—" : porcentaje(k.conversion)}
           pie={k.conversion == null ? "Sin cierres en el periodo" : `${numero(k.ganadas)} de ${numero(k.ganadas + k.perdidas)} cerradas`}
           href={ruta.oportunidades}
         />
-        <Kpi
-          etiqueta="Nuevas oportunidades"
-          valor={numero(k.creadasPeriodo)}
-          pie={textoPeriodo}
-          href={ruta.oportunidades}
-          serie={d.porMes.map((m) => m.creadas)}
-        />
-        <Kpi
-          etiqueta="Empresas activas"
-          valor={numero(k.empresasActivas)}
-          pie={`de ${numero(k.empresasTotal)} empresas`}
-          href={`${ruta.empresas}?estado=activa`}
-        />
-        <Kpi etiqueta="Contactos" valor={numero(k.contactos)} pie="Personas activas" href={ruta.contactos} />
-        <Kpi
-          etiqueta="Tareas pendientes"
-          valor={numero(k.pendientes)}
-          pie={k.vencidas > 0 ? `${numero(k.vencidas)} vencidas` : "Ninguna vencida"}
-          href={ruta.tareas}
-          alarma={k.vencidas > 0}
-        />
-        <Kpi
-          etiqueta="Acciones vencidas"
-          valor={numero(k.accionesVencidas)}
-          pie="Próximas acciones fuera de plazo"
-          href={`${ruta.oportunidades}?vista=tabla&etapa=abiertas&orden=accion&dir=asc`}
-          alarma={k.accionesVencidas > 0}
-        />
+      </Resumen>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <section aria-label="Requiere atención" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Atencion
+            nivel={k.vencidas > 0 ? "error" : k.pendientes > 0 ? "aviso" : "ok"}
+            titulo="Tareas"
+            valor={numero(k.vencidas > 0 ? k.vencidas : k.pendientes)}
+            texto={
+              k.vencidas > 0
+                ? `vencidas · ${numero(k.pendientes)} pendientes en total`
+                : k.pendientes > 0
+                  ? "pendientes, ninguna vencida"
+                  : "Todo al día"
+            }
+            href={ruta.tareas}
+          />
+          <Atencion
+            nivel={k.accionesVencidas > 0 ? "error" : "ok"}
+            titulo="Próximas acciones"
+            valor={numero(k.accionesVencidas)}
+            texto={k.accionesVencidas > 0 ? "fuera de plazo en oportunidades abiertas" : "Ninguna fuera de plazo"}
+            href={`${ruta.oportunidades}?vista=tabla&etapa=abiertas&orden=accion&dir=asc`}
+          />
+        </section>
+        <section aria-label="Otros datos" className="grid grid-cols-2 gap-1 rounded-2xl bg-placa p-1.5 shadow-placa sm:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
+          <MiniDato etiqueta="Perdidas" valor={numero(k.perdidas)} pie={dinero(k.valorPerdido)} href={`${ruta.oportunidades}?etapa=perdida`} />
+          <MiniDato etiqueta="Nuevas" valor={numero(k.creadasPeriodo)} pie={textoPeriodo} href={ruta.oportunidades} />
+          <MiniDato
+            etiqueta="Empresas activas"
+            valor={numero(k.empresasActivas)}
+            pie={`de ${numero(k.empresasTotal)}`}
+            href={`${ruta.empresas}?estado=activa`}
+          />
+          <MiniDato etiqueta="Contactos" valor={numero(k.contactos)} href={ruta.contactos} />
+        </section>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Tarjeta
-          titulo="Pipeline por etapa"
-          subtitulo={`Valor y nº de oportunidades · cerradas: ${textoPeriodo}`}
+          titulo="Embudo comercial"
+          subtitulo={`Valor abierto por etapa · cerradas: ${textoPeriodo}`}
           className="xl:col-span-2"
           extra={
             <Link href={`${ruta.oportunidades}`} className={claseEnlace}>
@@ -131,7 +133,7 @@ export default async function PaginaDashboard({
             </Link>
           }
         >
-          <GraficoEtapas datos={d.porEtapa} />
+          <GraficoEmbudo datos={d.porEtapa} />
         </Tarjeta>
         <Tarjeta titulo="Por tipo de oportunidad" subtitulo="Valor abierto">
           {d.porTipo.length > 0 ? (

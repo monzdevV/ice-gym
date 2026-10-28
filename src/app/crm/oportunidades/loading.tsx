@@ -4,7 +4,7 @@ const pulso = "animate-pulse motion-reduce:animate-none";
 
 export default function Cargando() {
   return (
-    <main className={`${pulso} flex flex-col px-4 pb-4 md:h-[calc(100dvh-3.5rem)] lg:px-8`} aria-busy aria-label="Cargando oportunidades">
+    <main className={`${pulso} flex flex-col px-4 pb-4 md:h-dvh md:overflow-hidden md:px-8 md:pt-5`} aria-busy aria-label="Cargando oportunidades">
       <div className="flex items-end justify-between gap-4 pb-5 pt-6">
         <div className="flex flex-col gap-2">
           <span className="h-7 w-44 rounded-md bg-placa-2" />

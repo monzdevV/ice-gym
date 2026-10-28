@@ -1,7 +1,7 @@
 /** Esqueletos de carga de actividades, tareas y configuración (misma retícula que la pantalla real). */
 
 const pulso = "animate-pulse motion-reduce:animate-none";
-const bloque = "rounded-xl border border-linea bg-placa";
+const bloque = "rounded-2xl bg-placa shadow-placa";
 
 function Cabecera({ acciones = 1 }: { acciones?: number }) {
   return (
@@ -63,7 +63,7 @@ export function EsqueletoTareas() {
   return (
     <main className={`${pulso} flex flex-col gap-4 px-4 lg:px-8`} aria-busy aria-label="Cargando tareas">
       <Cabecera />
-      <div className="flex gap-3 border-b border-linea pb-2.5">
+      <div className="flex gap-3 pb-2.5">
         {Array.from({ length: 4 }).map((_, i) => (
           <span key={i} className="h-5 w-24 rounded bg-placa-2" />
         ))}
@@ -74,9 +74,9 @@ export function EsqueletoTareas() {
       </div>
       {Array.from({ length: 2 }).map((_, g) => (
         <div key={g} className={`${bloque} overflow-hidden`}>
-          <div className="h-8 border-b border-linea bg-placa-2/50" />
+          <div className="h-8 bg-placa-2/60" />
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 border-b border-linea/70 px-4 py-3.5 last:border-0">
+            <div key={i} className="flex items-center gap-3 px-4 py-3.5">
               <span className="size-[18px] rounded-full bg-placa-2" />
               <span className="flex flex-1 flex-col gap-1.5">
                 <span className="h-3.5 w-1/3 rounded bg-placa-2" />
@@ -96,14 +96,14 @@ export function EsqueletoConfiguracion() {
   return (
     <main className={`${pulso} flex flex-col gap-5 px-4 lg:px-8`} aria-busy aria-label="Cargando configuración">
       <Cabecera acciones={0} />
-      <div className="flex gap-3 border-b border-linea pb-2.5">
+      <div className="flex gap-3 pb-2.5">
         {Array.from({ length: 4 }).map((_, i) => (
           <span key={i} className="h-5 w-20 rounded bg-placa-2" />
         ))}
       </div>
       <div className={`${bloque} max-w-3xl overflow-hidden`}>
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 border-b border-linea/70 px-4 py-3 last:border-0">
+          <div key={i} className="flex items-center gap-3 px-4 py-3">
             <span className="size-9 rounded-full bg-placa-2" />
             <span className="flex flex-1 flex-col gap-1.5">
               <span className="h-3.5 w-40 rounded bg-placa-2" />

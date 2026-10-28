@@ -61,9 +61,9 @@ export function TablaActividades({ items }: { items: InteraccionCompleta[] }) {
   };
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-linea bg-placa">
+    <div className="overflow-x-auto rounded-2xl bg-placa shadow-placa">
       <table className="w-full min-w-[860px] text-sm">
-        <thead className="border-b border-linea bg-placa-2/50 text-xs text-tinta-2">
+        <thead className="bg-placa-2/60 text-xs text-tinta-2">
           <tr>
             {cabecera("fecha", "Fecha", "w-36")}
             {cabecera("tipo", "Tipo", "w-36")}
@@ -84,12 +84,12 @@ export function TablaActividades({ items }: { items: InteraccionCompleta[] }) {
             const vencida = esVencida(i);
             return (
               <tr key={i.id} className="border-b border-linea/70 last:border-0 hover:bg-placa-2/40">
-                <td className={`whitespace-nowrap px-3 py-2.5 tabular-nums ${vencida ? "font-medium text-alarma-tinta" : "text-tinta-2"}`}>
+                <td className={`whitespace-nowrap px-3 py-2.5 tabular-nums ${vencida ? "font-medium text-critico" : "text-tinta-2"}`}>
                   {fechaHora(i.fecha)}
                 </td>
                 <td className="px-3 py-2.5">
                   <span className="inline-flex items-center gap-2 text-tinta">
-                    <span className="grid size-6 place-items-center rounded-full text-white" style={{ background: TONO_INTERACCION[i.tipo] }}>
+                    <span className="grid size-6 place-items-center rounded-full text-sobre-relleno" style={{ background: TONO_INTERACCION[i.tipo] }}>
                       <Icono className="size-3.5" weight="bold" aria-hidden />
                     </span>
                     {ETIQUETA_INTERACCION[i.tipo]}

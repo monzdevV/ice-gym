@@ -19,21 +19,22 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { CaretDoubleUp, CaretUp, PauseCircle, WarningCircle } from "@phosphor-icons/react";
 import {
   ETIQUETA_ETAPA,
   PROBABILIDAD_POR_ETAPA,
   TONO_ETAPA,
+  accionVencidaB2B,
   esEtapa,
   estadoParaEtapa,
-  nombreCompleto,
   valorEsperado,
   type Etapa,
   type OportunidadCompleta,
 } from "@/lib/b2b";
 import { dinero, numero } from "@/lib/formato";
-import { Avatar, BadgePrioridad, BadgeTipoOportunidad, LogoEmpresa, Responsable } from "@/components/crm/b2b/Piezas";
+import { LogoEmpresa, Responsable } from "@/components/crm/b2b/Piezas";
 import { useAccionesOportunidad, MenuOportunidad } from "./Acciones";
-import { MarcaEstado, Probabilidad, ProximaAccion, fechaCorta } from "./Piezas";
+import { fechaCorta } from "./Piezas";
 
 type Columnas = Record<Etapa, OportunidadCompleta[]>;
 
@@ -56,53 +57,72 @@ function posicionEntre(lista: OportunidadCompleta[], i: number) {
 
 /* --------------------------------- Tarjeta -------------------------------- */
 
+/**
+ * Tarjeta: solo lo esencial para decidir de un vistazo. Qué es, con quién,
+ * cuánto vale y, si hace falta, una única alerta (acción vencida en rojo,
+ * prioridad alta en ámbar, urgente en rojo). Contacto, tipo, probabilidad y
+ * próxima acción siguen en la vista rápida al hacer clic.
+ */
 function Contenido({ o }: { o: OportunidadCompleta }) {
+  const cerrada = o.etapa === "ganada" || o.etapa === "perdida";
+  const vencida = !cerrada && accionVencidaB2B(o);
+  const urgente = !cerrada && o.prioridad === "urgente";
+  const alta = !cerrada && o.prioridad === "alta";
   return (
     <>
-      <div className="flex items-start gap-2 pr-6">
-        <p className="line-clamp-2 text-sm font-medium leading-snug text-tinta">{o.nombre}</p>
+      {/* El logo de la empresa es el ancla de color de cada tarjeta. */}
+      <div className="flex items-start gap-2.5 pr-5">
+        {o.empresa ? (
+          <LogoEmpresa nombre={o.empresa.nombre} url={o.empresa.logo_url} tamano="md" />
+        ) : (
+          <span className="size-9 shrink-0 rounded-[28%] border border-dashed border-linea" aria-hidden />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-[0.875rem] font-semibold leading-snug text-tinta">{o.nombre}</p>
+          <p className="mt-0.5 truncate text-xs text-tinta-2">{o.empresa?.nombre ?? "Sin empresa"}</p>
+        </div>
       </div>
 
-      {o.empresa && (
-        <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[0.8125rem] text-tinta">
-          <LogoEmpresa nombre={o.empresa.nombre} url={o.empresa.logo_url} tamano="xs" />
-          <span className="truncate">{o.empresa.nombre}</span>
-        </p>
-      )}
-      {o.contacto && (
-        <p className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-tinta-2">
-          <Avatar nombre={o.contacto.nombre} apellidos={o.contacto.apellidos} url={o.contacto.avatar_url} tamano="xs" />
-          <span className="truncate">{nombreCompleto(o.contacto)}</span>
-        </p>
-      )}
-
-      <div className="mt-2 flex flex-wrap items-center gap-1">
-        <BadgeTipoOportunidad tipo={o.tipo} />
-        {(o.prioridad === "alta" || o.prioridad === "urgente") && <BadgePrioridad prioridad={o.prioridad} />}
-        <MarcaEstado estado={o.estado} />
-      </div>
-
-      <div className="mt-2.5 flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold tabular-nums text-tinta">{dinero(o.valor)}</span>
-        <Probabilidad o={o} />
-      </div>
-
-      <div className="mt-2 border-t border-linea/70 pt-2">
-        <ProximaAccion o={o} />
-      </div>
-
-      <div className="mt-2 flex items-center justify-between gap-2 text-xs text-tinta-2">
-        <span className="tabular-nums" title="Fecha de creación">
-          Creada {fechaCorta(o.created_at)}
+      <div className="mt-3 flex items-center gap-2 border-t border-linea/60 pt-2.5">
+        <span className={`cifra whitespace-nowrap text-lg ${o.etapa === "perdida" ? "text-tinta-2 line-through decoration-1" : "text-tinta"}`}>
+          {dinero(o.valor)}
         </span>
-        <Responsable m={o.responsable} soloAvatar />
+        <span className="ml-auto flex shrink-0 items-center gap-1">
+          {vencida && (
+            <span
+              className="grid size-5 place-items-center rounded-md bg-critico-suave text-critico"
+              title={`Acción vencida el ${fechaCorta(o.proxima_accion_fecha)}: ${o.proxima_accion ?? "seguimiento"}`}
+            >
+              <WarningCircle className="size-3.5" weight="fill" aria-hidden />
+              <span className="sr-only">Acción vencida el {fechaCorta(o.proxima_accion_fecha)}</span>
+            </span>
+          )}
+          {urgente && (
+            <span className="grid size-5 place-items-center rounded-md bg-critico-suave text-critico" title="Prioridad urgente">
+              <CaretDoubleUp className="size-3.5" weight="bold" aria-hidden />
+              <span className="sr-only">Prioridad urgente</span>
+            </span>
+          )}
+          {alta && (
+            <span className="grid size-5 place-items-center rounded-md bg-aviso-suave text-aviso" title="Prioridad alta">
+              <CaretUp className="size-3.5" weight="bold" aria-hidden />
+              <span className="sr-only">Prioridad alta</span>
+            </span>
+          )}
+          {o.estado === "en_pausa" && (
+            <span className="text-tinta-2" title="En pausa">
+              <PauseCircle className="size-4" weight="fill" aria-hidden />
+              <span className="sr-only">En pausa</span>
+            </span>
+          )}
+          <Responsable m={o.responsable} soloAvatar />
+        </span>
       </div>
     </>
   );
 }
 
-const claseTarjeta =
-  "relative block w-full rounded-lg border border-linea bg-placa p-3 text-left shadow-[0_1px_2px_rgb(0_0_0/0.08)]";
+const claseTarjeta = "relative block w-full rounded-2xl bg-tarjeta px-3 py-3 text-left shadow-placa ring-1 ring-linea/70";
 
 function Tarjeta({ o, alAbrir }: { o: OportunidadCompleta; alAbrir: (o: OportunidadCompleta) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -122,7 +142,7 @@ function Tarjeta({ o, alAbrir }: { o: OportunidadCompleta; alAbrir: (o: Oportuni
         aria-roledescription="tarjeta arrastrable"
         aria-label={`${o.nombre}, ${dinero(o.valor)}. Espacio para mover, clic para vista rápida.`}
         onClick={() => alAbrir(o)}
-        className={`${claseTarjeta} cursor-grab transition-[border-color,box-shadow] hover:border-tinta-2/40 hover:shadow-[0_2px_8px_rgb(0_0_0/0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento active:cursor-grabbing`}
+        className={`${claseTarjeta} cursor-grab transition-[box-shadow,transform] duration-150 hover:-translate-y-px hover:ring-tinta-2/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta active:cursor-grabbing`}
       >
         <Contenido o={o} />
       </div>
@@ -148,25 +168,27 @@ function Columna({
 
   return (
     <section
-      className={`flex max-h-[75dvh] w-[288px] shrink-0 snap-start flex-col rounded-xl border bg-placa-2/40 transition-colors md:max-h-none md:w-0 md:min-w-[190px] md:flex-1 ${
-        isOver ? "border-acento bg-acento/5" : "border-linea"
+      className={`flex max-h-[75dvh] w-[288px] shrink-0 snap-start flex-col rounded-2xl transition-[background-color,box-shadow] md:max-h-none md:min-h-0 md:w-0 md:min-w-[212px] md:flex-1 ${
+        isOver ? "bg-acento-suave ring-2 ring-acento/60" : "bg-columna"
       }`}
       aria-label={`${ETIQUETA_ETAPA[etapa]}: ${items.length} oportunidades, ${dinero(valor)}`}
     >
-      <header className="flex flex-col gap-0.5 px-3 pb-2 pt-3">
-        <div className="flex items-center gap-2">
-          <span className="size-2 rounded-full" style={{ backgroundColor: TONO_ETAPA[etapa] }} aria-hidden />
+      <header className="shrink-0 px-3 pb-3 pt-3">
+        <span className="mb-3 block h-1 rounded-full" style={{ backgroundColor: TONO_ETAPA[etapa] }} aria-hidden />
+        <div className="flex items-baseline gap-2">
           <h2 className="truncate text-sm font-semibold text-tinta">{ETIQUETA_ETAPA[etapa]}</h2>
-          <span className="rounded-md bg-placa-2 px-1.5 text-xs tabular-nums text-tinta-2">{numero(items.length)}</span>
+          <span className="text-xs font-medium tabular-nums text-tinta-2">{numero(items.length)}</span>
+          <span
+            className="cifra ml-auto text-base text-tinta"
+            title={etapa !== "ganada" && etapa !== "perdida" && valor > 0 ? `${dinero(esperado)} esperados` : undefined}
+          >
+            {dinero(valor)}
+          </span>
         </div>
-        <p className="flex flex-wrap items-baseline gap-x-1.5 text-xs tabular-nums text-tinta-2">
-          <span className="text-sm font-medium text-tinta">{dinero(valor)}</span>
-          {etapa !== "ganada" && etapa !== "perdida" && valor > 0 && <span>· {dinero(esperado)} esperados</span>}
-        </p>
       </header>
 
       <SortableContext id={etapa} items={items.map((o) => o.id)} strategy={verticalListSortingStrategy}>
-        <ul ref={setNodeRef} className="flex min-h-[120px] flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
+        <ul ref={setNodeRef} className="flex min-h-[120px] flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-2 pb-2 pt-0.5">
           {items.map((o) => (
             <Tarjeta key={o.id} o={o} alAbrir={alAbrir} />
           ))}
@@ -336,7 +358,7 @@ export function Kanban({ filas, etapas }: { filas: OportunidadCompleta[]; etapas
       }}
     >
       <div
-        className="relative -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 md:h-[calc(100dvh-4.5rem)] md:min-h-[420px] lg:-mx-8 lg:px-8"
+        className="relative -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 md:min-h-0 md:flex-1 md:snap-none md:overflow-y-hidden lg:-mx-8 lg:px-8"
         role="region"
         aria-label="Tablero de oportunidades"
       >
@@ -347,7 +369,7 @@ export function Kanban({ filas, etapas }: { filas: OportunidadCompleta[]; etapas
 
       <DragOverlay dropAnimation={{ duration: 180, easing: "cubic-bezier(0.23, 1, 0.32, 1)" }}>
         {activa ? (
-          <div className={`${claseTarjeta} w-[272px] rotate-[1.5deg] cursor-grabbing border-acento shadow-xl`}>
+          <div className={`${claseTarjeta} w-[272px] rotate-[1.5deg] cursor-grabbing shadow-xl ring-2 ring-acento`}>
             <Contenido o={activa} />
           </div>
         ) : null}

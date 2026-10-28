@@ -63,7 +63,7 @@ export function VistaContactos({
   return (
     <ProveedorAcciones catalogos={catalogos}>
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <nav className="-mx-4 flex gap-1 border-b border-linea px-4 lg:-mx-8 lg:px-8" aria-label="Vistas">
+        <nav className="-mx-4 flex gap-1 px-4 lg:-mx-8 lg:px-8" aria-label="Vistas">
           {PESTANAS.map(({ vista, texto, Icono }) => {
             const activa = filtros.vista === vista;
             return (
@@ -78,7 +78,7 @@ export function VistaContactos({
               >
                 <Icono className="size-4" weight={activa ? "fill" : "regular"} aria-hidden />
                 {texto}
-                {activa && <span className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-tinta" aria-hidden />}
+                {activa && <span className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-acento-tinta" aria-hidden />}
               </button>
             );
           })}
@@ -177,7 +177,7 @@ function Tabla({
 }) {
   const cab = { filtros, ordenarPor };
   return (
-    <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-linea bg-placa md:h-full">
+    <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl bg-placa shadow-placa md:h-full">
       <div className="relative min-h-0 flex-1 overflow-auto">
         <table className="w-full min-w-[1180px] border-collapse text-left">
           <thead className="sticky top-0 z-10 bg-placa">
@@ -264,7 +264,7 @@ function Tarjetas({ filas }: { filas: ContactoFila[] }) {
   return (
     <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {filas.map((c) => (
-        <li key={c.id} className="relative flex flex-col gap-3 rounded-xl border border-linea bg-placa p-4 transition-colors hover:border-tinta-2/30">
+        <li key={c.id} className="relative flex flex-col gap-3 rounded-2xl bg-placa p-4 shadow-placa transition-colors hover:bg-placa-2/40">
           <div className="flex items-start gap-3">
             <Avatar nombre={c.nombre} apellidos={c.apellidos} url={c.avatar_url} tamano="md" />
             <div className="min-w-0 flex-1">
@@ -291,7 +291,7 @@ function Tarjetas({ filas }: { filas: ContactoFila[] }) {
               <a
                 href={`mailto:${c.email}`}
                 title={c.email}
-                className="inline-flex h-7 min-w-0 items-center gap-1.5 rounded-md border border-linea px-2 text-xs text-tinta hover:bg-placa-2"
+                className="inline-flex h-7 min-w-0 items-center gap-1.5 rounded-md bg-placa-2 px-2 text-xs text-tinta transition-colors hover:bg-linea"
               >
                 <EnvelopeSimple className="size-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{c.email}</span>
@@ -301,7 +301,7 @@ function Tarjetas({ filas }: { filas: ContactoFila[] }) {
               <a
                 href={`tel:${c.telefono.replace(/\s/g, "")}`}
                 aria-label={`Llamar a ${c.telefono}`}
-                className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-linea px-2 text-xs tabular-nums text-tinta hover:bg-placa-2"
+                className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-placa-2 px-2 text-xs tabular-nums text-tinta transition-colors hover:bg-linea"
               >
                 <Phone className="size-3.5" aria-hidden />
                 {c.telefono}
@@ -309,7 +309,7 @@ function Tarjetas({ filas }: { filas: ContactoFila[] }) {
             )}
           </div>
 
-          <div className="mt-auto flex items-end justify-between gap-2 border-t border-linea pt-3">
+          <div className="mt-auto flex items-end justify-between gap-2 pt-2">
             <UltimaActividad u={c.ultima_actividad} />
             <div className="flex items-center gap-3">
               <span className="text-xs text-tinta-2">

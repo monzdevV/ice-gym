@@ -1,0 +1,4 @@
+langchain-core>=1.7,<2
+langchain-openai>=1.7,<2
+supabase>=2.33,<3
+python-dotenv>=1.2,<2

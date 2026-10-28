@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
+import { ChevronDown, ChevronUp, ChevronsUp, Minus } from "lucide-react";
 import { iniciales } from "@/lib/formato";
 import {
   ETIQUETA_ESTADO_EMPRESA,
@@ -8,10 +9,8 @@ import {
   ETIQUETA_PRIORIDAD,
   ETIQUETA_TIPO_EMPRESA,
   ETIQUETA_TIPO_OPORTUNIDAD,
-  TONO_ESTADO_EMPRESA,
-  TONO_ETAPA,
+  RELLENO_ETAPA,
   TONO_INTERACCION,
-  TONO_PRIORIDAD,
   TONO_TIPO_EMPRESA,
   nombreCompleto,
   ruta,
@@ -29,10 +28,53 @@ import {
 /** Piezas visuales compartidas del CRM B2B (server-safe: sin hooks). */
 
 
-/** Etiqueta de color: el tono llega por la variable --tono. */
+/**
+ * Etiqueta de categoría (etapa, tipo, canal): relleno sólido, el tono llega por --tono.
+ * Para estados y prioridad se usa `Senal`: color sólido del significado + icono o punto.
+ */
 export function Tag({ tono, children, className = "" }: { tono?: string; children: ReactNode; className?: string }) {
   return (
     <span className={`tag ${className}`} style={tono ? ({ "--tono": tono } as CSSProperties) : undefined}>
+      {children}
+    </span>
+  );
+}
+
+/**
+ * Señal de estado: color sólido del significado (rojo, ámbar, verde, azul o gris)
+ * con texto blanco y su icono o punto, para que el color nunca vaya solo.
+ */
+const SENAL = {
+  critico: "bg-[var(--relleno-rojo)]",
+  aviso: "bg-[var(--relleno-ambar)]",
+  exito: "bg-[var(--relleno-verde)]",
+  acento: "bg-[var(--relleno-azul)]",
+  neutro: "bg-[var(--relleno-gris)]",
+} as const;
+type Semantica = keyof typeof SENAL;
+
+export function Senal({
+  tipo,
+  icono,
+  children,
+  className = "",
+}: {
+  tipo: Semantica;
+  icono?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex h-[1.375rem] items-center gap-1 whitespace-nowrap rounded-full pl-1.5 pr-2 text-xs font-semibold text-white ${SENAL[tipo]} ${className}`}
+    >
+      {icono ? (
+        <span className="grid size-3.5 place-items-center" aria-hidden>
+          {icono}
+        </span>
+      ) : (
+        <span className="mx-0.5 size-1.5 shrink-0 rounded-full bg-white/85" aria-hidden />
+      )}
       {children}
     </span>
   );
@@ -43,7 +85,8 @@ type Tamano = keyof typeof TAMANO;
 
 /** Tono estable a partir de un texto, para que cada empresa conserve su color. */
 function tonoDe(texto: string) {
-  const tonos = ["azul", "violeta", "ambar", "rosa", "verde"];
+  // Sin verde/ámbar/rojo: esos colores son de estado, no de identidad.
+  const tonos = ["azul", "violeta", "cian", "rosa", "gris"];
   let h = 0;
   for (const c of texto) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return `var(--relleno-${tonos[h % tonos.length]})`;
@@ -51,10 +94,10 @@ function tonoDe(texto: string) {
 
 /** Logo de empresa: la imagen si hay, si no un monograma cuadrado con su tono. */
 export function LogoEmpresa({ nombre, url, tamano = "sm" }: { nombre: string; url?: string | null; tamano?: Tamano }) {
-  const clase = `${TAMANO[tamano]} shrink-0 rounded-md border border-linea`;
+  const clase = `${TAMANO[tamano]} shrink-0 rounded-[28%]`;
   if (url) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={url} alt="" className={`${clase} bg-placa object-contain`} />;
+    return <img src={url} alt="" className={`${clase} logo-empresa object-contain`} />;
   }
   const letras = nombre
     .split(/\s+/)
@@ -65,7 +108,7 @@ export function LogoEmpresa({ nombre, url, tamano = "sm" }: { nombre: string; ur
     .toUpperCase();
   return (
     <span
-      className={`${clase} grid place-items-center font-semibold text-tinta`}
+      className={`${clase} grid place-items-center font-semibold text-sobre-relleno`}
       style={{ background: tonoDe(nombre) }}
       aria-hidden
     >
@@ -91,11 +134,11 @@ export function Avatar({
   const clase = `${TAMANO[tamano]} shrink-0 rounded-full`;
   if (url) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={url} alt="" className={`${clase} object-cover`} />;
+    return <img src={url} alt="" className={`${clase} logo-empresa object-contain`} />;
   }
   return (
     <span
-      className={`${clase} grid place-items-center font-semibold text-tinta`}
+      className={`${clase} grid place-items-center font-semibold text-sobre-relleno`}
       style={{ background: tono ?? tonoDe(`${nombre}${apellidos ?? ""}`) }}
       aria-hidden
     >
@@ -115,7 +158,7 @@ export function Responsable({ m, soloAvatar = false }: { m: MiembroMini | null |
   );
 }
 
-export const BadgeEtapa = ({ etapa }: { etapa: Etapa }) => <Tag tono={TONO_ETAPA[etapa]}>{ETIQUETA_ETAPA[etapa]}</Tag>;
+export const BadgeEtapa = ({ etapa }: { etapa: Etapa }) => <Tag tono={RELLENO_ETAPA[etapa]}>{ETIQUETA_ETAPA[etapa]}</Tag>;
 
 export const BadgeTipoOportunidad = ({ tipo }: { tipo: TipoOportunidad }) => (
   <Tag tono={tonoTipoOportunidad(tipo)}>{ETIQUETA_TIPO_OPORTUNIDAD[tipo]}</Tag>
@@ -125,17 +168,40 @@ export const BadgeTipoEmpresa = ({ tipo }: { tipo: TipoEmpresa }) => (
   <Tag tono={TONO_TIPO_EMPRESA[tipo]}>{ETIQUETA_TIPO_EMPRESA[tipo]}</Tag>
 );
 
+/** Estado de empresa: verde activa, ámbar en evaluación, rojo bloqueada, gris inactiva. */
+const SEMANTICA_ESTADO_EMPRESA: Record<EstadoEmpresa, Semantica> = {
+  activa: "exito",
+  en_evaluacion: "aviso",
+  inactiva: "neutro",
+  bloqueada: "critico",
+};
+
 export const BadgeEstadoEmpresa = ({ estado }: { estado: EstadoEmpresa }) => (
-  <Tag tono={TONO_ESTADO_EMPRESA[estado]}>{ETIQUETA_ESTADO_EMPRESA[estado]}</Tag>
+  <Senal tipo={SEMANTICA_ESTADO_EMPRESA[estado] ?? "neutro"}>{ETIQUETA_ESTADO_EMPRESA[estado]}</Senal>
 );
 
 export const BadgeInteraccion = ({ tipo }: { tipo: TipoInteraccion }) => (
   <Tag tono={TONO_INTERACCION[tipo]}>{ETIQUETA_INTERACCION[tipo]}</Tag>
 );
 
-/** Prioridad: sólo alta y urgente llaman la atención. */
+/**
+ * Prioridad: escala ordinal con flecha + texto. Urgente rojo, alta ámbar,
+ * media azul suave, baja gris. Sólo alta y urgente llaman la atención.
+ */
+const SENAL_PRIORIDAD: Record<Prioridad, { tipo: Semantica; icono: ReactNode }> = {
+  urgente: { tipo: "critico", icono: <ChevronsUp className="size-3.5" strokeWidth={2.5} /> },
+  alta: { tipo: "aviso", icono: <ChevronUp className="size-3.5" strokeWidth={2.5} /> },
+  media: { tipo: "acento", icono: <Minus className="size-3.5" strokeWidth={2.5} /> },
+  baja: { tipo: "neutro", icono: <ChevronDown className="size-3.5" strokeWidth={2.5} /> },
+};
+
 export function BadgePrioridad({ prioridad }: { prioridad: Prioridad }) {
-  return <Tag tono={TONO_PRIORIDAD[prioridad]}>{ETIQUETA_PRIORIDAD[prioridad]}</Tag>;
+  const s = SENAL_PRIORIDAD[prioridad] ?? SENAL_PRIORIDAD.media;
+  return (
+    <Senal tipo={s.tipo} icono={s.icono}>
+      {ETIQUETA_PRIORIDAD[prioridad]}
+    </Senal>
+  );
 }
 
 /** Enlaces cruzados entre entidades: siempre se puede saltar a la ficha. */

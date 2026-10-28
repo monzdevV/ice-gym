@@ -109,7 +109,7 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
       </nav>
 
       {/* Cabecera */}
-      <header className="mt-3 flex flex-col gap-4 border-b border-linea pb-5 lg:flex-row lg:items-start lg:justify-between">
+      <header className="mt-3 flex flex-col gap-4 pb-1 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <Avatar nombre={contacto.nombre} apellidos={contacto.apellidos} url={contacto.avatar_url} tamano="lg" />
           <div className="min-w-0">
@@ -171,9 +171,9 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
           { k: "Ganado", v: dinero(ganado) },
           { k: "Último contacto", v: ultima ? relativo(ultima.fecha) : "Nunca" },
         ].map((c) => (
-          <div key={c.k} className="rounded-xl border border-linea bg-placa px-4 py-3">
+          <div key={c.k} className="min-w-0 rounded-2xl bg-placa px-4 py-3.5 shadow-placa">
             <dt className="text-[0.8125rem] text-tinta-2">{c.k}</dt>
-            <dd className="mt-1 text-xl font-semibold tabular-nums text-tinta">{c.v}</dd>
+            <dd className="cifra mt-1.5 truncate text-[1.75rem] text-tinta">{c.v}</dd>
           </div>
         ))}
       </dl>
@@ -184,14 +184,14 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
           {tareas.length > 0 && (
             <section
               aria-labelledby="tareas-pendientes"
-              className="rounded-xl border border-aviso/40 bg-aviso/[0.07] px-4 py-3.5"
+              className="rounded-2xl bg-aviso-suave px-4 py-3.5"
             >
               <h2 id="tareas-pendientes" className="flex items-center gap-2 text-sm font-semibold text-tinta">
                 <WarningCircle className="size-4 text-aviso" weight="fill" aria-hidden />
                 Pendiente con {contacto.nombre}
                 <span className="font-normal tabular-nums text-tinta-2">{tareas.length}</span>
               </h2>
-              <ul className="mt-2.5 flex flex-col divide-y divide-linea/70">
+              <ul className="mt-2 flex flex-col">
                 {tareas.map((t) => {
                   const vencida = new Date(t.fecha).getTime() < ahora;
                   return (
@@ -235,7 +235,7 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
               <div className="-m-4 overflow-x-auto">
                 <table className="w-full min-w-[640px] border-collapse text-left">
                   <thead>
-                    <tr className="border-b border-linea text-[0.8125rem] text-tinta-2">
+                    <tr className="text-[0.8125rem] text-tinta-2">
                       <th className="py-2 pl-4 pr-3 font-normal">Oportunidad</th>
                       <th className="py-2 pr-3 font-normal">Etapa</th>
                       <th className="py-2 pr-3 text-right font-normal">Valor</th>
@@ -399,7 +399,7 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
                 )}
               </dl>
 
-              <div className="mt-4 border-t border-linea pt-3.5">
+              <div className="mt-5">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-[0.8125rem] font-medium text-tinta">
                     Otros contactos <span className="font-normal tabular-nums text-tinta-2">{otros.length}</span>

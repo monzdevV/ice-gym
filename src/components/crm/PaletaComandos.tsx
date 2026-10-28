@@ -7,10 +7,12 @@ import {
   AirplaneTilt,
   ArrowSquareOut,
   Buildings,
+  CalendarCheck,
   ChartBar,
   CheckSquare,
   Clock,
   FileText,
+  Funnel,
   GearSix,
   Handshake,
   IdentificationBadge,
@@ -18,12 +20,15 @@ import {
   ListChecks,
   MagnifyingGlass,
   Plus,
+  SlidersHorizontal,
   Star,
   Target,
   User,
+  UsersThree,
   type Icon,
 } from "@phosphor-icons/react";
 import { rutaRrhh } from "@/lib/rrhh";
+import { rutaVentas } from "@/lib/ventas";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ResultadoBusqueda } from "@/lib/datos/buscar";
 import { URL_WEB } from "@/lib/enlaces";
@@ -164,10 +169,14 @@ export function PaletaComandos() {
       { id: "panel", grupo: "Ir a", texto: "Dashboard", Icono: ChartBar, claves: "inicio panel", ir: ir("/crm") },
       { id: "oportunidades", grupo: "Ir a", texto: "Oportunidades", Icono: Target, claves: "pipeline tablero", ir: ir(ruta.oportunidades) },
       { id: "empresas", grupo: "Ir a", texto: "Empresas", Icono: Buildings, claves: "cuentas proveedores clientes", ir: ir(ruta.empresas) },
-      { id: "clientes", grupo: "Ir a", texto: "Clientes", Icono: Handshake, claves: "empresas cuentas", ir: ir(`${ruta.empresas}?tipo=cliente`) },
       { id: "contactos", grupo: "Ir a", texto: "Contactos", Icono: AddressBook, claves: "personas", ir: ir(ruta.contactos) },
       { id: "actividades", grupo: "Ir a", texto: "Actividades", Icono: Lightning, claves: "historial llamadas reuniones", ir: ir(ruta.actividades) },
       { id: "tareas", grupo: "Ir a", texto: "Tareas", Icono: CheckSquare, claves: "pendientes agenda", ir: ir(ruta.tareas) },
+      { id: "ventas-flujo", grupo: "Ir a", texto: "Mi flujo de ventas", Icono: Funnel, claves: "ventas pipeline leads oportunidades kanban", ir: ir(rutaVentas.flujo) },
+      { id: "ventas-actividades", grupo: "Ir a", texto: "Mis actividades de ventas", Icono: CalendarCheck, claves: "ventas actividades llamadas reuniones pendientes", ir: ir(rutaVentas.actividades) },
+      { id: "ventas-equipos", grupo: "Ir a", texto: "Equipos de ventas", Icono: UsersThree, claves: "ventas equipos comerciales", ir: ir(rutaVentas.equipos) },
+      { id: "ventas-clientes", grupo: "Ir a", texto: "Clientes de ventas", Icono: Handshake, claves: "ventas clientes cuentas personas", ir: ir(rutaVentas.clientes) },
+      { id: "ventas-ajustes", grupo: "Ir a", texto: "Ajustes de ventas", Icono: SlidersHorizontal, claves: "ventas etapas etiquetas razones perdida tipos actividad planes", ir: ir(rutaVentas.configuracion) },
       { id: "rrhh-empleados", grupo: "Ir a", texto: "Empleados", Icono: IdentificationBadge, claves: "rrhh plantilla personal trabajadores", ir: ir(rutaRrhh.empleados) },
       { id: "rrhh-horarios", grupo: "Ir a", texto: "Horarios", Icono: Clock, claves: "rrhh fichar fichajes entrada salida", ir: ir(rutaRrhh.horarios) },
       { id: "rrhh-vacaciones", grupo: "Ir a", texto: "Vacaciones", Icono: AirplaneTilt, claves: "rrhh ausencias permisos", ir: ir(rutaRrhh.vacaciones) },
@@ -338,14 +347,23 @@ export function PaletaComandos() {
 }
 
 /** Botón de búsqueda de la barra superior; `compacto` es sólo la lupa (móvil). */
+/**
+ * Pantallas con cabecera y buscador propios: en escritorio llevan «Crear» y la
+ * búsqueda global en su propia fila y la barra superior desaparece.
+ */
+export const CON_CABECERA_PROPIA = ["/crm/oportunidades"];
+export const tieneCabeceraPropia = (pathname: string) => CON_CABECERA_PROPIA.some((r) => pathname.startsWith(r));
+
 export function BotonPaleta({ compacto = false }: { compacto?: boolean }) {
+  const pathname = usePathname();
   const abrir = () => window.dispatchEvent(new Event(EVENTO_PALETA));
-  if (compacto) {
+  if (compacto || tieneCabeceraPropia(pathname)) {
     return (
       <button
         type="button"
         onClick={abrir}
-        aria-label="Buscar"
+        aria-label="Buscar en todo el CRM (Ctrl K)"
+        title="Buscar en todo el CRM (Ctrl K)"
         className="grid size-8 place-items-center rounded-md text-tinta-2 transition-colors hover:bg-placa-2 hover:text-tinta"
       >
         <MagnifyingGlass className="size-[18px]" aria-hidden />

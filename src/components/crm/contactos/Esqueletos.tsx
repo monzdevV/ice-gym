@@ -1,7 +1,7 @@
 /** Esqueletos de carga de contactos, con la misma retícula que las pantallas reales. */
 
 const pulso = "animate-pulse motion-reduce:animate-none";
-const bloque = "rounded-xl border border-linea bg-placa";
+const bloque = "rounded-2xl bg-placa shadow-placa";
 
 export function EsqueletoContactos() {
   return (
@@ -13,7 +13,7 @@ export function EsqueletoContactos() {
         </div>
         <span className="h-8 w-36 rounded-lg bg-placa-2" />
       </div>
-      <div className="mb-4 flex gap-3 border-b border-linea pb-2.5">
+      <div className="mb-4 flex gap-3 pb-2.5">
         <span className="h-5 w-16 rounded bg-placa-2" />
         <span className="h-5 w-20 rounded bg-placa-2" />
       </div>
@@ -24,9 +24,9 @@ export function EsqueletoContactos() {
         ))}
       </div>
       <div className={`${bloque} overflow-hidden`}>
-        <div className="h-10 border-b border-linea" />
+        <div className="h-10" />
         {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 border-b border-linea/70 px-4 py-3 last:border-0">
+          <div key={i} className="flex items-center gap-4 px-4 py-3">
             <span className="size-9 shrink-0 rounded-full bg-placa-2" />
             <span className="flex w-48 flex-col gap-1.5">
               <span className="h-3.5 w-32 rounded bg-placa-2" />
@@ -47,7 +47,7 @@ export function EsqueletoFichaContacto() {
   return (
     <main className={`${pulso} px-4 pb-12 pt-5 lg:px-8`} aria-busy="true" aria-label="Cargando contacto">
       <span className="block h-4 w-24 rounded bg-placa-2/70" />
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-4 border-b border-linea pb-5">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-4 pb-1">
         <div className="flex items-center gap-4">
           <span className="size-16 rounded-full bg-placa-2" />
           <span className="flex flex-col gap-2">

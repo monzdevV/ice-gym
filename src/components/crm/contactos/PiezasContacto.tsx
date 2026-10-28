@@ -30,7 +30,7 @@ export const BadgeTipoContacto = ({ tipo }: { tipo: TipoContacto }) => (
 export function EstadoContactoMarca({ estado }: { estado: EstadoContacto }) {
   return (
     <span className={`inline-flex items-center gap-1.5 text-sm ${estado === "activo" ? "text-tinta" : "text-tinta-2"}`}>
-      <span className={`size-1.5 shrink-0 rounded-full ${estado === "activo" ? "bg-emerald-500" : "bg-apagado"}`} aria-hidden />
+      <span className={`size-1.5 shrink-0 rounded-full ${estado === "activo" ? "bg-exito" : "bg-apagado"}`} aria-hidden />
       {ETIQUETA_ESTADO_CONTACTO[estado]}
     </span>
   );

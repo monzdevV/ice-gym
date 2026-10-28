@@ -46,8 +46,39 @@ function abrir(tipo: TipoCrear) {
   setTimeout(() => document.querySelector<HTMLButtonElement>(`[data-crear="${tipo}"]`)?.click(), 20);
 }
 
-/** Botón global «+ Crear» de la cabecera, con los diálogos de alta del CRM B2B. */
-export function BotonCrear({ catalogos }: { catalogos: Catalogos }) {
+/**
+ * Menú «+ Crear». Puede aparecer en varios sitios (cabecera, cabecera propia de
+ * una pantalla): sólo pide abrir un formulario; los diálogos viven en DialogosCrear.
+ */
+export function MenuCrear() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Crear"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-acento px-2.5 text-[0.8125rem] font-semibold text-sobre-campo transition-[background-color,transform] duration-150 hover:bg-acento/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta focus-visible:ring-offset-2 focus-visible:ring-offset-fondo sm:px-3.5"
+        >
+          <Plus className="size-4" weight="bold" aria-hidden />
+          <span className="hidden sm:inline">Crear</span>
+          <CaretDown className="hidden size-3 opacity-70 sm:inline" weight="bold" aria-hidden />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-48">
+        <DropdownMenuLabel className="text-xs text-tinta-2">Comercial</DropdownMenuLabel>
+        {OPCIONES.map(({ tipo, texto, Icono }) => (
+          <DropdownMenuItem key={tipo} onSelect={() => abrir(tipo)}>
+            <Icono className="size-4" aria-hidden />
+            {texto}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Diálogos de alta del CRM B2B, montados una sola vez en el layout. */
+export function DialogosCrear({ catalogos }: { catalogos: Catalogos }) {
   useEffect(() => {
     const escuchar = (e: Event) => abrir((e as CustomEvent<TipoCrear>).detail);
     window.addEventListener(EVENTO_CREAR, escuchar);
@@ -56,29 +87,6 @@ export function BotonCrear({ catalogos }: { catalogos: Catalogos }) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Crear"
-            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-acento px-2 text-[0.8125rem] font-medium text-sobre-campo shadow-sm transition-[filter] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento focus-visible:ring-offset-2 focus-visible:ring-offset-fondo sm:px-3"
-          >
-            <Plus className="size-4" weight="bold" aria-hidden />
-            <span className="hidden sm:inline">Crear</span>
-            <CaretDown className="hidden size-3 opacity-80 sm:inline" weight="bold" aria-hidden />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-48">
-          <DropdownMenuLabel className="text-xs text-tinta-2">Comercial</DropdownMenuLabel>
-          {OPCIONES.map(({ tipo, texto, Icono }) => (
-            <DropdownMenuItem key={tipo} onSelect={() => abrir(tipo)}>
-              <Icono className="size-4" aria-hidden />
-              {texto}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
       <NuevaOportunidad catalogos={catalogos}>
         {disparador("oportunidad")}
       </NuevaOportunidad>

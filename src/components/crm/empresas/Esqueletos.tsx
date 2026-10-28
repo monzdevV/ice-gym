@@ -1,7 +1,7 @@
 /** Esqueletos de carga de empresas: misma retícula que la pantalla real. */
 
 const pulso = "animate-pulse motion-reduce:animate-none";
-const bloque = "rounded-xl border border-linea bg-placa";
+const bloque = "rounded-2xl bg-placa shadow-placa";
 
 export function EsqueletoEmpresas() {
   return (
@@ -27,7 +27,7 @@ export function EsqueletoEmpresas() {
       </div>
       <div className={`${bloque} overflow-hidden`}>
         {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 border-b border-linea/70 px-4 py-3 last:border-0">
+          <div key={i} className="flex items-center gap-4 px-4 py-3">
             <span className="size-9 rounded-md bg-placa-2" />
             <span className="flex w-48 flex-col gap-1.5">
               <span className="h-3.5 w-32 rounded bg-placa-2" />
@@ -49,7 +49,7 @@ export function EsqueletoFichaEmpresa() {
   return (
     <main className={`${pulso} px-4 pb-12 pt-5 lg:px-8`} aria-busy aria-label="Cargando empresa">
       <span className="block h-4 w-24 rounded bg-placa-2/70" />
-      <div className="mt-4 flex flex-wrap items-center gap-4 border-b border-linea pb-5">
+      <div className="mt-4 flex flex-wrap items-center gap-4 pb-1">
         <span className="size-14 rounded-md bg-placa-2" />
         <span className="flex flex-col gap-2">
           <span className="h-7 w-56 rounded-md bg-placa-2" />
@@ -70,7 +70,7 @@ export function EsqueletoFichaEmpresa() {
           <div key={i} className={`${bloque} h-[4.5rem]`} />
         ))}
       </div>
-      <div className="mt-6 flex gap-4 border-b border-linea pb-2.5">
+      <div className="mt-6 flex gap-4 pb-2.5">
         {Array.from({ length: 5 }).map((_, i) => (
           <span key={i} className="h-5 w-20 rounded bg-placa-2" />
         ))}

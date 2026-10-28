@@ -23,7 +23,7 @@ import { claseBotonPrincipal, claseCampo, claseError } from "@/components/crm/Pr
 import { CamposEmpresa } from "./CamposEmpresa";
 
 export const claseBotonSecundario =
-  "inline-flex h-8 items-center gap-1.5 rounded-md border border-linea bg-placa px-3 text-[0.8125rem] font-medium text-tinta transition-colors hover:bg-placa-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento disabled:opacity-50";
+  "inline-flex h-8 items-center gap-1.5 rounded-md bg-placa px-3 text-[0.8125rem] font-medium text-tinta shadow-placa transition-colors hover:bg-placa-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento disabled:opacity-50";
 
 function Enviar({ texto, enviando, className = "" }: { texto: string; enviando: string; className?: string }) {
   const { pending } = useFormStatus();
@@ -65,7 +65,7 @@ function FormularioEditar({ empresa, equipo, alGuardar }: { empresa: Empresa; eq
       <div className="flex-1 overflow-y-auto p-4">
         <CamposEmpresa equipo={equipo} empresa={empresa} conLogo />
       </div>
-      <div className="flex flex-col gap-3 border-t border-linea p-4">
+      <div className="flex flex-col gap-3 p-4">
         {estado?.ok === false && (
           <p role="alert" className={claseError}>
             {estado.mensaje}
@@ -94,7 +94,7 @@ export function EditarEmpresa({ empresa, equipo }: { empresa: Empresa; equipo: M
         </button>
       </SheetTrigger>
       <SheetContent className="w-full gap-0 sm:max-w-xl">
-        <SheetHeader className="border-b border-linea">
+        <SheetHeader>
           <SheetTitle>Editar empresa</SheetTitle>
           <SheetDescription>{empresa.nombre}</SheetDescription>
         </SheetHeader>
@@ -135,7 +135,7 @@ export function BorrarEmpresa({
   return (
     <Dialog open={abierto} onOpenChange={setAbierto}>
       <DialogTrigger asChild>
-        <button type="button" aria-label="Borrar empresa" title="Borrar empresa" className={`${claseBotonSecundario} px-2 text-alarma-tinta`}>
+        <button type="button" aria-label="Borrar empresa" title="Borrar empresa" className={`${claseBotonSecundario} px-2 text-critico`}>
           <Trash className="size-4" aria-hidden />
         </button>
       </DialogTrigger>
@@ -155,7 +155,7 @@ export function BorrarEmpresa({
             type="button"
             onClick={borrar}
             disabled={pendiente}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-alarma px-3 text-[0.8125rem] font-medium text-white transition-[filter] hover:brightness-110 disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-critico px-3 text-[0.8125rem] font-medium text-sobre-critico transition-[filter] hover:brightness-110 disabled:opacity-50"
           >
             <Trash className="size-4" aria-hidden />
             {pendiente ? "Borrando…" : "Borrar empresa"}
@@ -184,7 +184,7 @@ export function PestanasEmpresa({ inicial, paneles }: { inicial: string; paneles
 
   return (
     <Tabs value={tab} onValueChange={cambiar} className="mt-6 gap-5">
-      <div className="-mx-4 overflow-x-auto border-b border-linea px-4 [scrollbar-width:none] lg:-mx-8 lg:px-8">
+      <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] lg:-mx-8 lg:px-8">
         <TabsList variant="line" className="h-10 gap-2 p-0">
           {paneles.map((p) => (
             <TabsTrigger

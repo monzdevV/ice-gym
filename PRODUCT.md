@@ -10,15 +10,15 @@ web
 
 Todo el equipo interno de Ice Gym usa el mismo CRM, cada perfil con su trabajo:
 
-- **Recepción:** busca socios, cobra recibos, comprueba quién está dentro y anota llamadas. Muchas consultas cortas seguidas.
-- **Comerciales:** trabajan el embudo de leads: llaman, agendan visitas, ponen el pase de prueba y convierten en socio.
+- **Compras y operaciones:** gestionan proveedores (maquinaria, agua, bebidas, mantenimiento, tecnología), sus contactos y las negociaciones abiertas.
+- **Comerciales:** trabajan el pipeline de oportunidades B2B: prospectan, envían propuestas, negocian y cierran acuerdos con empresas.
 - **Dirección / gerencia:** revisa el panel: ingresos, altas y bajas, conversión, ocupación y comparativa entre centros.
 
 Uso principal en **oficina, con portátil y en sesiones largas**. También tiene que funcionar en móvil.
 
 ## Product Purpose
 
-CRM interno de Ice Gym, una cadena ficticia de gimnasios con tres centros (Chamberí en Madrid, Poblenou en Barcelona y Ruzafa en Valencia). Reúne en un solo sitio socios, cuotas, accesos, clases y el embudo comercial, para que el equipo deje de trabajar con hojas de cálculo sueltas. Funciona bien si cada perfil encuentra y resuelve su tarea en segundos, y si los impagos y los leads calientes no se pierden.
+CRM interno de Ice Gym, una cadena ficticia de gimnasios con tres centros (Chamberí en Madrid, Poblenou en Barcelona y Ruzafa en Valencia). Es un CRM comercial B2B: reúne empresas (clientes corporativos, proveedores y partners), contactos, oportunidades, actividades y tareas, para que el equipo deje de trabajar con hojas de cálculo sueltas. Funciona bien si cada perfil encuentra y resuelve su tarea en segundos, y si las oportunidades calientes y los seguimientos vencidos no se pierden.
 
 ## Positioning
 
@@ -26,14 +26,14 @@ Es la herramienta propia de la cadena, no un SaaS genérico. Está construida so
 
 ## Operating Context
 
-- Rutas: `/crm` (panel), `/crm/leads` (Kanban y ficha), `/crm/socios` (tabla y ficha), `/crm/pagos`, `/crm/clases`. Acceso con Supabase Auth.
+- Rutas: `/crm` (dashboard), `/crm/oportunidades` (Kanban, tabla y ficha), `/crm/empresas`, `/crm/contactos`, `/crm/actividades`, `/crm/tareas`, `/crm/configuracion`. Acceso con Supabase Auth. La web pública vive en `/`.
 - Si el dominio empieza por `crm-`, la raíz sirve el CRM directamente. Hay una web pública aparte (fase 2) que crea leads con origen `web`.
-- Los datos de ejemplo son ficticios: 3 centros, 3 tarifas, unos 150 socios, 60 leads, 6 meses de pagos y accesos, y una semana de clases.
+- Los datos de ejemplo son ficticios: 3 centros, 3 tarifas, 6 miembros del equipo, 41 empresas con contactos, oportunidades e interacciones (`supabase/seed_b2b.sql`). Las clases de la web se generan a diario desde `horario_clases` con `programar_clases()` (pg_cron).
 
 ## Capabilities and Constraints
 
 - Stack fijado por el cliente: Next.js 16 (App Router, TypeScript), Tailwind v4, shadcn/ui muy personalizado, Motion, @supabase/ssr y despliegue en Vercel.
-- Acciones: mover leads por estado, convertir un lead en socio (crea el socio y emite su primera cuota), congelar, reactivar o dar de baja socios, cobrar recibos y registrar actividades (llamada, email, WhatsApp, visita, nota).
+- Acciones: mover oportunidades por etapa (Kanban), marcarlas ganadas o perdidas (con motivo), crear y editar empresas y contactos, marcar contacto principal, registrar interacciones (llamada, email, reunión, nota, tarea, seguimiento) y completar tareas. La web pública crea leads con origen `web`.
 - Seguridad: RLS en todas las tablas. El público solo puede crear leads y leer centros, tarifas y clases. Nunca se usa la `service_role` key.
 - Idioma: todo en español.
 - Temas: claro y oscuro. Por defecto sigue la preferencia del sistema y se puede cambiar a mano.
@@ -56,7 +56,7 @@ Es la herramienta propia de la cadena, no un SaaS genérico. Está construida so
 
 1. **La tarea antes que la decoración.** Cada pantalla responde primero a "¿qué tengo que hacer ahora?": cobrar, llamar, convertir.
 2. **Lo urgente se ve sin buscarlo.** Los impagos y los leads que se enfrían tienen que saltar a la vista, pero con jerarquía, no con alarmas.
-3. **Un solo lenguaje para tres perfiles.** Recepción, comerciales y dirección comparten las mismas piezas; cambia la densidad, no el idioma visual.
+3. **Un solo lenguaje para tres perfiles.** Compras, comerciales y dirección comparten las mismas piezas; cambia la densidad, no el idioma visual.
 4. **Honesto con los datos.** Si falta un dato, se ve el hueco; nunca se rellena con un valor inventado.
 
 ## Accessibility & Inclusion

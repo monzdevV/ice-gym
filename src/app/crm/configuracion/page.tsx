@@ -82,14 +82,14 @@ export default async function PaginaConfiguracion({ searchParams }: { searchPara
   const [equipo, { email, miembro }, pipeline] = await Promise.all([listarEquipo(), usuarioActual(), resumenPipeline()]);
 
   const disparador =
-    "h-9 rounded-none border-0 border-b-2 border-transparent bg-transparent px-3 text-sm font-medium text-tinta-2 shadow-none hover:text-tinta data-[state=active]:border-tinta data-[state=active]:bg-transparent data-[state=active]:text-tinta data-[state=active]:shadow-none";
+    "h-9 rounded-none border-0 border-b-2 border-transparent bg-transparent px-3 text-sm font-medium text-tinta-2 shadow-none hover:text-tinta data-[state=active]:border-acento-tinta data-[state=active]:bg-transparent data-[state=active]:text-tinta data-[state=active]:shadow-none";
 
   return (
     <main className="flex flex-col px-4 pb-10 lg:px-8">
       <Encabezado titulo="Configuración" meta="Equipo, pipeline, catálogos y tu cuenta." className="px-0 lg:px-0" />
 
       <Tabs defaultValue={inicial} className="gap-5">
-        <TabsList variant="line" className="-mx-4 h-auto w-auto justify-start gap-1 overflow-x-auto rounded-none border-b border-linea p-0 px-4 lg:-mx-8 lg:px-8">
+        <TabsList variant="line" className="-mx-4 h-auto w-auto justify-start gap-1 overflow-x-auto rounded-none p-0 px-4 lg:-mx-8 lg:px-8">
           {PESTANAS.map((p) => (
             <TabsTrigger key={p.valor} value={p.valor} className={disparador}>
               {p.texto}
@@ -106,7 +106,7 @@ export default async function PaginaConfiguracion({ searchParams }: { searchPara
             Etapas por las que pasa cualquier oportunidad (venta, compra o alianza). Al mover una tarjeta en el Kanban, la probabilidad
             se ajusta a la de su etapa; luego se puede afinar a mano en cada oportunidad.
           </p>
-          <ol className="overflow-hidden rounded-xl border border-linea bg-placa">
+          <ol className="overflow-hidden rounded-2xl bg-placa shadow-placa">
             {ETAPAS.map((e, n) => {
               const p = PROBABILIDAD_POR_ETAPA[e];
               return (
@@ -162,7 +162,7 @@ export default async function PaginaConfiguracion({ searchParams }: { searchPara
                   const Icono = ICONO[t];
                   return (
                     <li key={t} className="flex items-center gap-2 text-sm text-tinta">
-                      <span className="grid size-6 place-items-center rounded-full text-white" style={{ background: TONO_INTERACCION[t] }} aria-hidden>
+                      <span className="grid size-6 place-items-center rounded-full text-sobre-relleno" style={{ background: TONO_INTERACCION[t] }} aria-hidden>
                         <Icono className="size-3.5" weight="bold" />
                       </span>
                       {ETIQUETA_INTERACCION[t]}
@@ -209,7 +209,7 @@ export default async function PaginaConfiguracion({ searchParams }: { searchPara
                 <p className="text-sm font-medium text-tinta">Tema claro u oscuro</p>
                 <p className="text-[0.8125rem] text-tinta-2">Se recuerda en este navegador.</p>
               </div>
-              <span className="rounded-md border border-linea">
+              <span className="rounded-md bg-placa-2">
                 <InterruptorTema />
               </span>
             </div>
@@ -219,7 +219,7 @@ export default async function PaginaConfiguracion({ searchParams }: { searchPara
               <p className="text-[0.8125rem] text-tinta-2">Cierra la sesión en este dispositivo.</p>
               <button
                 type="submit"
-                className="inline-flex h-9 items-center gap-2 rounded-md border border-linea px-4 text-sm font-medium text-alarma-tinta transition-colors hover:bg-alarma/10"
+                className="inline-flex h-9 items-center gap-2 rounded-md bg-placa-2 px-4 text-sm font-medium text-tinta transition-colors hover:bg-linea"
               >
                 <SignOut className="size-4" aria-hidden />
                 Cerrar sesión
