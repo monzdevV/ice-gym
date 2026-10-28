@@ -20,6 +20,7 @@ import {
   IdentificationBadge,
   Lightning,
   ListChecks,
+  Receipt,
   SidebarSimple,
   SignOut,
   SlidersHorizontal,
@@ -74,6 +75,10 @@ const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
       { href: "/crm/rrhh/evaluaciones", texto: "Evaluaciones", Icono: Star },
       { href: "/crm/rrhh/nominas", texto: "Nóminas", Icono: FileText },
     ],
+  },
+  {
+    titulo: "Administración",
+    secciones: [{ href: "/crm/facturas", texto: "Facturas", Icono: Receipt }],
   },
 ];
 

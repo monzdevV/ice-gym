@@ -22,6 +22,7 @@ import {
   Plus,
   SlidersHorizontal,
   Star,
+  Receipt,
   Target,
   User,
   UsersThree,
@@ -183,6 +184,7 @@ export function PaletaComandos() {
       { id: "rrhh-incorporacion", grupo: "Ir a", texto: "Tareas de incorporación", Icono: ListChecks, claves: "rrhh onboarding", ir: ir(rutaRrhh.incorporacion) },
       { id: "rrhh-evaluaciones", grupo: "Ir a", texto: "Evaluaciones", Icono: Star, claves: "rrhh trimestral desempeño", ir: ir(rutaRrhh.evaluaciones) },
       { id: "rrhh-nominas", grupo: "Ir a", texto: "Nóminas", Icono: FileText, claves: "rrhh sueldo pdf firma", ir: ir(rutaRrhh.nominas) },
+      { id: "facturas", grupo: "Ir a", texto: "Facturas", Icono: Receipt, claves: "proveedores gastos leer factura subir iva", ir: ir("/crm/facturas") },
       { id: "configuracion", grupo: "Ir a", texto: "Configuración", Icono: GearSix, claves: "ajustes equipo", ir: ir(ruta.configuracion) },
       { id: "web", grupo: "Ir a", texto: "Web pública", Icono: ArrowSquareOut, ir: () => window.location.assign(URL_WEB) },
     ];

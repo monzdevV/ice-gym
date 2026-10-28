@@ -46,3 +46,12 @@ next-env.d.ts
 
 # impeccable: registros temporales de la página de decisión
 .impeccable/questions/
+
+# agente lector de facturas (Python)
+agente/.env
+agente/.venv/
+!agente/.env.example
+
+# python
+__pycache__/
+*.pyc
