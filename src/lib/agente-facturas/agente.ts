@@ -1,17 +1,17 @@
 import "server-only";
+import Anthropic from "@anthropic-ai/sdk";
 import type { DatosFactura } from "@/lib/facturas";
 
 /**
  * Agente lector de facturas.
- * Manda la factura (foto o PDF) a Claude vía OpenRouter con una sola herramienta,
+ * Manda la factura (foto o PDF) a Claude (API de Anthropic) con una sola herramienta,
  * `guardar_factura`. Claude NUNCA toca la base de datos: solo devuelve la llamada a la
  * herramienta con los datos; quien la ejecuta (el INSERT) es nuestro código.
  * Sin memoria: cada factura es una conversación nueva.
  */
 
-const URL_OPENROUTER = "https://openrouter.ai/api/v1/chat/completions";
-const MODELO_DEFECTO = "anthropic/claude-sonnet-4.5";
-const TIMEOUT_MS = 60_000;
+const MODELO_DEFECTO = "claude-haiku-5-5";
+const TIMEOUT_MS = 90_000;
 
 export const PROMPT_SISTEMA = [
   "Eres un asistente de administración.",
@@ -26,27 +26,27 @@ export const PROMPT_SISTEMA = [
 const texto = (description: string) => ({ type: ["string", "null"], description });
 const numero = (description: string) => ({ type: ["number", "null"], description });
 
-export const HERRAMIENTA_GUARDAR_FACTURA = {
-  type: "function",
-  function: {
-    name: "guardar_factura",
-    description: "Guarda en la base de datos los datos leídos de la factura.",
-    parameters: {
-      type: "object",
-      properties: {
-        numero: texto("Número de factura, tal cual aparece."),
-        fecha: texto("Fecha de emisión en formato AAAA-MM-DD."),
-        proveedor: texto("Nombre o razón social de quien emite la factura."),
-        nif: texto("NIF/CIF del proveedor."),
-        base: numero("Base imponible en euros, con punto decimal."),
-        iva: numero("Cuota de IVA en euros (el importe, no el porcentaje), con punto decimal."),
-        total: numero("Total de la factura en euros, con punto decimal."),
-      },
-      required: ["numero", "fecha", "proveedor", "nif", "base", "iva", "total"],
-      additionalProperties: false,
+// `strict` garantiza que los argumentos cumplen el esquema. Estos modelos no admiten forzar
+// la herramienta con tool_choice, así que el prompt le dice que la llame.
+export const HERRAMIENTA_GUARDAR_FACTURA: Anthropic.Beta.BetaTool = {
+  name: "guardar_factura",
+  description: "Guarda en la base de datos los datos leídos de la factura.",
+  strict: true,
+  input_schema: {
+    type: "object",
+    properties: {
+      numero: texto("Número de factura, tal cual aparece."),
+      fecha: texto("Fecha de emisión en formato AAAA-MM-DD."),
+      proveedor: texto("Nombre o razón social de quien emite la factura."),
+      nif: texto("NIF/CIF del proveedor."),
+      base: numero("Base imponible en euros, con punto decimal."),
+      iva: numero("Cuota de IVA en euros (el importe, no el porcentaje), con punto decimal."),
+      total: numero("Total de la factura en euros, con punto decimal."),
     },
+    required: ["numero", "fecha", "proveedor", "nif", "base", "iva", "total"],
+    additionalProperties: false,
   },
-} as const;
+};
 
 export type ArchivoFactura = { bytes: ArrayBuffer | Buffer; tipo: string; nombre: string };
 export type ResultadoAgente = { datos: DatosFactura; modelo: string };
@@ -117,26 +117,17 @@ export const datosRellenos = (d: DatosFactura) => Object.values(d).filter((v) =>
 
 /* ------------------------------- Llamada ------------------------------- */
 
-function contenidoArchivo(archivo: ArchivoFactura) {
+function contenidoArchivo(archivo: ArchivoFactura): Anthropic.Beta.BetaContentBlockParam {
   const bytes = archivo.bytes instanceof ArrayBuffer ? Buffer.from(archivo.bytes) : archivo.bytes;
-  const url = `data:${archivo.tipo};base64,${bytes.toString("base64")}`;
+  const data = bytes.toString("base64");
   if (archivo.tipo === "application/pdf") {
-    return { type: "file", file: { filename: archivo.nombre || "factura.pdf", file_data: url } };
+    return { type: "document", source: { type: "base64", media_type: "application/pdf", data } };
   }
-  if (archivo.tipo.startsWith("image/")) return { type: "image_url", image_url: { url } };
+  const imagenes = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
+  const tipoImagen = imagenes.find((t) => t === archivo.tipo);
+  if (tipoImagen) return { type: "image", source: { type: "base64", media_type: tipoImagen, data } };
   throw new Error(`Tipo de archivo no admitido (${archivo.tipo}). Sube una foto (JPG, PNG, WebP) o un PDF.`);
 }
-
-type RespuestaOpenRouter = {
-  model?: string;
-  error?: { message?: string };
-  choices?: {
-    message?: {
-      content?: string | null;
-      tool_calls?: { function?: { name?: string; arguments?: string } }[];
-    };
-  }[];
-};
 
 /**
  * Manda la factura a Claude y devuelve los argumentos de `guardar_factura` ya normalizados.
@@ -144,77 +135,59 @@ type RespuestaOpenRouter = {
  * termina; no se vuelve a llamar a Claude.
  */
 export async function ejecutarAgente(archivo: ArchivoFactura): Promise<ResultadoAgente> {
-  const clave = process.env.OPENROUTER_API_KEY;
+  const clave = process.env.ANTHROPIC_API_KEY;
   if (!clave) {
-    throw new Error("Falta la clave de OpenRouter: añade OPENROUTER_API_KEY a .env.local y reinicia el servidor.");
+    throw new Error("Falta la clave de Claude: añade ANTHROPIC_API_KEY a .env.local y reinicia el servidor.");
   }
-  const modelo = process.env.OPENROUTER_MODEL || MODELO_DEFECTO;
+  const modelo = process.env.ANTHROPIC_MODEL || MODELO_DEFECTO;
+  const cliente = new Anthropic({ apiKey: clave, timeout: TIMEOUT_MS, maxRetries: 1 });
 
-  const cuerpo = {
-    model: modelo,
-    messages: [
-      { role: "system", content: PROMPT_SISTEMA },
-      {
-        role: "user",
-        content: [{ type: "text", text: `Factura: ${archivo.nombre}` }, contenidoArchivo(archivo)],
-      },
-    ],
-    tools: [HERRAMIENTA_GUARDAR_FACTURA],
-    tool_choice: { type: "function", function: { name: "guardar_factura" } },
-    temperature: 0,
-    max_tokens: 1024,
-  };
-
-  let res: Response;
+  let respuesta: Anthropic.Beta.BetaMessage;
   try {
-    res = await fetch(URL_OPENROUTER, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${clave}`,
-        "Content-Type": "application/json",
-        "X-Title": "Ice Gym CRM - lector de facturas",
-      },
-      body: JSON.stringify(cuerpo),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-      cache: "no-store",
+    respuesta = await cliente.beta.messages.create({
+      model: modelo,
+      max_tokens: 16000,
+      output_config: { effort: "low" },
+      system: PROMPT_SISTEMA,
+      messages: [
+        {
+          role: "user",
+          content: [contenidoArchivo(archivo), { type: "text", text: `Factura: ${archivo.nombre}` }],
+        },
+      ],
+      tools: [HERRAMIENTA_GUARDAR_FACTURA],
+      tool_choice: { type: "auto", disable_parallel_tool_use: true },
     });
   } catch (e) {
-    if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) {
+    if (e instanceof Anthropic.AuthenticationError) throw new Error("Anthropic rechaza la clave (ANTHROPIC_API_KEY no es válida).");
+    if (e instanceof Anthropic.PermissionDeniedError) throw new Error("La clave de Claude no tiene permiso para este modelo o no queda saldo.");
+    if (e instanceof Anthropic.RateLimitError) throw new Error("Demasiadas peticiones a Claude. Espera un momento y repite.");
+    if (e instanceof Anthropic.APIConnectionTimeoutError) {
       throw new Error(`Claude ha tardado más de ${TIMEOUT_MS / 1000} s en responder. Prueba otra vez.`);
     }
-    throw new Error("No se pudo conectar con OpenRouter. Revisa la conexión a internet.");
+    if (e instanceof Anthropic.APIConnectionError) throw new Error("No se pudo conectar con Claude. Revisa la conexión a internet.");
+    if (e instanceof Anthropic.APIError) {
+      if (e.status === 413) throw new Error("El archivo es demasiado grande para mandarlo a Claude.");
+      throw new Error(`Claude ha devuelto un error (${e.status ?? "?"}): ${e.message}.`);
+    }
+    throw e;
   }
 
-  let json: RespuestaOpenRouter | null = null;
-  try {
-    json = (await res.json()) as RespuestaOpenRouter;
-  } catch {
-    // Respuesta sin JSON: se trata abajo según el código HTTP.
+  if (respuesta.stop_reason === "refusal") {
+    throw new Error("Claude se ha negado a leer este archivo.");
   }
 
-  if (!res.ok || json?.error) {
-    if (res.status === 401) throw new Error("OpenRouter rechaza la clave (OPENROUTER_API_KEY no es válida).");
-    if (res.status === 402) throw new Error("No queda saldo en OpenRouter para llamar a Claude.");
-    if (res.status === 429) throw new Error("Demasiadas peticiones a OpenRouter. Espera un momento y repite.");
-    if (res.status === 413) throw new Error("El archivo es demasiado grande para mandarlo a Claude.");
-    const detalle = json?.error?.message ? `: ${json.error.message}` : "";
-    throw new Error(`OpenRouter ha devuelto un error (${res.status})${detalle}.`);
-  }
-
-  const llamada = json?.choices?.[0]?.message?.tool_calls?.find((t) => t.function?.name === "guardar_factura");
-  if (!llamada?.function?.arguments) {
+  const llamada = respuesta.content.find(
+    (b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use" && b.name === "guardar_factura",
+  );
+  if (!llamada) {
     throw new Error("Claude no ha llamado a guardar_factura: no ha podido leer la factura.");
   }
 
-  let args: unknown;
-  try {
-    args = JSON.parse(llamada.function.arguments);
-  } catch {
-    args = null;
-  }
+  const args = llamada.input;
   if (!args || typeof args !== "object" || Array.isArray(args)) {
     throw new Error("Claude ha devuelto los datos en un formato que no se entiende.");
   }
 
-  return { datos: normalizarDatos(args as Record<string, unknown>), modelo: json?.model || modelo };
+  return { datos: normalizarDatos(args as Record<string, unknown>), modelo: respuesta.model || modelo };
 }
