@@ -90,7 +90,10 @@ export const BadgeTarea = ({ estado }: { estado: EstadoTarea }) => <Tag tono={TO
 /** Puntuación 1–5: cinco marcas, la cifra y su significado. */
 export function Puntuacion({ valor, conTexto = true }: { valor: number; conTexto?: boolean }) {
   return (
-    <span className="inline-flex items-center gap-2" aria-label={`${valor} de 5, ${ETIQUETA_PUNTUACION[valor]}`}>
+    <span className="inline-flex items-center gap-2">
+      <span className="sr-only">
+        {valor} de 5, {ETIQUETA_PUNTUACION[valor]}
+      </span>
       <span className="flex gap-0.5" aria-hidden>
         {[1, 2, 3, 4, 5].map((n) => (
           <span
@@ -100,17 +103,41 @@ export function Puntuacion({ valor, conTexto = true }: { valor: number; conTexto
           />
         ))}
       </span>
-      <span className="text-sm font-medium tabular-nums text-tinta">{valor}/5</span>
-      {conTexto && <span className="text-xs text-tinta-2">{ETIQUETA_PUNTUACION[valor]}</span>}
+      <span className="text-sm font-medium tabular-nums text-tinta" aria-hidden>
+        {valor}/5
+      </span>
+      {conTexto && (
+        <span className="text-xs text-tinta-2" aria-hidden>
+          {ETIQUETA_PUNTUACION[valor]}
+        </span>
+      )}
     </span>
   );
 }
 
 /** Barra de progreso fina con su cifra. */
-export function Progreso({ pct, texto, completado = false }: { pct: number; texto?: ReactNode; completado?: boolean }) {
+export function Progreso({
+  pct,
+  texto,
+  completado = false,
+  etiqueta = "Progreso de la incorporación",
+}: {
+  pct: number;
+  texto?: ReactNode;
+  completado?: boolean;
+  etiqueta?: string;
+}) {
   return (
     <span className="flex min-w-0 items-center gap-2.5">
-      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-placa-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+      <span
+        className="h-1.5 flex-1 overflow-hidden rounded-full bg-placa-2"
+        role="progressbar"
+        aria-label={etiqueta}
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuetext={completado ? "Completada" : `${pct} %`}
+      >
         <span
           className="block h-full rounded-full transition-[width]"
           style={{ width: `${pct}%`, background: completado ? "var(--relleno-verde)" : "var(--acento)" }}
@@ -136,10 +163,25 @@ export function Cifras({ items }: { items: { k: string; v: ReactNode; detalle?: 
   );
 }
 
-/** Tabla dentro de una Seccion o en caja propia, con el mismo marco que el resto del CRM. */
-export function MarcoTabla({ children, enSeccion = false, minimo = "min-w-[720px]" }: { children: ReactNode; enSeccion?: boolean; minimo?: string }) {
+/** Tabla dentro de una Seccion o en caja propia, con el mismo marco que el resto del CRM. `titulo` es su caption (sólo para lectores de pantalla). */
+export function MarcoTabla({
+  children,
+  titulo,
+  enSeccion = false,
+  minimo = "min-w-[720px]",
+}: {
+  children: ReactNode;
+  titulo: string;
+  enSeccion?: boolean;
+  minimo?: string;
+}) {
   // Dentro de una ficha la columna es estrecha: las celdas se ajustan antes de pedir scroll horizontal.
-  const tabla = <table className={`w-full ${enSeccion ? "min-w-[600px]" : minimo} border-collapse text-left`}>{children}</table>;
+  const tabla = (
+    <table className={`w-full ${enSeccion ? "min-w-[600px]" : minimo} border-collapse text-left`}>
+      <caption className="sr-only">{titulo}</caption>
+      {children}
+    </table>
+  );
   if (enSeccion) return <div className="-m-4 overflow-x-auto">{tabla}</div>;
   return <div className="overflow-x-auto rounded-xl border border-linea bg-placa">{tabla}</div>;
 }

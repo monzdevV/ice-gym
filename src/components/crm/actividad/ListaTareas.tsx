@@ -53,7 +53,7 @@ function FilaTarea({
   return (
     <li className="group flex items-start gap-3 px-4 py-3 transition-colors hover:bg-placa-2/40">
       {t.estado === "cancelada" ? (
-        <span className="mt-0.5 size-[18px] shrink-0 rounded-full border-[1.5px] border-dashed border-tinta-2/50" title="Cancelada" />
+        <span className="mt-0.5 size-[18px] shrink-0 rounded-full border-[1.5px] border-dashed border-tinta-2/50" aria-hidden />
       ) : (
         <input
           type="checkbox"
@@ -91,6 +91,7 @@ function FilaTarea({
           }`}
         >
           {pasada && <ClockCountdown className="size-3.5" aria-hidden />}
+          {pasada && <span className="sr-only">Vencida: </span>}
           {vista === "hoy" || vista === "proximas" ? hora(t.fecha) : `${fechaCorta.format(new Date(t.fecha)).replace(".", "")} · ${hora(t.fecha)}`}
         </time>
         <MenuInteraccion item={t} onEstado={onEstado} onBorrar={onBorrar} />

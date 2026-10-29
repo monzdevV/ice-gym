@@ -30,8 +30,15 @@ export async function guardarMiembro(_: Resultado | null, fd: FormData): Promise
   };
 
   const supabase = await createClient();
-  const { data: repetido } = await supabase.from("equipo").select("id").ilike("email", email).neq("id", id || "00000000-0000-0000-0000-000000000000").maybeSingle();
-  if (repetido) return { ok: false, mensaje: "Ya hay alguien del equipo con ese email." };
+  // ilike sin comodines: «_» y «%» de un email no deben casar con cualquier carácter.
+  const patron = email.replace(/[\\%_]/g, "\\$&");
+  const { data: repetidos } = await supabase
+    .from("equipo")
+    .select("id")
+    .ilike("email", patron)
+    .neq("id", id || "00000000-0000-0000-0000-000000000000")
+    .limit(1);
+  if (repetidos?.length) return { ok: false, mensaje: "Ya hay alguien del equipo con ese email." };
 
   if (id) {
     const { error } = await supabase.from("equipo").update(fila).eq("id", id);

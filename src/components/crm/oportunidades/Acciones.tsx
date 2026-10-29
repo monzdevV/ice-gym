@@ -216,7 +216,9 @@ function DialogoPerdida({ perdida, onCerrar }: { perdida: Perdida | null; onCerr
             ))}
           </div>
           <label className="flex flex-col gap-1.5">
-            <span className="text-[0.8125rem] font-medium text-tinta">Motivo</span>
+            <span className="text-[0.8125rem] font-medium text-tinta">
+              Motivo <span className="font-normal text-tinta-2">(obligatorio)</span>
+            </span>
             <textarea
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}

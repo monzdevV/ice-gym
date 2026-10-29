@@ -33,22 +33,26 @@ Con cada factura, siempre el mismo bucle:
 | Prompt del sistema | `PROMPT_SISTEMA`: las instrucciones fijas que recibe Claude con cada factura. |
 | Herramienta | `guardar_factura(numero, fecha, proveedor, nif, base, iva, total)`. La ruta del archivo la añade el agente; Claude no la ve. |
 | Memoria | Ninguna. |
-| Bucle | `procesar_factura`: agente → Claude → el agente ejecuta la herramienta → fin. |
+| Bucle | `leer_con_claude` y `guardar`: agente → Claude → el agente ejecuta la herramienta → fin. `Agente.ronda` repite esto con cada factura nueva. |
 
 ## Instalación
 
-```bash
-cd agente
-python -m venv .venv
-# Windows:  .venv\Scripts\activate
-# Linux:    source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # y rellena las claves
-```
+1. Entra en la carpeta y crea un entorno virtual:
 
-En Supabase, ejecuta una vez `../supabase/facturas.sql` en el SQL Editor. Crea la tabla `facturas` con sus permisos (RLS).
+   ```bash
+   cd agente
+   python -m venv .venv
+   ```
 
-El agente entra con un **usuario del CRM** (rol `authenticated`, sujeto a RLS) y la clave publicable. Nunca usa `service_role`. Lo mejor es crearle un usuario propio, por ejemplo `agente@…`.
+2. Actívalo. En Windows: `.venv\Scriptsctivate`. En Linux: `source .venv/bin/activate`.
+3. Instala las dependencias: `pip install -r requirements.txt`.
+4. Copia `.env.example` a `.env` (Windows: `copy .env.example .env`; Linux: `cp .env.example .env`) y rellena los valores. El archivo `.env` no se sube a Git.
+5. En Supabase, ejecuta una vez `../supabase/facturas.sql` en el SQL Editor. Crea la tabla `facturas` con sus permisos (RLS).
+6. Crea en Supabase (Authentication → Users) un usuario propio para el agente, por ejemplo `agente@…`, y pon su correo y contraseña en `.env`.
+7. Prueba sin guardar nada: deja una factura en `facturas/Proveedores/` y ejecuta `python agente.py --dry-run`. Verás el JSON que saca Claude.
+8. Prueba de verdad: `python agente.py --una-vez`. La factura debe aparecer en la pantalla de facturas del CRM.
+
+El agente entra con un **usuario del CRM** (rol `authenticated`, sujeto a RLS) y la **clave publicable**. Nunca usa `service_role` ni una clave `sb_secret_…`: si la pones por error, el agente no arranca.
 
 ## Uso
 
@@ -57,13 +61,18 @@ python agente.py                          # siempre encendido: vigila ./facturas
 python agente.py --intervalo 60           # cada minuto
 python agente.py --carpeta /srv/facturas  # otra carpeta raíz (o FACTURAS_CARPETA en .env)
 python agente.py --una-vez                # una pasada y termina
-python agente.py --dry-run                # una pasada que enseña el JSON sin insertar
+python agente.py --dry-run                # una pasada que enseña el JSON sin insertar (no conecta con Supabase)
 ```
 
-- Cada factura se guarda una sola vez: el campo `archivo` (p. ej. `Proveedores/FAC-0153.pdf`) es único en la tabla. Si reinicias el agente, salta las facturas que ya estaban guardadas.
-- Antes de leer un archivo recién copiado, el agente espera unos segundos a que termine de copiarse.
-- Si una factura falla (Claude no responde, red caída…), no se reintenta en cada ronda: vuelve a intentarse cuando cambia el archivo o se reinicia el agente.
-- Los archivos no se mueven ni se borran. Las facturas no se suben a Git: solo se versionan las carpetas vacías.
+- **Una sola vez por factura.** El campo `archivo` (p. ej. `Proveedores/FAC-0153.pdf`) es único en la tabla. Si reinicias el agente, salta las facturas que ya estaban guardadas sin volver a llamar a Claude.
+- **Origen.** El agente guarda con `origen = 'carpeta'`. Las facturas subidas desde la pantalla del CRM llevan `origen = 'crm'` y su `archivo` es `crm/<id>.<ext>` en el almacén. Por eso **no crees una subcarpeta `crm`** en la carpeta de facturas: el agente la ignora.
+- **Archivos a medio copiar.** Un archivo sólo se lee cuando no ha cambiado entre dos rondas y lleva al menos 10 segundos sin modificarse.
+- **Errores.** Si una factura falla (Claude no responde, red caída…), se reintenta hasta 3 veces con espera creciente (2, 4 minutos). Si lo que falló fue guardar en Supabase, el reintento no vuelve a llamar a Claude. Después se deja hasta que el archivo cambie o se reinicie el agente. Si Supabase no responde, la ronda entera se repite en la siguiente.
+- **Sesión.** El token de Supabase se renueva solo antes de cada uso; si caduca del todo, el agente vuelve a entrar con el usuario de `.env`.
+- **Tamaño máximo.** PDF hasta 20 MB y fotos hasta 5 MB (límites de Claude). Los más grandes se saltan con un aviso en el registro.
+- **Qué se ignora.** Archivos ocultos (`.algo`), temporales de Office (`~$algo`) y cualquier formato que no sea PDF, JPG, PNG o WEBP.
+- Los archivos no se mueven ni se borran. Las facturas no se suben a Git: sólo se versionan las carpetas vacías.
+- El registro nunca muestra claves ni contraseñas: sólo nombres de archivo y los datos de cada factura.
 
 ## Dejarlo siempre encendido
 
@@ -90,4 +99,4 @@ sudo systemctl enable --now agente-facturas
 journalctl -u agente-facturas -f   # ver lo que hace
 ```
 
-**Windows:** en el Programador de tareas, crea una tarea que se ejecute «al iniciar el sistema» con `.venv\Scripts\python.exe agente.py`. Pon como carpeta de inicio la carpeta `agente` y marca «Si la tarea no se ejecuta, reiniciar cada 1 minuto».
+**Windows:** en el Programador de tareas, crea una tarea que se ejecute «al iniciar el sistema» con `.venv\Scripts\python.exe agente.py`. Pon como carpeta de inicio («Iniciar en») la carpeta `agente`, marca «Ejecutar tanto si el usuario inició sesión como si no» y, en Configuración, «Si la tarea no se ejecuta correctamente, reiniciar cada: 1 minuto». Quita también «Detener la tarea si se ejecuta durante más de…», porque el agente no termina nunca.

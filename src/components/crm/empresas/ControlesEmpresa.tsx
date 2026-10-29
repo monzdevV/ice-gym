@@ -20,13 +20,25 @@ import { crearInteraccion, type Resultado } from "@/app/crm/acciones/b2b";
 import { actualizarEmpresa, borrarEmpresa, guardarNotasEmpresa, marcarContactoPrincipal } from "@/app/crm/acciones/empresas";
 import { ruta, type Empresa, type Miembro } from "@/lib/b2b";
 import { claseBotonPrincipal, claseCampo, claseError } from "@/components/crm/Primitivas";
+import { useFormularioAccion } from "@/components/crm/b2b/useFormularioAccion";
 import { CamposEmpresa } from "./CamposEmpresa";
 
 export const claseBotonSecundario =
   "inline-flex h-8 items-center gap-1.5 rounded-md bg-placa px-3 text-[0.8125rem] font-medium text-tinta shadow-placa transition-colors hover:bg-placa-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento disabled:opacity-50";
 
-function Enviar({ texto, enviando, className = "" }: { texto: string; enviando: string; className?: string }) {
-  const { pending } = useFormStatus();
+function Enviar({
+  texto,
+  enviando,
+  className = "",
+  pendiente = false,
+}: {
+  texto: string;
+  enviando: string;
+  className?: string;
+  /** Para formularios enviados con onSubmit, donde useFormStatus no se entera. */
+  pendiente?: boolean;
+}) {
+  const pending = useFormStatus().pending || pendiente;
   return (
     <button type="submit" disabled={pending} className={`${claseBotonPrincipal} ${className}`}>
       {pending ? enviando : texto}
@@ -52,7 +64,7 @@ function useAlAcertar(estado: Resultado | null, alHacerlo: (r: Resultado) => voi
 
 function FormularioEditar({ empresa, equipo, alGuardar }: { empresa: Empresa; equipo: Miembro[]; alGuardar: () => void }) {
   const router = useRouter();
-  const [estado, accion] = useActionState<Resultado | null, FormData>(actualizarEmpresa, null);
+  const { estado, onSubmit, pendiente } = useFormularioAccion<Resultado>(actualizarEmpresa);
   useAlAcertar(estado, (r) => {
     toast.success(r.mensaje);
     alGuardar();
@@ -60,7 +72,7 @@ function FormularioEditar({ empresa, equipo, alGuardar }: { empresa: Empresa; eq
   });
 
   return (
-    <form action={accion} className="flex min-h-0 flex-1 flex-col">
+    <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
       <input type="hidden" name="id" value={empresa.id} />
       <div className="flex-1 overflow-y-auto p-4">
         <CamposEmpresa equipo={equipo} empresa={empresa} conLogo />
@@ -71,7 +83,7 @@ function FormularioEditar({ empresa, equipo, alGuardar }: { empresa: Empresa; eq
             {estado.mensaje}
           </p>
         )}
-        <Enviar texto="Guardar cambios" enviando="Guardando…" className="w-full" />
+        <Enviar texto="Guardar cambios" enviando="Guardando…" className="w-full" pendiente={pendiente} />
       </div>
     </form>
   );
@@ -135,7 +147,7 @@ export function BorrarEmpresa({
   return (
     <Dialog open={abierto} onOpenChange={setAbierto}>
       <DialogTrigger asChild>
-        <button type="button" aria-label="Borrar empresa" title="Borrar empresa" className={`${claseBotonSecundario} px-2 text-critico`}>
+        <button type="button" aria-label={`Borrar ${nombre}`} title="Borrar empresa" className={`${claseBotonSecundario} px-2 text-critico`}>
           <Trash className="size-4" aria-hidden />
         </button>
       </DialogTrigger>
@@ -227,6 +239,7 @@ export function BotonPrincipal({ empresaId, contactoId, nombre }: { empresaId: s
           } else toast.error(r.mensaje);
         })
       }
+      aria-label={pendiente ? undefined : `Hacer principal a ${nombre}`}
       className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs font-medium text-tinta-2 transition-colors hover:bg-placa-2 hover:text-tinta disabled:opacity-50"
     >
       <Star className="size-3.5" aria-hidden />
@@ -268,7 +281,9 @@ export function NotasEmpresa({ id, notas }: { id: string; notas: string | null }
         </p>
       )}
       <div className="flex items-center justify-end gap-3">
-        {cambiado && <span className="text-xs text-tinta-2">Cambios sin guardar</span>}
+        <span className="text-xs text-tinta-2" aria-live="polite">
+          {cambiado ? "Cambios sin guardar" : ""}
+        </span>
         <Enviar texto="Guardar notas" enviando="Guardando…" className="h-8 px-3" />
       </div>
     </form>

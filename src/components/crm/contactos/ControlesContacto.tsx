@@ -26,6 +26,7 @@ import { actualizarContacto, borrarContacto, guardarNotasContacto } from "@/app/
 import { cambiarEstadoInteraccion, type Resultado } from "@/app/crm/acciones/b2b";
 import { nombreCompleto, ruta, type Contacto } from "@/lib/b2b";
 import type { Catalogos } from "@/lib/datos/b2b";
+import { useFormularioAccion } from "@/components/crm/b2b/useFormularioAccion";
 import { CamposContacto } from "./FormularioContacto";
 import { copiar } from "./AccionesContacto";
 
@@ -46,7 +47,7 @@ function HojaEditar({
   onAbierto: (v: boolean) => void;
 }) {
   const router = useRouter();
-  const [estado, accion] = useActionState(async (prev: Resultado | null, fd: FormData) => {
+  const { estado, onSubmit, pendiente } = useFormularioAccion<Resultado>(async (prev, fd) => {
     const r = await actualizarContacto(prev, fd);
     if (r.ok) {
       toast.success(r.mensaje);
@@ -54,7 +55,7 @@ function HojaEditar({
       router.refresh();
     }
     return r;
-  }, null);
+  });
 
   return (
     <Sheet open={abierto} onOpenChange={onAbierto}>
@@ -63,7 +64,7 @@ function HojaEditar({
           <SheetTitle>Editar contacto</SheetTitle>
           <SheetDescription>{nombreCompleto(contacto)}</SheetDescription>
         </SheetHeader>
-        <form action={accion} className="flex-1 overflow-y-auto p-4">
+        <form onSubmit={onSubmit} className="flex-1 overflow-y-auto p-4">
           <input type="hidden" name="id" value={contacto.id} />
           <CamposContacto
             catalogos={catalogos}
@@ -72,6 +73,7 @@ function HojaEditar({
             estado={estado}
             textoEnviar="Guardar cambios"
             textoPendiente="Guardando…"
+            pendiente={pendiente}
             onCancelar={() => onAbierto(false)}
           />
         </form>
@@ -123,7 +125,7 @@ export function MasAcciones({ contacto }: { contacto: Contacto }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button type="button" aria-label="Más acciones" className={`${claseBotonSecundario} w-8 justify-center px-0`}>
+          <button type="button" aria-label={`Más acciones de ${nombreCompleto(contacto)}`} className={`${claseBotonSecundario} w-8 justify-center px-0`}>
             <DotsThree className="size-5" weight="bold" aria-hidden />
           </button>
         </DropdownMenuTrigger>

@@ -48,11 +48,24 @@ function fechaPorDefecto(tipo: TipoInteraccion) {
   return { dia: diaLocal(d), hora: `${dosCifras(d.getHours())}:${dosCifras(m)}` };
 }
 
-function Campo({ etiqueta, htmlFor, children, className = "" }: { etiqueta: string; htmlFor?: string; children: ReactNode; className?: string }) {
+function Campo({
+  etiqueta,
+  htmlFor,
+  children,
+  className = "",
+  obligatorio = false,
+}: {
+  etiqueta: string;
+  htmlFor?: string;
+  children: ReactNode;
+  className?: string;
+  obligatorio?: boolean;
+}) {
   return (
     <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
       <label htmlFor={htmlFor} className="text-[0.8125rem] font-medium text-tinta">
         {etiqueta}
+        {obligatorio && <span className="font-normal text-tinta-2"> (obligatorio)</span>}
       </label>
       {children}
     </div>
@@ -215,7 +228,7 @@ function Formulario({ catalogos, empresaId, contactoId, oportunidadId, tipo: tip
         })}
       />
 
-      <Campo etiqueta="Título" htmlFor={`${idBase}-titulo`}>
+      <Campo etiqueta="Título" htmlFor={`${idBase}-titulo`} obligatorio>
         <input
           id={`${idBase}-titulo`}
           name="titulo"

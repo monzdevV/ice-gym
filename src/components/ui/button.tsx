@@ -4,7 +4,7 @@ import { cn } from "cn"
 import { Slot } from "radix-ui"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform] duration-150 ease-out outline-none select-none focus-visible:ring-3 focus-visible:ring-acento/40 focus-visible:outline-none active:not-aria-[haspopup]:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-critico aria-invalid:ring-3 aria-invalid:ring-critico/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform] duration-150 ease-out outline-none select-none focus-visible:outline-none active:not-aria-[haspopup]:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-critico aria-invalid:ring-3 aria-invalid:ring-critico/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -16,7 +16,7 @@ const buttonVariants = cva(
         ghost:
           "text-tinta hover:bg-placa-2 aria-expanded:bg-placa-2",
         destructive:
-          "bg-critico-suave text-critico hover:bg-[color-mix(in_oklch,var(--critico-suave),var(--critico)_12%)] focus-visible:ring-critico/30",
+          "bg-critico-suave text-critico hover:bg-[color-mix(in_oklch,var(--critico-suave),var(--critico)_12%)]",
         link: "text-acento-tinta underline-offset-4 hover:underline",
       },
       size: {

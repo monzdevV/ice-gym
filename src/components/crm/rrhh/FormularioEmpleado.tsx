@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useState } from "react";
+import { useActionState, useEffect, useId, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ArrowsClockwise, Camera, Eye, EyeSlash, PencilSimple, Plus } from "@phosphor-icons/react";
@@ -29,6 +29,10 @@ import {
 import { claseBotonSecundarioRrhh } from "./Piezas";
 
 export type Sugerencias = { departamentos: string[]; puestos: string[] };
+
+const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp"];
+const MAX_FOTO = 5 * 1024 * 1024;
+const OBLIGATORIO = " (obligatorio)";
 
 const select = `${claseCampo} appearance-none`;
 
@@ -63,6 +67,7 @@ function CamposEmpleado({
   directorio,
   sugerencias,
   estado,
+  vez,
   onCancelar,
   textoEnviar,
   textoPendiente,
@@ -70,7 +75,8 @@ function CamposEmpleado({
   inicial?: Empleado;
   directorio: EmpleadoMini[];
   sugerencias: Sugerencias;
-  estado: Resultado | null;
+  estado: (Resultado & { vez?: number }) | null;
+  vez: number;
   onCancelar: () => void;
   textoEnviar: string;
   textoPendiente: string;
@@ -81,6 +87,7 @@ function CamposEmpleado({
   const [apellidos, setApellidos] = useState(inicial?.apellidos ?? "");
   const [email, setEmail] = useState(inicial?.email ?? "");
   const [foto, setFoto] = useState<string | null>(null);
+  const [errorFoto, setErrorFoto] = useState<string | null>(null);
   const [crearCuenta, setCrearCuenta] = useState(true);
   const [usuario, setUsuario] = useState("");
   const [usuarioTocado, setUsuarioTocado] = useState(false);
@@ -88,6 +95,12 @@ function CamposEmpleado({
   const [ver, setVer] = useState(false);
   const [comercial, setComercial] = useState(false);
   const [rol, setRol] = useState(inicial?.rol ?? "empleado");
+
+  // La vista previa es una URL de objeto: se libera al cambiarla o al cerrar.
+  useEffect(() => {
+    if (!foto) return;
+    return () => URL.revokeObjectURL(foto);
+  }, [foto]);
 
   const usuarioMostrado = usuarioTocado ? usuario : usuarioSugerido(email);
   const fotoActual = foto ?? directorio.find((e) => e.id === inicial?.id)?.foto_url ?? null;
@@ -100,7 +113,7 @@ function CamposEmpleado({
         <Avatar nombre={nombre || "?"} apellidos={apellidos} url={fotoActual} tamano="lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-tinta">{nombreEmpleado({ nombre: nombre || "Nuevo empleado", apellidos })}</p>
-          <label className="mt-1.5 inline-flex cursor-pointer items-center gap-1.5 text-[0.8125rem] font-medium text-acento-tinta hover:underline">
+          <label className="mt-1.5 inline-flex cursor-pointer items-center gap-1.5 rounded text-[0.8125rem] font-medium text-acento-tinta hover:underline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-acento-tinta">
             <Camera className="size-4" aria-hidden />
             {fotoActual ? "Cambiar fotografía" : "Añadir fotografía"}
             <input
@@ -108,19 +121,38 @@ function CamposEmpleado({
               name="foto"
               accept="image/jpeg,image/png,image/webp"
               className="sr-only"
+              aria-invalid={errorFoto ? true : undefined}
+              aria-describedby={`${id}-foto-ayuda`}
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                setFoto(f ? URL.createObjectURL(f) : null);
+                const fallo = !f
+                  ? null
+                  : !TIPOS_FOTO.includes(f.type)
+                    ? "La foto tiene que ser JPG, PNG o WebP."
+                    : f.size > MAX_FOTO
+                      ? "La foto pasa de 5 MB. Elige una más ligera."
+                      : null;
+                setErrorFoto(fallo);
+                if (fallo) e.target.value = "";
+                setFoto(f && !fallo ? URL.createObjectURL(f) : null);
               }}
             />
           </label>
-          <p className="text-xs text-tinta-2">JPG, PNG o WebP · máx. 5 MB</p>
+          {errorFoto ? (
+            <p id={`${id}-foto-ayuda`} role="alert" className="text-xs font-medium text-alarma-tinta">
+              {errorFoto}
+            </p>
+          ) : (
+            <p id={`${id}-foto-ayuda`} className="text-xs text-tinta-2">
+              JPG, PNG o WebP · máx. 5 MB
+            </p>
+          )}
         </div>
       </div>
 
       <Titulo>Datos personales</Titulo>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Campo etiqueta="Nombre" htmlFor={`${id}-nombre`}>
+        <Campo etiqueta={`Nombre${OBLIGATORIO}`} htmlFor={`${id}-nombre`}>
           <input id={`${id}-nombre`} name="nombre" required minLength={2} value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="off" className={claseCampo} autoFocus />
         </Campo>
         <Campo etiqueta="Apellidos" htmlFor={`${id}-apellidos`}>
@@ -132,7 +164,7 @@ function CamposEmpleado({
         <Campo etiqueta="Fecha de nacimiento" htmlFor={`${id}-nacimiento`}>
           <input id={`${id}-nacimiento`} type="date" name="fecha_nacimiento" defaultValue={inicial?.fecha_nacimiento ?? ""} className={claseCampo} />
         </Campo>
-        <Campo etiqueta="Email" htmlFor={`${id}-email`}>
+        <Campo etiqueta={`Email${OBLIGATORIO}`} htmlFor={`${id}-email`}>
           <input id={`${id}-email`} type="email" name="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" className={claseCampo} />
         </Campo>
         <Campo etiqueta="Teléfono" htmlFor={`${id}-telefono`}>
@@ -175,7 +207,7 @@ function CamposEmpleado({
             ))}
           </select>
         </Campo>
-        <Campo etiqueta="Fecha de alta" htmlFor={`${id}-alta`}>
+        <Campo etiqueta={`Fecha de alta${OBLIGATORIO}`} htmlFor={`${id}-alta`}>
           <input id={`${id}-alta`} type="date" name="fecha_alta" required defaultValue={inicial?.fecha_alta ?? hoyMadrid()} className={claseCampo} />
         </Campo>
         <Campo etiqueta="Fecha de baja" htmlFor={`${id}-baja`}>
@@ -216,12 +248,12 @@ function CamposEmpleado({
               <span className="block text-sm font-medium text-tinta">Crear cuenta de acceso al CRM</span>
               <span className="block text-xs text-tinta-2">Queda vinculada a esta ficha. La contraseña se guarda cifrada y no se vuelve a mostrar.</span>
             </span>
-            <Switch id={`${id}-cuenta`} checked={crearCuenta} onCheckedChange={setCrearCuenta} />
+            <Switch id={`${id}-cuenta`} checked={crearCuenta} onCheckedChange={setCrearCuenta} aria-label="Crear cuenta de acceso al CRM" />
           </label>
           <input type="hidden" name="crear_cuenta" value={crearCuenta ? "si" : "no"} />
           {crearCuenta && (
             <div className="grid gap-3 sm:grid-cols-2">
-              <Campo etiqueta="Nombre de usuario" htmlFor={`${id}-usuario`}>
+              <Campo etiqueta={`Nombre de usuario${OBLIGATORIO}`} htmlFor={`${id}-usuario`}>
                 <input
                   id={`${id}-usuario`}
                   name="usuario"
@@ -238,7 +270,7 @@ function CamposEmpleado({
                   className={claseCampo}
                 />
               </Campo>
-              <Campo etiqueta="Contraseña inicial" htmlFor={`${id}-password`}>
+              <Campo etiqueta={`Contraseña inicial${OBLIGATORIO}`} htmlFor={`${id}-password`}>
                 <span className="relative flex items-center">
                   <input
                     id={`${id}-password`}
@@ -249,6 +281,7 @@ function CamposEmpleado({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
+                    aria-describedby={`${id}-password-ayuda`}
                     className={`${claseCampo} pr-16`}
                   />
                   <span className="absolute right-1.5 flex items-center gap-0.5">
@@ -274,7 +307,9 @@ function CamposEmpleado({
                     </button>
                   </span>
                 </span>
-                <span className="text-xs text-tinta-2">Mínimo 8 caracteres con letras y números. Entrégasela en persona.</span>
+                <span id={`${id}-password-ayuda`} className="text-xs text-tinta-2">
+                  Mínimo 8 caracteres con letras y números. Entrégasela en persona.
+                </span>
               </Campo>
             </div>
           )}
@@ -283,7 +318,7 @@ function CamposEmpleado({
               <span className="block text-sm font-medium text-tinta">Añadir también al equipo comercial</span>
               <span className="block text-xs text-tinta-2">Podrá ser responsable de empresas, oportunidades y tareas.</span>
             </span>
-            <Switch id={`${id}-comercial`} checked={comercial} onCheckedChange={setComercial} />
+            <Switch id={`${id}-comercial`} checked={comercial} onCheckedChange={setComercial} aria-label="Añadir también al equipo comercial" />
           </label>
           <input type="hidden" name="equipo_comercial" value={comercial ? "si" : "no"} />
         </div>
@@ -293,7 +328,7 @@ function CamposEmpleado({
         <textarea id={`${id}-notas`} name="notas" rows={3} defaultValue={inicial?.notas ?? ""} className={`${claseCampo} h-auto py-2`} />
       </Campo>
 
-      {estado?.ok === false && (
+      {estado?.ok === false && estado.vez === vez && (
         <p role="alert" className={claseError}>
           {estado.mensaje}
         </p>
@@ -321,7 +356,7 @@ export function NuevoEmpleado({ directorio, sugerencias }: { directorio: Emplead
       setAbierto(false);
       router.refresh();
     }
-    return r;
+    return { ...r, vez };
   }, null);
 
   return (
@@ -349,6 +384,7 @@ export function NuevoEmpleado({ directorio, sugerencias }: { directorio: Emplead
             directorio={directorio}
             sugerencias={sugerencias}
             estado={estado}
+            vez={vez}
             onCancelar={() => setAbierto(false)}
             textoEnviar="Dar de alta"
             textoPendiente="Dando de alta…"
@@ -371,7 +407,7 @@ export function EditarEmpleado({ empleado, directorio, sugerencias }: { empleado
       setAbierto(false);
       router.refresh();
     }
-    return r;
+    return { ...r, vez };
   }, null);
 
   return (
@@ -399,6 +435,7 @@ export function EditarEmpleado({ empleado, directorio, sugerencias }: { empleado
               directorio={directorio}
               sugerencias={sugerencias}
               estado={estado}
+            vez={vez}
               onCancelar={() => setAbierto(false)}
               textoEnviar="Guardar cambios"
               textoPendiente="Guardando…"

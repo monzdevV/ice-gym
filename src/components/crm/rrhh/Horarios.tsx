@@ -63,7 +63,7 @@ function CamposFichaje({ empleados, fichaje, empleadoId }: { empleados: Empleado
   return (
     <>
       {fichaje && <input type="hidden" name="id" value={fichaje.id} />}
-      <CampoRrhh etiqueta="Empleado">
+      <CampoRrhh etiqueta="Empleado" obligatorio>
         <select name="empleado_id" required defaultValue={fichaje?.empleado_id ?? empleadoId ?? ""} className={select}>
           <option value="" disabled>
             Elige a quién
@@ -76,10 +76,10 @@ function CamposFichaje({ empleados, fichaje, empleadoId }: { empleados: Empleado
         </select>
       </CampoRrhh>
       <div className="grid gap-3 sm:grid-cols-3">
-        <CampoRrhh etiqueta="Fecha">
+        <CampoRrhh etiqueta="Fecha" obligatorio>
           <input type="date" name="fecha" required defaultValue={fichaje?.fecha ?? hoyMadrid()} className={claseCampo} />
         </CampoRrhh>
-        <CampoRrhh etiqueta="Entrada">
+        <CampoRrhh etiqueta="Entrada" obligatorio>
           <input type="time" name="entrada" required defaultValue={fichaje ? horaMadrid(fichaje.entrada) : "09:00"} className={claseCampo} />
         </CampoRrhh>
         <CampoRrhh etiqueta="Salida">
@@ -93,7 +93,7 @@ function CamposFichaje({ empleados, fichaje, empleadoId }: { empleados: Empleado
           <option value="incidencia">Incidencia</option>
         </select>
       </CampoRrhh>
-      <CampoRrhh etiqueta={estado === "incidencia" ? "Qué ha pasado" : "Nota (opcional)"}>
+      <CampoRrhh etiqueta={estado === "incidencia" ? "Qué ha pasado" : "Nota (opcional)"} obligatorio={estado === "incidencia"}>
         <input name="incidencia" defaultValue={fichaje?.incidencia ?? ""} required={estado === "incidencia"} placeholder="Olvido de fichaje, cita médica…" className={claseCampo} />
       </CampoRrhh>
     </>

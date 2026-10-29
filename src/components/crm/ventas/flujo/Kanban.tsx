@@ -21,13 +21,14 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CaretLineLeft, CaretLineRight, GearSix, PencilSimple, Plus, Trash } from "@phosphor-icons/react";
+import { ArrowsLeftRight, CaretLineLeft, CaretLineRight, Check, GearSix, PencilSimple, Plus, X } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { crearOportunidadVentas, moverOportunidadVentas, plegarEtapaVentas } from "@/app/crm/acciones/ventas";
@@ -103,6 +104,57 @@ function RelojActividades({ o }: { o: OportunidadVentasCompleta }) {
   );
 }
 
+/**
+ * «Mover a etapa» sin arrastrar: la alternativa de teclado, lector de pantalla y
+ * dedo (WCAG 2.5.7) al arrastre de la tarjeta.
+ */
+function MoverEtapa({ o }: { o: OportunidadVentasCompleta }) {
+  const router = useRouter();
+  const { catalogos } = useFlujo();
+  const [pendiente, empezar] = useTransition();
+
+  function mover(etapa: EtapaVentas) {
+    if (etapa.id === o.etapa_id) return;
+    empezar(async () => {
+      const r = await moverOportunidadVentas(o.id, etapa.id);
+      if (!r.ok) return void toast.error(r.mensaje);
+      toast.success(etapa.ganada ? `${o.nombre}: ¡ganada!` : `${o.nombre} → ${etapa.nombre}`);
+      router.refresh();
+    });
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          {...aislar}
+          onClick={(e) => e.stopPropagation()}
+          disabled={pendiente}
+          aria-label={`Mover ${o.nombre} a otra etapa`}
+          title="Mover a etapa"
+          className="grid size-6 place-items-center rounded-md text-tinta-2 hover:bg-placa-2 hover:text-tinta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta disabled:opacity-50"
+        >
+          <ArrowsLeftRight className="size-4" aria-hidden />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" {...aislar} onClick={(e) => e.stopPropagation()}>
+        <DropdownMenuLabel>Mover a etapa</DropdownMenuLabel>
+        {catalogos.etapas.map((e) => {
+          const actual = e.id === o.etapa_id;
+          return (
+            <DropdownMenuItem key={e.id} disabled={actual} onSelect={() => mover(e)}>
+              <Check className={actual ? "" : "invisible"} aria-hidden />
+              {e.nombre}
+              {actual && <span className="sr-only"> (etapa actual)</span>}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function Contenido({ o, interactivo = true }: { o: OportunidadVentasCompleta; interactivo?: boolean }) {
   const quien = quienVenta(o);
   return (
@@ -132,6 +184,7 @@ function Contenido({ o, interactivo = true }: { o: OportunidadVentasCompleta; in
       <div className="mt-2.5 flex items-center gap-1.5">
         {interactivo ? <EstrellasEditables valor={o.prioridad} id={o.id} /> : <Estrellas n={o.prioridad} />}
         {interactivo && <RelojActividades o={o} />}
+        {interactivo && <MoverEtapa o={o} />}
         <span className="ml-auto">
           <Responsable m={o.comercial} soloAvatar />
         </span>
@@ -150,7 +203,7 @@ function Tarjeta({ o, alAbrir }: { o: OportunidadVentasCompleta; alAbrir: (o: Op
         {...attributes}
         {...listeners}
         aria-roledescription="tarjeta arrastrable"
-        aria-label={`${o.nombre}${o.ingresos ? `, ${dinero(o.ingresos)}` : ""}. Espacio para mover.`}
+        aria-label={`${o.nombre}${o.ingresos ? `, ${dinero(o.ingresos)}` : ""}. Espacio para arrastrar, o usa el botón «Mover a etapa».`}
         onClick={() => alAbrir(o)}
         className={`${claseTarjeta} cursor-grab transition-[box-shadow,transform] duration-150 hover:-translate-y-px hover:ring-tinta-2/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta active:cursor-grabbing`}
       >
@@ -165,6 +218,7 @@ function Tarjeta({ o, alAbrir }: { o: OportunidadVentasCompleta; alAbrir: (o: Op
 function AltaRapida({ etapa, onCerrar }: { etapa: EtapaVentas; onCerrar: () => void }) {
   const router = useRouter();
   const { catalogos, nueva } = useFlujo();
+  const idError = useId();
   const [pendiente, empezar] = useTransition();
   const [d, setD] = useState({ cliente_id: "", contacto_nombre: "", nombre: "", email: "", telefono: "", ingresos: "", prioridad: 0 });
   const [importeMalo, setImporteMalo] = useState(false);
@@ -197,7 +251,11 @@ function AltaRapida({ etapa, onCerrar }: { etapa: EtapaVentas; onCerrar: () => v
       className="mx-2 mb-2 flex flex-col gap-2 rounded-2xl bg-tarjeta p-3 shadow-placa ring-2 ring-acento/60"
       aria-label={`Alta rápida en ${etapa.nombre}`}
     >
+      <label htmlFor={`${idError}-cliente`} className="sr-only">
+        Cliente
+      </label>
       <Selector
+        id={`${idError}-cliente`}
         name="cliente_id"
         valor={d.cliente_id}
         onCambio={(v) => {
@@ -224,10 +282,16 @@ function AltaRapida({ etapa, onCerrar }: { etapa: EtapaVentas; onCerrar: () => v
           placeholder="0 €"
           aria-label="Ingresos esperados"
           aria-invalid={importeMalo || undefined}
+          aria-describedby={importeMalo ? idError : undefined}
           className={`${claseCampo} w-28 tabular-nums`}
         />
         <EstrellasEditables valor={d.prioridad} onCambio={(n) => poner("prioridad", n)} />
       </div>
+      {importeMalo && (
+        <p id={idError} className="text-xs font-medium text-critico">
+          Escribe una cantidad, por ejemplo 1.234,56
+        </p>
+      )}
       <div className="flex items-center gap-2">
         <button type="submit" disabled={pendiente} className={`${claseBotonPrincipal} h-8 px-3`}>
           Añadir
@@ -242,8 +306,8 @@ function AltaRapida({ etapa, onCerrar }: { etapa: EtapaVentas; onCerrar: () => v
         >
           Editar
         </button>
-        <button type="button" onClick={onCerrar} aria-label="Cerrar el alta rápida" className="ml-auto grid size-8 place-items-center rounded-md text-tinta-2 hover:bg-placa-2 hover:text-tinta">
-          <Trash className="size-4" aria-hidden />
+        <button type="button" onClick={onCerrar} aria-label="Descartar el alta rápida" title="Descartar" className="ml-auto grid size-8 place-items-center rounded-md text-tinta-2 hover:bg-placa-2 hover:text-tinta">
+          <X className="size-4" weight="bold" aria-hidden />
         </button>
       </div>
     </form>
@@ -270,23 +334,41 @@ function BarraPlazos({
     ...PLAZOS.map((p) => ({ p, tono: TONO_PLAZO[p], texto: ETIQUETA_PLAZO[p] })),
     { p: "sin" as const, tono: "var(--linea)", texto: "Sin actividad" },
   ];
+  const activo = filtro ? tramos.find((t) => t.p === filtro) : null;
+  // La barra se ve fina, pero cada tramo se pulsa en 24 px de alto (WCAG 2.5.8).
   return (
-    <div className="flex h-1.5 overflow-hidden rounded-full bg-linea/60" role="group" aria-label="Filtrar por actividad">
-      {total > 0 &&
-        tramos.map(({ p, tono, texto }) =>
-          cuenta[p] ? (
-            <button
-              key={p}
-              type="button"
-              onClick={() => onFiltro(filtro === p ? null : p)}
-              aria-pressed={filtro === p}
-              title={`${texto}: ${cuenta[p]}`}
-              aria-label={`${texto}: ${cuenta[p]}`}
-              className={`h-full transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta ${filtro && filtro !== p ? "opacity-30" : ""}`}
-              style={{ width: `${(cuenta[p] / total) * 100}%`, background: tono }}
-            />
-          ) : null
-        )}
+    <div>
+      <div className="flex h-6 w-full items-center gap-px" role="group" aria-label="Filtrar por actividad">
+        {total === 0 && <span className="h-1.5 w-full rounded-full bg-linea/60" aria-hidden />}
+        {total > 0 &&
+          tramos.map(({ p, tono, texto }) =>
+            cuenta[p] ? (
+              <button
+                key={p}
+                type="button"
+                onClick={() => onFiltro(filtro === p ? null : p)}
+                aria-pressed={filtro === p}
+                title={`${texto}: ${cuenta[p]}`}
+                aria-label={`${texto}: ${cuenta[p]}`}
+                className={`flex h-full min-w-1.5 items-center rounded-sm transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta ${
+                  filtro && filtro !== p ? "opacity-30" : ""
+                }`}
+                style={{ width: `${(cuenta[p] / total) * 100}%` }}
+              >
+                <span className="h-1.5 w-full rounded-full" style={{ background: tono }} aria-hidden />
+              </button>
+            ) : null
+          )}
+      </div>
+      {/* El tramo elegido, también en palabras: el color no puede ser la única pista. */}
+      {activo && (
+        <p className="flex flex-wrap items-center gap-1 text-xs text-tinta-2">
+          Sólo «{activo.texto.toLowerCase()}» ({cuenta[activo.p]})
+          <button type="button" onClick={() => onFiltro(null)} className="rounded px-1 py-0.5 font-medium text-acento-tinta underline-offset-4 hover:underline">
+            Ver todas
+          </button>
+        </p>
+      )}
     </div>
   );
 }
@@ -329,6 +411,7 @@ function Columna({
   const [, empezar] = useTransition();
   const { setNodeRef, isOver } = useDroppable({ id: etapa.id });
   const [alta, setAlta] = useState(false);
+  const botonAlta = useRef<HTMLButtonElement>(null);
   const [filtro, setFiltro] = useState<FiltroPlazo | null>(null);
   const hoy = hoyISO();
   const visibles = filtro ? items.filter((o) => (plazoMasUrgente(o.actividades, hoy) ?? "sin") === filtro) : items;
@@ -376,6 +459,7 @@ function Columna({
               </DropdownMenuContent>
             </DropdownMenu>
             <button
+              ref={botonAlta}
               type="button"
               onClick={() => setAlta((v) => !v)}
               aria-expanded={alta}
@@ -394,7 +478,16 @@ function Columna({
         </div>
       </header>
 
-      {alta && <AltaRapida etapa={etapa} onCerrar={() => setAlta(false)} />}
+      {alta && (
+        <AltaRapida
+          etapa={etapa}
+          onCerrar={() => {
+            setAlta(false);
+            // Al cerrar con Escape o con la X, el foco vuelve al «+» en vez de perderse.
+            botonAlta.current?.focus();
+          }}
+        />
+      )}
 
       <SortableContext id={etapa.id} items={visibles.map((o) => o.id)} strategy={verticalListSortingStrategy}>
         <ul ref={setNodeRef} className="flex min-h-[120px] flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-2 pb-2 pt-0.5">
@@ -525,9 +618,11 @@ export function KanbanVentas({ filas, etapas }: { filas: OportunidadVentasComple
       ...original,
       etapa_id: etapaId,
       posicion,
+      // Las mismas reglas que moverOportunidadVentas: una perdida que cambia de etapa se restaura.
       ...(cambia && {
-        probabilidad: original.probabilidad_manual && !destino.ganada ? original.probabilidad : destino.probabilidad,
-        estado: destino.ganada ? "ganada" : original.estado === "ganada" ? "abierta" : original.estado,
+        probabilidad:
+          original.probabilidad_manual && !destino.ganada && original.estado !== "perdida" ? original.probabilidad : destino.probabilidad,
+        estado: destino.ganada ? "ganada" : "abierta",
       }),
     };
     lista = lista.map((o) => (o.id === movida.id ? movida : o));

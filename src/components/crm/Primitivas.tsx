@@ -139,7 +139,7 @@ export const claseBotonPrincipal =
 
 /** Campo de formulario. */
 export const claseCampo =
-  "h-9 w-full rounded-lg border border-linea bg-placa px-3 text-sm text-tinta outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-tinta-2 focus:border-acento focus:ring-3 focus:ring-acento/30 aria-invalid:border-critico aria-invalid:ring-critico/20";
+  "h-9 w-full rounded-lg border border-linea-campo bg-placa px-3 text-sm text-tinta outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-tinta-2 focus:border-acento-tinta aria-invalid:border-critico aria-invalid:ring-3 aria-invalid:ring-critico/20";
 
 /** Error de formulario. */
 export const claseError =

@@ -37,7 +37,9 @@ function AltaPrimerAdmin({ email }: { email: string | null }) {
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex min-w-0 flex-col gap-1.5">
-          <span className="text-[0.8125rem] font-medium text-tinta">Nombre</span>
+          <span className="text-[0.8125rem] font-medium text-tinta">
+            Nombre <span className="font-normal text-tinta-2">(obligatorio)</span>
+          </span>
           <input name="nombre" required minLength={2} autoComplete="given-name" className={claseCampo} />
         </label>
         <label className="flex min-w-0 flex-col gap-1.5">

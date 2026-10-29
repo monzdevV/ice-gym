@@ -104,14 +104,18 @@ export function Atencion({
 }: {
   nivel: Nivel;
   titulo: string;
-  valor: ReactNode;
+  valor: string;
   texto: string;
   href: string;
 }) {
   const { Icono, caja, icono } = NIVEL[nivel];
+  // En pantalla la cifra va al final; el lector la oye en orden natural:
+  // «Tareas: 3 vencidas · 8 pendientes en total».
+  const nombre = nivel === "ok" ? `${titulo}: ${texto}` : `${titulo}: ${valor} ${texto}`;
   return (
     <Link
       href={href}
+      aria-label={nombre}
       className={`group flex min-w-0 items-center gap-3.5 rounded-xl px-4 py-3.5 transition-[filter,transform] duration-150 hover:brightness-[0.98] active:scale-[0.99] ${caja}`}
     >
       <Icono className={`size-6 shrink-0 ${icono}`} weight="fill" aria-hidden />

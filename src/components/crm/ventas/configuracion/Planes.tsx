@@ -91,7 +91,7 @@ function FormularioPlan({
               </div>
               <div className="grid gap-2 pl-7 sm:grid-cols-[minmax(0,1fr)_6rem_minmax(0,10rem)]">
                 <label>
-                  <span className="sr-only">Resumen</span>
+                  <span className="sr-only">Resumen de la actividad {i + 1}</span>
                   <input value={p.resumen} onChange={(e) => cambiar(p.clave, { resumen: e.target.value })} maxLength={200} placeholder="Resumen (opcional)" className={claseCampo} />
                 </label>
                 <label className="flex items-center gap-1.5">
@@ -102,13 +102,13 @@ function FormularioPlan({
                     max={365}
                     value={p.dias}
                     onChange={(e) => cambiar(p.clave, { dias: e.target.value })}
-                    aria-label="Días desde el inicio del plan"
+                    aria-label={`Días desde el inicio del plan, actividad ${i + 1}`}
                     className={`${claseCampo} tabular-nums`}
                   />
                   <span className="text-xs text-tinta-2">d</span>
                 </label>
                 <label>
-                  <span className="sr-only">Asignado a</span>
+                  <span className="sr-only">Asignado a, actividad {i + 1}</span>
                   <select value={p.asignado_id} onChange={(e) => cambiar(p.clave, { asignado_id: e.target.value })} className={claseCampo}>
                     <option value="">El comercial</option>
                     {comerciales

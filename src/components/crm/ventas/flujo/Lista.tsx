@@ -17,7 +17,7 @@ import {
   quienVenta,
   rutaVentas,
   textoPlazo,
-  TONO_PLAZO,
+  TINTA_PLAZO,
   type EtapaVentas,
   type FiltrosVentas,
   type OportunidadVentasCompleta,
@@ -120,7 +120,7 @@ function Fila({
       <td className="max-w-[220px] py-2 pr-4">
         {proxima && plazo ? (
           <span className="flex min-w-0 items-baseline gap-1.5 text-[0.8125rem]">
-            <span className="shrink-0 font-semibold" style={{ color: TONO_PLAZO[plazo] }}>
+            <span className="shrink-0 font-semibold" style={{ color: TINTA_PLAZO[plazo] }}>
               {textoPlazo(proxima.vence)}
             </span>
             <span className="truncate text-tinta-2">{proxima.resumen ?? ""}</span>
@@ -376,7 +376,7 @@ export function ListaVentas({
               type="button"
               onClick={() => lote({ tipo: "borrar" })}
               disabled={pendiente}
-              className="inline-flex h-9 items-center rounded-lg bg-critico px-4 text-sm font-semibold text-white hover:bg-critico/90 disabled:opacity-50"
+              className="inline-flex h-9 items-center rounded-lg bg-critico px-4 text-sm font-semibold text-sobre-critico hover:bg-critico/90 disabled:opacity-50"
             >
               {pendiente ? "Borrando…" : "Borrar"}
             </button>

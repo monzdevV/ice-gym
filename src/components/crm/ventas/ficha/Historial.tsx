@@ -105,7 +105,7 @@ export function Historial({
           Registrar una nota
         </button>
         <button type="button" onClick={() => setPlanificar(true)} className={boton}>
-          Actividad
+          Planificar actividad
         </button>
       </div>
 
@@ -215,7 +215,7 @@ export function Historial({
               type="button"
               onClick={confirmarBorrado}
               disabled={pendiente}
-              className="inline-flex h-9 items-center justify-center rounded-lg bg-critico px-4 text-sm font-semibold text-sobre-campo hover:bg-critico/90 disabled:opacity-50"
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-critico px-4 text-sm font-semibold text-sobre-critico hover:bg-critico/90 disabled:opacity-50"
             >
               {pendiente ? "Borrando…" : "Borrar"}
             </button>

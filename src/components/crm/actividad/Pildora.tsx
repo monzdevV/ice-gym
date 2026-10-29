@@ -63,12 +63,13 @@ export function Pildora({
             />
           </label>
         )}
-        <ul className="max-h-72 overflow-y-auto p-1" role="listbox" aria-label={etiqueta}>
-          {filtradas.length === 0 && <li className="px-2 py-3 text-sm text-tinta-2">Nada coincide.</li>}
+        <ul className="max-h-72 overflow-y-auto p-1" aria-label={etiqueta}>
+          {filtradas.length === 0 && <li role="status" className="px-2 py-3 text-sm text-tinta-2">Nada coincide.</li>}
           {filtradas.map((o) => (
-            <li key={o.valor} role="option" aria-selected={o.valor === valor}>
+            <li key={o.valor}>
               <button
                 type="button"
+                aria-pressed={o.valor === valor}
                 onClick={() => {
                   onCambio(o.valor);
                   setAbierta(false);

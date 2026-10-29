@@ -22,6 +22,7 @@ import {
   Plus,
   SlidersHorizontal,
   Star,
+  Receipt,
   Target,
   User,
   UsersThree,
@@ -106,6 +107,11 @@ export function PaletaComandos() {
   const [respondida, setRespondida] = useState("");
   const [buscando, empezar] = useTransition();
   const lista = useRef<HTMLUListElement>(null);
+  /** Lo que tenía el foco al abrir: se le devuelve al cerrar (patrón de diálogo de la APG). */
+  const origen = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (abierta) origen.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  }, [abierta]);
 
   // Atajos globales: ⌘K / Ctrl+K y «/» abren la paleta.
   useEffect(() => {
@@ -183,6 +189,7 @@ export function PaletaComandos() {
       { id: "rrhh-incorporacion", grupo: "Ir a", texto: "Tareas de incorporación", Icono: ListChecks, claves: "rrhh onboarding", ir: ir(rutaRrhh.incorporacion) },
       { id: "rrhh-evaluaciones", grupo: "Ir a", texto: "Evaluaciones", Icono: Star, claves: "rrhh trimestral desempeño", ir: ir(rutaRrhh.evaluaciones) },
       { id: "rrhh-nominas", grupo: "Ir a", texto: "Nóminas", Icono: FileText, claves: "rrhh sueldo pdf firma", ir: ir(rutaRrhh.nominas) },
+      { id: "facturas", grupo: "Ir a", texto: "Facturas", Icono: Receipt, claves: "proveedores gastos leer factura subir iva", ir: ir("/crm/facturas") },
       { id: "configuracion", grupo: "Ir a", texto: "Configuración", Icono: GearSix, claves: "ajustes equipo", ir: ir(ruta.configuracion) },
       { id: "web", grupo: "Ir a", texto: "Web pública", Icono: ArrowSquareOut, ir: () => window.location.assign(URL_WEB) },
     ];
@@ -271,7 +278,21 @@ export function PaletaComandos() {
     }
   }
 
-  let grupoAnterior = "";
+  // Agrupa en orden de aparición para pintar cada grupo como role="group" con su rótulo.
+  const grupos: { nombre: string; filas: { it: Item; i: number }[] }[] = [];
+  items.forEach((it, i) => {
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && ultimo.nombre === it.grupo) ultimo.filas.push({ it, i });
+    else grupos.push({ nombre: it.grupo, filas: [{ it, i }] });
+  });
+  const sinCoincidencias = items.length === 0 && (!consultaValida || respondida === q);
+  const aviso = buscando
+    ? "Buscando…"
+    : sinCoincidencias
+      ? `Nada coincide con «${q}».`
+      : q.trim()
+        ? `${items.length} ${items.length === 1 ? "resultado" : "resultados"}`
+        : "";
 
   return (
     <Dialog
@@ -281,8 +302,25 @@ export function PaletaComandos() {
         if (!v) setQ("");
       }}
     >
-      <DialogContent showCloseButton={false} className="top-[12%] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[18%] sm:max-w-xl">
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby="paleta-ayuda"
+        onCloseAutoFocus={(e) => {
+          // Si lo elegido no ha abierto otro diálogo ni cambiado de página, el foco vuelve a donde estaba.
+          const destino = origen.current;
+          const otroDialogo = document.querySelector('[role="dialog"][data-state="open"]');
+          if (otroDialogo) e.preventDefault();
+          else if (destino?.isConnected) {
+            e.preventDefault();
+            destino.focus();
+          }
+        }}
+        className="top-[12%] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[18%] sm:max-w-xl"
+      >
         <DialogTitle className="sr-only">Buscar o ir a…</DialogTitle>
+        <p id="paleta-ayuda" className="sr-only">
+          Escribe para buscar. Usa las flechas arriba y abajo para moverte por los resultados, Intro para abrir y Escape para cerrar.
+        </p>
         <div className="flex items-center gap-2.5 border-b border-linea px-4">
           <MagnifyingGlass className="size-5 text-tinta-2" aria-hidden />
           <input
@@ -295,24 +333,39 @@ export function PaletaComandos() {
             onKeyDown={teclaLista}
             placeholder="Busca empresas, contactos, oportunidades… o un comando"
             role="combobox"
-            aria-expanded="true"
+            aria-label="Buscar en el CRM o escribir un comando"
+            aria-autocomplete="list"
+            aria-expanded={items.length > 0}
             aria-controls="paleta-lista"
             aria-activedescendant={items[indiceActivo] ? `paleta-${items[indiceActivo].id}` : undefined}
             className="h-12 min-w-0 flex-1 bg-transparent text-[0.95rem] text-tinta outline-none placeholder:text-tinta-2"
           />
-          {buscando && <span className="text-xs text-tinta-2">Buscando…</span>}
-        </div>
-        <ul id="paleta-lista" ref={lista} role="listbox" className="max-h-[55vh] overflow-y-auto p-1.5">
-          {items.length === 0 && (!consultaValida || respondida === q) && (
-            <li className="px-3 py-6 text-center text-sm text-tinta-2">Nada coincide con «{q}».</li>
+          {buscando && (
+            <span className="text-xs text-tinta-2" aria-hidden>
+              Buscando…
+            </span>
           )}
-          {items.map((it, i) => {
-            const cabecera = it.grupo !== grupoAnterior ? it.grupo : null;
-            grupoAnterior = it.grupo;
-            return (
-              <li key={it.id} role="presentation">
-                {cabecera && <p className="px-2.5 pb-1 pt-2.5 text-[0.72rem] font-medium text-tinta-2">{cabecera}</p>}
+        </div>
+        {/* Anuncia el número de resultados sin mover el foco del campo. */}
+        <p role="status" className="sr-only">
+          {aviso}
+        </p>
+        {sinCoincidencias && <p className="px-3 py-6 text-center text-sm text-tinta-2">Nada coincide con «{q}».</p>}
+        <ul
+          id="paleta-lista"
+          ref={lista}
+          role="listbox"
+          aria-label="Resultados"
+          className={`max-h-[55vh] overflow-y-auto p-1.5 ${items.length === 0 ? "hidden" : ""}`}
+        >
+          {grupos.map((g, n) => (
+            <li key={`${g.nombre}-${n}`} role="group" aria-labelledby={`paleta-grupo-${n}`}>
+              <p id={`paleta-grupo-${n}`} className="px-2.5 pb-1 pt-2.5 text-[0.72rem] font-medium text-tinta-2">
+                {g.nombre}
+              </p>
+              {g.filas.map(({ it, i }) => (
                 <div
+                  key={it.id}
                   id={`paleta-${it.id}`}
                   role="option"
                   aria-selected={i === indiceActivo}
@@ -320,7 +373,7 @@ export function PaletaComandos() {
                   onMouseMove={() => setActivo(i)}
                   onClick={() => elegir(it)}
                   className={`flex cursor-pointer items-center gap-3 rounded-md px-2.5 py-2 text-sm ${
-                    i === indiceActivo ? "bg-placa-2 text-tinta" : "text-tinta"
+                    i === indiceActivo ? "bg-placa-2 text-tinta shadow-[inset_2px_0_0_var(--acento-tinta)]" : "text-tinta"
                   }`}
                 >
                   {it.visual ?? <it.Icono className="size-4 shrink-0 text-tinta-2" aria-hidden />}
@@ -332,11 +385,11 @@ export function PaletaComandos() {
                     <kbd className="ml-auto rounded border border-linea px-1.5 text-[0.7rem] text-tinta-2">{it.atajo}</kbd>
                   )}
                 </div>
-              </li>
-            );
-          })}
+              ))}
+            </li>
+          ))}
         </ul>
-        <div className="hidden gap-4 border-t border-linea px-4 py-2 text-[0.72rem] text-tinta-2 sm:flex">
+        <div className="hidden gap-4 border-t border-linea px-4 py-2 text-[0.72rem] text-tinta-2 sm:flex" aria-hidden>
           <span>↑↓ moverse</span>
           <span>↵ abrir</span>
           <span>Esc cerrar</span>
@@ -362,7 +415,8 @@ export function BotonPaleta({ compacto = false }: { compacto?: boolean }) {
       <button
         type="button"
         onClick={abrir}
-        aria-label="Buscar en todo el CRM (Ctrl K)"
+        aria-label="Buscar en todo el CRM"
+        aria-keyshortcuts="Control+K"
         title="Buscar en todo el CRM (Ctrl K)"
         className="grid size-8 place-items-center rounded-md text-tinta-2 transition-colors hover:bg-placa-2 hover:text-tinta"
       >
@@ -374,11 +428,14 @@ export function BotonPaleta({ compacto = false }: { compacto?: boolean }) {
     <button
       type="button"
       onClick={abrir}
+      aria-keyshortcuts="Control+K"
       className="flex h-8 w-full max-w-72 items-center gap-2 rounded-lg border border-linea bg-placa px-2.5 text-[0.8125rem] text-tinta-2 transition-colors hover:border-tinta-2/40 hover:text-tinta"
     >
       <MagnifyingGlass className="size-4" aria-hidden />
       <span className="flex-1 text-left">Buscar…</span>
-      <kbd className="rounded border border-linea px-1.5 text-[0.7rem]">Ctrl K</kbd>
+      <kbd className="rounded border border-linea px-1.5 text-[0.7rem]" aria-hidden>
+        Ctrl K
+      </kbd>
     </button>
   );
 }

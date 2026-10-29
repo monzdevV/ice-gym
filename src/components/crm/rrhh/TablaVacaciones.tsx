@@ -29,16 +29,16 @@ export function TablaVacaciones({
 }) {
   const hoy = hoyMadrid();
   return (
-    <MarcoTabla enSeccion={enSeccion} minimo="min-w-[900px]">
+    <MarcoTabla titulo="Solicitudes de vacaciones" enSeccion={enSeccion} minimo="min-w-[900px]">
       <thead>
         <tr className={claseCabeceraTabla}>
-          {conEmpleado && <th className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>}
-          <th className={`py-2.5 pr-3 font-normal ${conEmpleado ? "" : "pl-4"}`}>Periodo</th>
-          <th className="py-2.5 pr-3 text-right font-normal">Días</th>
-          <th className="py-2.5 pr-3 font-normal">Estado</th>
-          <th className="py-2.5 pr-3 font-normal">Comentario</th>
-          <th className="py-2.5 pr-3 font-normal">Resuelta por</th>
-          <th className="py-2.5 pr-4 text-right font-normal">
+          {conEmpleado && <th scope="col" className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>}
+          <th scope="col" className={`py-2.5 pr-3 font-normal ${conEmpleado ? "" : "pl-4"}`}>Periodo</th>
+          <th scope="col" className="py-2.5 pr-3 text-right font-normal">Días</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Estado</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Comentario</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Resuelta por</th>
+          <th scope="col" className="py-2.5 pr-4 text-right font-normal">
             <span className="sr-only">Acciones</span>
           </th>
         </tr>

@@ -7,6 +7,8 @@ import { hoyISO, rutaVentas, sumarDias, type FiltrosVentas, type OportunidadVent
 import { useFlujo } from "./Contexto";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const diaLargo = new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+const textoDia = (dia: string) => diaLargo.format(new Date(`${dia}T12:00:00Z`));
 
 function mesVecino(mes: string, delta: number) {
   const d = new Date(Date.UTC(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)) - 1 + delta, 1));
@@ -53,6 +55,7 @@ export function CalendarioVentas({
     const i = catalogos.etapas.findIndex((e) => e.id === o.etapa_id);
     return `var(--rampa-${Math.round((Math.max(0, i) / n) * 5)})`;
   };
+  const nombreEtapa = (o: OportunidadVentasCompleta) => catalogos.etapas.find((e) => e.id === o.etapa_id)?.nombre ?? "Sin etapa";
 
   const claseNav = "grid size-8 place-items-center rounded-md text-tinta-2 hover:bg-placa-2 hover:text-tinta";
 
@@ -78,9 +81,14 @@ export function CalendarioVentas({
       </div>
 
       <div className="-mx-4 min-h-0 flex-1 overflow-auto px-4 lg:mx-0 lg:px-0">
-        <div className="grid min-w-[720px] grid-cols-7 overflow-hidden rounded-xl border border-linea bg-placa" role="grid" aria-label={`Cierres previstos de ${mesLargo(`${mes}-15T12:00:00Z`)}`}>
+        <div
+          className="grid min-w-[720px] grid-cols-7 overflow-hidden rounded-xl border border-linea bg-placa"
+          role="region"
+          aria-label={`Cierres previstos de ${mesLargo(`${mes}-15T12:00:00Z`)}`}
+        >
+          {/* Cabeceras sólo visuales: cada día lleva su fecha completa para el lector. */}
           {DIAS.map((d) => (
-            <div key={d} role="columnheader" className="border-b border-linea px-2 py-1.5 text-xs font-medium text-tinta-2">
+            <div key={d} aria-hidden className="border-b border-linea px-2 py-1.5 text-xs font-medium text-tinta-2">
               <span className="hidden lg:inline">{d}</span>
               <span className="lg:hidden">{d.slice(0, 3)}</span>
             </div>
@@ -91,21 +99,25 @@ export function CalendarioVentas({
             return (
               <div
                 key={dia}
-                role="gridcell"
                 className={`group relative flex min-h-28 flex-col gap-1 border-linea p-1.5 ${i % 7 ? "border-l" : ""} ${i >= 7 ? "border-t" : ""} ${fuera ? "bg-placa-2/40" : ""}`}
               >
                 <div className="flex items-center justify-between">
                   <span
                     className={`grid size-6 place-items-center rounded-full text-xs tabular-nums ${
-                      dia === hoy ? "bg-acento font-semibold text-sobre-campo" : fuera ? "text-tinta-2/60" : "text-tinta-2"
+                      dia === hoy ? "bg-acento font-semibold text-sobre-campo" : "text-tinta-2"
                     }`}
                   >
-                    {Number(dia.slice(8))}
+                    <span aria-hidden>{Number(dia.slice(8))}</span>
+                    <span className="sr-only">
+                      {textoDia(dia)}
+                      {dia === hoy ? " (hoy)" : ""}
+                      {lista.length ? `: ${lista.length} ${lista.length === 1 ? "cierre" : "cierres"}` : ""}
+                    </span>
                   </span>
                   <button
                     type="button"
                     onClick={() => nueva({ cierre_previsto: dia })}
-                    aria-label={`Nueva oportunidad que cierra el ${dia}`}
+                    aria-label={`Nueva oportunidad que cierra el ${textoDia(dia)}`}
                     className="grid size-6 place-items-center rounded-md text-tinta-2 opacity-0 transition-opacity hover:bg-placa-2 hover:text-tinta focus-visible:opacity-100 group-hover:opacity-100"
                   >
                     <Plus className="size-3.5" weight="bold" aria-hidden />
@@ -116,12 +128,16 @@ export function CalendarioVentas({
                     <li key={o.id}>
                       <Link
                         href={rutaVentas.oportunidad(o.id)}
-                        title={`${o.nombre} · ${dinero(o.ingresos)}`}
-                        className="flex items-center gap-1.5 truncate rounded-md px-1.5 py-1 text-xs text-sobre-relleno transition-[filter] hover:brightness-95"
-                        style={{ background: tono(o) }}
+                        title={`${o.nombre} · ${nombreEtapa(o)} · ${dinero(o.ingresos)}`}
+                        className="flex items-center gap-1.5 truncate rounded-md bg-placa-2 py-1 pl-2.5 pr-1.5 text-xs text-tinta transition-colors hover:bg-linea"
+                        style={{ boxShadow: `inset 3px 0 0 ${tono(o)}` }}
                       >
                         <span className={`truncate font-medium ${o.estado === "perdida" ? "line-through" : ""}`}>{o.nombre}</span>
-                        {o.ingresos > 0 && <span className="ml-auto shrink-0 tabular-nums opacity-80">{dinero(o.ingresos)}</span>}
+                        <span className="sr-only">
+                          , {nombreEtapa(o)}
+                          {o.estado === "perdida" ? ", perdida" : o.estado === "ganada" ? ", ganada" : ""}
+                        </span>
+                        {o.ingresos > 0 && <span className="ml-auto shrink-0 tabular-nums text-tinta-2">{dinero(o.ingresos)}</span>}
                       </Link>
                     </li>
                   ))}

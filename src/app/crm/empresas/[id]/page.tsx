@@ -59,8 +59,11 @@ import { urlWeb, webLimpia } from "@/components/crm/empresas/CamposEmpresa";
 
 export const dynamic = "force-dynamic";
 
+const UUID = /^[0-9a-f-]{36}$/i;
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (!UUID.test(id)) return { title: "Empresa" };
   const empresa = await obtenerEmpresa(id);
   return { title: empresa?.nombre ?? "Empresa" };
 }
@@ -88,6 +91,7 @@ export default async function PaginaEmpresa({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const [{ id }, { tab }] = await Promise.all([params, searchParams]);
+  if (!UUID.test(id)) notFound();
   const [empresa, catalogos, interacciones] = await Promise.all([
     obtenerEmpresa(id),
     leerCatalogos(),
@@ -151,6 +155,7 @@ export default async function PaginaEmpresa({
             {empresa.web && (
               <a href={urlWeb(empresa.web)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:underline">
                 {webLimpia(empresa.web)} <ArrowSquareOut className="size-3.5 text-tinta-2" aria-hidden />
+                <span className="sr-only">(se abre en otra pestaña)</span>
               </a>
             )}
           </Dato>
@@ -228,14 +233,15 @@ export default async function PaginaEmpresa({
         </div>
         <div className="hidden overflow-x-auto rounded-2xl bg-placa shadow-placa md:block">
           <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+            <caption className="sr-only">Contactos de {empresa.nombre}</caption>
             <thead>
               <tr className="text-[0.8125rem] text-tinta-2">
-                <th className="py-2.5 pl-4 pr-4 font-normal">Contacto</th>
-                <th className="py-2.5 pr-4 font-normal">Cargo</th>
-                <th className="py-2.5 pr-4 font-normal">Email</th>
-                <th className="py-2.5 pr-4 font-normal">Teléfono</th>
-                <th className="py-2.5 pr-4 font-normal">Rol</th>
-                <th className="py-2.5 pr-4 font-normal">Relación</th>
+                <th scope="col" className="py-2.5 pl-4 pr-4 font-normal">Contacto</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Cargo</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Email</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Teléfono</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Rol</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Relación</th>
               </tr>
             </thead>
             <tbody>
@@ -286,7 +292,12 @@ export default async function PaginaEmpresa({
                   <span className="block truncate font-medium text-tinta">{nombreCompleto(c)}</span>
                   <span className="block truncate text-[0.8125rem] text-tinta-2">{c.cargo ?? ETIQUETA_TIPO_CONTACTO[c.tipo]}</span>
                 </span>
-                {c.principal && <Star className="size-4 text-acento-tinta" weight="fill" aria-label="Principal" />}
+                {c.principal && (
+                  <span className="shrink-0 text-acento-tinta">
+                    <Star className="size-4" weight="fill" aria-hidden />
+                    <span className="sr-only">Contacto principal</span>
+                  </span>
+                )}
               </Link>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-[0.8125rem]">
                 {c.email && <a href={`mailto:${c.email}`} className="truncate text-tinta-2 hover:underline">{c.email}</a>}
@@ -341,15 +352,16 @@ export default async function PaginaEmpresa({
 
         <div className="overflow-x-auto rounded-2xl bg-placa shadow-placa">
           <table className="w-full min-w-[980px] border-collapse text-left text-sm">
+            <caption className="sr-only">Oportunidades de {empresa.nombre}</caption>
             <thead>
               <tr className="text-[0.8125rem] text-tinta-2">
-                <th className="py-2.5 pl-4 pr-4 font-normal">Oportunidad</th>
-                <th className="py-2.5 pr-4 font-normal">Tipo</th>
-                <th className="py-2.5 pr-4 font-normal">Etapa</th>
-                <th className="py-2.5 pr-4 text-right font-normal">Valor</th>
-                <th className="py-2.5 pr-4 font-normal">Responsable</th>
-                <th className="py-2.5 pr-4 font-normal">Última actividad</th>
-                <th className="py-2.5 pr-4 font-normal">Próxima acción</th>
+                <th scope="col" className="py-2.5 pl-4 pr-4 font-normal">Oportunidad</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Tipo</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Etapa</th>
+                <th scope="col" className="py-2.5 pr-4 text-right font-normal">Valor</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Responsable</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Última actividad</th>
+                <th scope="col" className="py-2.5 pr-4 font-normal">Próxima acción</th>
               </tr>
             </thead>
             <tbody>
@@ -455,6 +467,7 @@ export default async function PaginaEmpresa({
                 {empresa.web && (
                   <a href={urlWeb(empresa.web)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-tinta hover:underline">
                     <Globe className="size-3.5" aria-hidden /> {webLimpia(empresa.web)}
+                    <span className="sr-only">(se abre en otra pestaña)</span>
                   </a>
                 )}
               </div>

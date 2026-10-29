@@ -137,7 +137,7 @@ export function Etapas({ etapas, conteo }: { etapas: EtapaVentas[]; conteo: Reco
                   <span className="flex items-center gap-2">
                     <span className="truncate text-sm font-medium text-tinta">{e.nombre}</span>
                     {e.ganada && (
-                      <span className="inline-flex items-center gap-1 rounded bg-exito-suave px-1.5 text-[0.6875rem] font-medium text-exito">
+                      <span className="inline-flex items-center gap-1 rounded bg-exito-suave px-1.5 text-[0.6875rem] font-medium text-[color-mix(in_oklab,var(--exito)_80%,var(--tinta))]">
                         <Trophy className="size-3" weight="fill" aria-hidden />
                         Ganado
                       </span>
@@ -148,8 +148,9 @@ export function Etapas({ etapas, conteo }: { etapas: EtapaVentas[]; conteo: Reco
                     {e.requisitos ? ` · ${e.requisitos}` : ""}
                   </span>
                 </span>
-                <span className="flex w-28 shrink-0 items-center gap-2" aria-label={`Probabilidad ${e.probabilidad} %`}>
-                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-placa-2">
+                <span className="flex w-28 shrink-0 items-center gap-2">
+                  <span className="sr-only">Probabilidad:</span>
+                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-placa-2" aria-hidden>
                     <span className="block h-full rounded-full bg-acento" style={{ width: `${e.probabilidad}%` }} />
                   </span>
                   <span className="w-9 text-right text-xs tabular-nums text-tinta">{e.probabilidad}%</span>

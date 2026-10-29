@@ -168,7 +168,7 @@ export function TopOportunidades({ items }: { items: OportunidadCompleta[] }) {
             </span>
             <span className="flex w-24 shrink-0 flex-col items-end">
               <span className="text-sm font-semibold tabular-nums text-tinta">{dinero(o.valor)}</span>
-              <span className="text-[0.7rem] tabular-nums text-tinta-2">{probabilidadB2B(o)} %</span>
+              <span className="text-[0.7rem] tabular-nums text-tinta-2">{probabilidadB2B(o)} %<span className="sr-only"> de probabilidad</span></span>
             </span>
           </Link>
         </li>
@@ -199,16 +199,13 @@ export function TopEmpresas({
                   <span className="truncate text-sm font-medium text-tinta">{empresa.nombre}</span>
                   <span className="ml-auto shrink-0 text-sm font-semibold tabular-nums text-tinta">{dinero(total)}</span>
                 </span>
-                <span
-                  className="flex h-1.5 overflow-hidden rounded-full bg-placa-2"
-                  role="img"
-                  aria-label={`${dinero(valorGanado)} ganado, ${dinero(valorAbierto)} abierto`}
-                >
+                <span className="flex h-1.5 overflow-hidden rounded-full bg-placa-2" aria-hidden>
                   <span className="h-full bg-exito" style={{ width: `${(valorGanado / max) * 100}%` }} />
                   <span className="h-full bg-serie-1" style={{ width: `${(valorAbierto / max) * 100}%` }} />
                 </span>
+                {/* La barra repite en color lo que dice este texto: ganado, después abierto. */}
                 <span className="text-[0.7rem] tabular-nums text-tinta-2">
-                  {numero(abiertas)} abiertas · {dinero(valorGanado)} ganado
+                  {dinero(valorGanado)} ganado · {dinero(valorAbierto)} abierto · {numero(abiertas)} {abiertas === 1 ? "abierta" : "abiertas"}
                 </span>
               </span>
             </Link>

@@ -125,23 +125,27 @@ export function BarraFicha({
         <div className="flex shrink-0 items-center gap-0.5">
           <span className="mr-1 text-[0.8125rem] tabular-nums text-tinta-2">
             {paginador.posicion} / {paginador.total}
+            <span className="sr-only"> oportunidades del flujo</span>
           </span>
-          <Link
-            href={paginador.anterior ? rutaVentas.oportunidad(paginador.anterior) : "#"}
-            aria-disabled={!paginador.anterior}
-            className={botonIcono}
-            aria-label="Oportunidad anterior"
-          >
-            <CaretLeft className="size-4" weight="bold" aria-hidden />
-          </Link>
-          <Link
-            href={paginador.siguiente ? rutaVentas.oportunidad(paginador.siguiente) : "#"}
-            aria-disabled={!paginador.siguiente}
-            className={botonIcono}
-            aria-label="Oportunidad siguiente"
-          >
-            <CaretRight className="size-4" weight="bold" aria-hidden />
-          </Link>
+          {/* En los extremos, sin enlace: un href="#" con aria-disabled seguía navegando con Intro. */}
+          {paginador.anterior ? (
+            <Link href={rutaVentas.oportunidad(paginador.anterior)} className={botonIcono} aria-label="Oportunidad anterior">
+              <CaretLeft className="size-4" weight="bold" aria-hidden />
+            </Link>
+          ) : (
+            <span className={botonIcono} aria-hidden>
+              <CaretLeft className="size-4 opacity-40" weight="bold" />
+            </span>
+          )}
+          {paginador.siguiente ? (
+            <Link href={rutaVentas.oportunidad(paginador.siguiente)} className={botonIcono} aria-label="Oportunidad siguiente">
+              <CaretRight className="size-4" weight="bold" aria-hidden />
+            </Link>
+          ) : (
+            <span className={botonIcono} aria-hidden>
+              <CaretRight className="size-4 opacity-40" weight="bold" />
+            </span>
+          )}
         </div>
       )}
 
@@ -161,7 +165,7 @@ export function BarraFicha({
               type="button"
               disabled={pendiente}
               onClick={() => lanzar(() => borrarOportunidadVentas(o.id), () => router.replace(rutaVentas.flujo))}
-              className="inline-flex h-9 items-center justify-center rounded-lg bg-critico px-4 text-sm font-semibold text-sobre-campo transition-[background-color,transform] hover:bg-critico/90 active:scale-[0.97] disabled:opacity-50"
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-critico px-4 text-sm font-semibold text-sobre-critico transition-[background-color,transform] hover:bg-critico/90 active:scale-[0.97] disabled:opacity-50"
             >
               {pendiente ? "Eliminando…" : "Eliminar"}
             </button>
@@ -254,7 +258,7 @@ export function BarraEtapas({ o, etapas, tiempo }: { o: OportunidadVentasComplet
             }`}
           >
             {e.nombre}
-            {actual && <span className="text-xs font-normal opacity-80">{tiempo}</span>}
+            {actual && <span className="text-xs font-normal">{tiempo}<span className="sr-only"> en esta etapa</span></span>}
           </button>
         );
         return e.requisitos ? (

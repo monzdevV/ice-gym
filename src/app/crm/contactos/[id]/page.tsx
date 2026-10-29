@@ -56,6 +56,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return { title: "Contacto" };
   const { contacto } = await obtenerContacto(id);
   return { title: contacto ? nombreCompleto(contacto) : "Contacto" };
 }
@@ -146,6 +147,7 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
           {contacto.linkedin && (
             <a href={urlExterna(contacto.linkedin)} target="_blank" rel="noopener noreferrer" className={claseBotonSecundario}>
               <LinkedinLogo className="size-4" aria-hidden /> LinkedIn
+              <span className="sr-only">(se abre en otra pestaña)</span>
             </a>
           )}
           <NuevaInteraccion catalogos={cat} contactoId={contacto.id} empresaId={contacto.empresa_id ?? undefined}>
@@ -221,7 +223,7 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
             id="oportunidades"
             extra={
               <NuevaOportunidad catalogos={cat} contactoId={contacto.id} empresaId={contacto.empresa_id ?? undefined}>
-                <button type="button" className="inline-flex items-center gap-1 text-[0.8125rem] font-medium text-acento-tinta hover:underline">
+                <button type="button" aria-label="Añadir oportunidad" className="inline-flex items-center gap-1 text-[0.8125rem] font-medium text-acento-tinta hover:underline">
                   <Plus className="size-3.5" weight="bold" aria-hidden /> Añadir
                 </button>
               </NuevaOportunidad>
@@ -234,12 +236,13 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
             ) : (
               <div className="-m-4 overflow-x-auto">
                 <table className="w-full min-w-[640px] border-collapse text-left">
+                  <caption className="sr-only">Oportunidades de {nombreCompleto(contacto)}</caption>
                   <thead>
                     <tr className="text-[0.8125rem] text-tinta-2">
-                      <th className="py-2 pl-4 pr-3 font-normal">Oportunidad</th>
-                      <th className="py-2 pr-3 font-normal">Etapa</th>
-                      <th className="py-2 pr-3 text-right font-normal">Valor</th>
-                      <th className="py-2 pr-4 font-normal">Próxima acción</th>
+                      <th scope="col" className="py-2 pl-4 pr-3 font-normal">Oportunidad</th>
+                      <th scope="col" className="py-2 pr-3 font-normal">Etapa</th>
+                      <th scope="col" className="py-2 pr-3 text-right font-normal">Valor</th>
+                      <th scope="col" className="py-2 pr-4 font-normal">Próxima acción</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -290,7 +293,7 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
             id="actividad"
             extra={
               <NuevaInteraccion catalogos={cat} contactoId={contacto.id} empresaId={contacto.empresa_id ?? undefined}>
-                <button type="button" className="inline-flex items-center gap-1 text-[0.8125rem] font-medium text-acento-tinta hover:underline">
+                <button type="button" aria-label="Registrar actividad" className="inline-flex items-center gap-1 text-[0.8125rem] font-medium text-acento-tinta hover:underline">
                   <Plus className="size-3.5" weight="bold" aria-hidden /> Registrar
                 </button>
               </NuevaInteraccion>
@@ -331,6 +334,7 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
                 {contacto.linkedin ? (
                   <a href={urlExterna(contacto.linkedin)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:underline">
                     <LinkedinLogo className="size-4" aria-hidden /> Perfil
+                    <span className="sr-only">de LinkedIn (se abre en otra pestaña)</span>
                   </a>
                 ) : null}
               </Dato>
@@ -405,7 +409,7 @@ export default async function PaginaContacto({ params }: { params: Promise<{ id:
                     Otros contactos <span className="font-normal tabular-nums text-tinta-2">{otros.length}</span>
                   </h3>
                   <NuevoContacto catalogos={cat} empresaId={empresa.id}>
-                    <button type="button" className="inline-flex items-center gap-1 text-[0.8125rem] font-medium text-acento-tinta hover:underline">
+                    <button type="button" aria-label="Añadir contacto a la empresa" className="inline-flex items-center gap-1 text-[0.8125rem] font-medium text-acento-tinta hover:underline">
                       <Plus className="size-3.5" weight="bold" aria-hidden /> Añadir
                     </button>
                   </NuevoContacto>

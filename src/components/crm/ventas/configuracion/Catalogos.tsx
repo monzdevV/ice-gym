@@ -295,7 +295,7 @@ export function TiposActividad({ tipos }: { tipos: TipoActividadVentas[] }) {
                 </button>
                 <BorrarConConfirmacion
                   titulo={`¿Borrar el tipo ${t.nombre}?`}
-                  descripcion="Las actividades de este tipo se conservan, sin tipo. Los planes que lo usan pierden ese paso."
+                  descripcion="Las actividades de este tipo se conservan, sin tipo. Si algún plan de actividad lo usa, no se puede borrar: quítalo antes del plan."
                   etiqueta={`Borrar ${t.nombre}`}
                   onBorrar={() => borrarTipoActividadVentas(t.id)}
                 />

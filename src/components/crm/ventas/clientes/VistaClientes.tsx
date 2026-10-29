@@ -41,16 +41,17 @@ function Tabla({ filas }: { filas: ClienteListado[] }) {
     <div className="overflow-hidden rounded-2xl bg-placa shadow-placa">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[980px] border-collapse text-left text-sm">
+          <caption className="sr-only">Clientes de ventas</caption>
           <thead>
             <tr className="text-[0.8125rem] text-tinta-2">
-              <th className="py-2.5 pl-4 pr-4 font-normal">Nombre</th>
-              <th className="py-2.5 pr-4 font-normal">Correo electrónico</th>
-              <th className="py-2.5 pr-4 font-normal">Teléfono</th>
-              <th className="py-2.5 pr-4 font-normal">Ciudad</th>
-              <th className="py-2.5 pr-4 font-normal">País</th>
-              <th className="py-2.5 pr-4 font-normal">Comercial</th>
-              <th className="py-2.5 pr-4 text-right font-normal">Oport.</th>
-              <th className="py-2.5 pr-4 font-normal">
+              <th scope="col" className="py-2.5 pl-4 pr-4 font-normal">Nombre</th>
+              <th scope="col" className="py-2.5 pr-4 font-normal">Correo electrónico</th>
+              <th scope="col" className="py-2.5 pr-4 font-normal">Teléfono</th>
+              <th scope="col" className="py-2.5 pr-4 font-normal">Ciudad</th>
+              <th scope="col" className="py-2.5 pr-4 font-normal">País</th>
+              <th scope="col" className="py-2.5 pr-4 font-normal">Comercial</th>
+              <th scope="col" className="py-2.5 pr-4 text-right font-normal">Oport.</th>
+              <th scope="col" className="py-2.5 pr-4 font-normal">
                 <span className="sr-only">Actividades</span>
               </th>
             </tr>
@@ -229,22 +230,21 @@ export function VistaClientes({
             className={`${claseCampo} h-8 pl-8`}
           />
         </label>
-        <div role="radiogroup" aria-label="Tipo de cliente" className="flex gap-1.5">
+        <div role="group" aria-label="Tipo de cliente" className="flex gap-1.5">
           {chips.map((c) => {
             const on = tipo === c.valor;
             return (
               <button
                 key={c.valor}
                 type="button"
-                role="radio"
-                aria-checked={on}
+                aria-pressed={on}
                 onClick={() => cambiar({ tipo: c.valor === "todos" ? "" : c.valor })}
                 className={`flex h-8 items-center gap-2 rounded-full px-3 text-[0.8125rem] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta ${
                   on ? "bg-acento-suave text-acento-tinta" : "bg-placa text-tinta shadow-placa hover:bg-placa-2"
                 }`}
               >
                 {c.texto}
-                <span className={`tabular-nums ${on ? "opacity-70" : "text-tinta-2"}`}>{numero(conteo[c.valor])}</span>
+                <span className={`tabular-nums ${on ? "" : "text-tinta-2"}`}>{numero(conteo[c.valor])}</span>
               </button>
             );
           })}

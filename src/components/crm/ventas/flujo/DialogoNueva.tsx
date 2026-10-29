@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,11 +18,17 @@ export type Prefill = Omit<DatosOportunidad, "ingresos" | "probabilidad"> & { in
 const claseEtiqueta = "text-[0.8125rem] font-medium text-tinta";
 const claseSecundario = "h-9 rounded-md border border-linea px-4 text-sm font-medium text-tinta hover:bg-placa-2 disabled:opacity-50";
 
-function Campo({ etiqueta, children, className = "" }: { etiqueta: string; children: React.ReactNode; className?: string }) {
+/** Con `error`, el texto sale debajo con el id `idError` (el campo lo enlaza con aria-describedby). */
+function Campo({ etiqueta, children, className = "", error, idError }: { etiqueta: string; children: React.ReactNode; className?: string; error?: string | false; idError?: string }) {
   return (
     <label className={`flex flex-col gap-1.5 ${className}`}>
       <span className={claseEtiqueta}>{etiqueta}</span>
       {children}
+      {error && (
+        <span id={idError} className="text-xs font-medium text-critico">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -39,6 +45,7 @@ export function DialogoNueva({
   onCerrar: () => void;
 }) {
   const router = useRouter();
+  const idError = useId();
   const [pendiente, empezar] = useTransition();
   const [d, setD] = useState<Prefill>({});
   const [malos, setMalos] = useState<string[]>([]);
@@ -126,8 +133,11 @@ export function DialogoNueva({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <span className={claseEtiqueta}>Cliente</span>
+              <label htmlFor={`${idError}-cliente`} className={claseEtiqueta}>
+                Cliente
+              </label>
               <Selector
+                id={`${idError}-cliente`}
                 name="cliente_id"
                 valor={d.cliente_id ?? ""}
                 onCambio={elegirCliente}
@@ -167,15 +177,24 @@ export function DialogoNueva({
               <input type="tel" value={d.telefono ?? ""} onChange={(e) => poner("telefono", e.target.value)} maxLength={60} className={claseCampo} />
             </Campo>
 
-            <Campo etiqueta="Ingresos esperados (€)">
-              <input inputMode="decimal" value={d.ingresos ?? ""} onChange={(e) => poner("ingresos", e.target.value)} placeholder="p. ej. 1.500" aria-invalid={malos.includes("ingresos") || undefined} className={`${claseCampo} tabular-nums`} />
+            <Campo etiqueta="Ingresos esperados (€)" error={malos.includes("ingresos") && "Escribe una cantidad, por ejemplo 1.500 o 1.234,56."} idError={`${idError}-ingresos`}>
+              <input
+                inputMode="decimal"
+                value={d.ingresos ?? ""}
+                onChange={(e) => poner("ingresos", e.target.value)}
+                placeholder="p. ej. 1.500"
+                aria-invalid={malos.includes("ingresos") || undefined}
+                aria-describedby={malos.includes("ingresos") ? `${idError}-ingresos` : undefined}
+                className={`${claseCampo} tabular-nums`}
+              />
             </Campo>
-            <Campo etiqueta="Probabilidad (%)">
+            <Campo etiqueta="Probabilidad (%)" error={malos.includes("probabilidad") && "Escribe un número del 0 al 100."} idError={`${idError}-probabilidad`}>
               <input
                 inputMode="decimal"
                 value={d.probabilidad ?? ""}
                 onChange={(e) => poner("probabilidad", e.target.value)}
                 aria-invalid={malos.includes("probabilidad") || undefined}
+                aria-describedby={malos.includes("probabilidad") ? `${idError}-probabilidad` : undefined}
                 placeholder={etapa ? `${etapa.probabilidad} (la de la etapa)` : "Según la etapa"}
                 className={`${claseCampo} tabular-nums`}
               />
@@ -203,11 +222,20 @@ export function DialogoNueva({
               </select>
             </Campo>
 
-            <Campo etiqueta="Cierre previsto">
-              <input type="date" value={d.cierre_previsto ?? ""} onChange={(e) => poner("cierre_previsto", e.target.value || null)} aria-invalid={malos.includes("cierre_previsto") || undefined} className={claseCampo} />
+            <Campo etiqueta="Cierre previsto" error={malos.includes("cierre_previsto") && "Esa fecha no existe."} idError={`${idError}-cierre`}>
+              <input
+                type="date"
+                value={d.cierre_previsto ?? ""}
+                onChange={(e) => poner("cierre_previsto", e.target.value || null)}
+                aria-invalid={malos.includes("cierre_previsto") || undefined}
+                aria-describedby={malos.includes("cierre_previsto") ? `${idError}-cierre` : undefined}
+                className={claseCampo}
+              />
             </Campo>
             <div className="flex flex-col gap-1.5">
-              <span className={claseEtiqueta}>Prioridad</span>
+              <span className={claseEtiqueta} aria-hidden>
+                Prioridad
+              </span>
               <span className="flex h-9 items-center">
                 <EstrellasEditables valor={d.prioridad ?? 0} onCambio={(n) => poner("prioridad", n)} tamano="size-5" />
               </span>

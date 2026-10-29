@@ -181,7 +181,7 @@ export default async function PaginaEmpleado({ params }: { params: Promise<{ id:
                 <span className="flex items-center gap-3">
                   {tareas.length > 0 && (
                     <span className="w-36">
-                      <Progreso pct={progreso.pct} completado={progreso.completada} texto={progreso.completada ? "Completada" : `${progreso.hechas}/${progreso.obligatorias}`} />
+                      <Progreso etiqueta={`Incorporación de ${nombreEmpleado(empleado)}`} pct={progreso.pct} completado={progreso.completada} texto={progreso.completada ? "Completada" : `${progreso.hechas}/${progreso.obligatorias}`} />
                     </span>
                   )}
                   {perfil.esAdmin && <NuevaTareaIncorporacion empleadoId={id} responsables={activos} />}
@@ -338,8 +338,8 @@ export default async function PaginaEmpleado({ params }: { params: Promise<{ id:
             <Seccion titulo="Equipo a cargo" id="equipo" extra={<span className="text-xs tabular-nums text-tinta-2">{aCargo.length}</span>}>
               <ul className="flex flex-col gap-2.5">
                 {aCargo.map((e) => (
-                  <li key={e.id} className={e.estado === "inactivo" ? "opacity-60" : ""}>
-                    <EnlaceEmpleado e={e} detalle={e.puesto} />
+                  <li key={e.id}>
+                    <EnlaceEmpleado e={e} detalle={[e.puesto, e.estado === "inactivo" ? "Inactivo" : null].filter(Boolean).join(" · ") || null} />
                   </li>
                 ))}
               </ul>

@@ -100,25 +100,60 @@ function Lienzo({
   llenar = false,
   children,
   etiqueta,
+  tabla,
 }: {
   alto: number;
   /** Ocupa todo el alto disponible, con `alto` como mínimo. */
   llenar?: boolean;
   etiqueta: string;
+  /** Los datos del gráfico en una tabla para lectores de pantalla (el canvas no se lee). */
+  tabla?: Tabla;
   children: (p: Paleta) => ReactNode;
 }) {
   const { ref, paleta } = usePaleta();
   return (
-    <div
-      ref={ref}
-      style={llenar ? { minHeight: alto } : { height: alto }}
-      className={`relative w-full ${llenar ? "flex-1" : ""}`}
-      role="img"
-      aria-label={etiqueta}
-    >
-      {/* Al cambiar de tema se monta de nuevo: Chart.js no actualiza sus plugins en vivo. */}
-      {paleta && <Fragment key={paleta.tinta}>{children(paleta)}</Fragment>}
-    </div>
+    <>
+      <div
+        ref={ref}
+        style={llenar ? { minHeight: alto } : { height: alto }}
+        className={`relative w-full ${llenar ? "flex-1" : ""}`}
+        {...(tabla ? { "aria-hidden": true } : { role: "img", "aria-label": etiqueta })}
+      >
+        {/* Al cambiar de tema se monta de nuevo: Chart.js no actualiza sus plugins en vivo. */}
+        {paleta && <Fragment key={paleta.tinta}>{children(paleta)}</Fragment>}
+      </div>
+      {tabla && <TablaOculta titulo={etiqueta} {...tabla} />}
+    </>
+  );
+}
+
+type Tabla = { columnas: string[]; filas: string[][] };
+
+/** Alternativa textual de un gráfico: tabla real, sólo para lectores de pantalla. */
+function TablaOculta({ titulo, columnas, filas }: Tabla & { titulo: string }) {
+  return (
+    <table className="sr-only">
+      <caption>{titulo}</caption>
+      <thead>
+        <tr>
+          {columnas.map((c) => (
+            <th key={c} scope="col">
+              {c}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {filas.map(([cabeza, ...resto], i) => (
+          <tr key={`${cabeza}-${i}`}>
+            <th scope="row">{cabeza}</th>
+            {resto.map((v, j) => (
+              <td key={j}>{v}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -148,6 +183,32 @@ function degradadoH(chart: Chart, izq: string, der: string) {
   g.addColorStop(0, izq);
   g.addColorStop(1, der);
   return g;
+}
+
+/**
+ * Relleno rayado: lo «perdido» se distingue de lo «ganado» por la textura,
+ * no sólo por el color (rojo y verde se confunden con daltonismo).
+ */
+function rayado(chart: Chart, color: string) {
+  const c = document.createElement("canvas");
+  c.width = c.height = 8;
+  const x = c.getContext("2d");
+  if (!x) return color;
+  x.fillStyle = alfa(color, 0.5);
+  x.fillRect(0, 0, 8, 8);
+  x.strokeStyle = color;
+  x.lineWidth = 2.5;
+  x.beginPath();
+  for (const [a, b, d, e] of [
+    [0, 8, 8, 0],
+    [-2, 2, 2, -2],
+    [6, 10, 10, 6],
+  ]) {
+    x.moveTo(a, b);
+    x.lineTo(d, e);
+  }
+  x.stroke();
+  return chart.ctx.createPattern(c, "repeat") ?? color;
 }
 
 /** Texto blanco o tinta según lo claro que sea el relleno. */
@@ -217,7 +278,6 @@ function tooltipHtml<T extends ChartType>() {
         const [nombre, valor] = linea.split("|");
         const fila = document.createElement("div");
         fila.className = "mt-1.5 flex items-center gap-2 border-t border-linea pt-1.5";
-        fila.innerHTML = "";
         const n = document.createElement("span");
         n.className = "pl-4 text-tinta-2";
         n.textContent = nombre;
@@ -368,12 +428,20 @@ const centro: PluginPropio = {
 
 /* -------------------------------- Leyenda -------------------------------- */
 
-function Leyenda({ items }: { items: { texto: string; tono: string }[] }) {
+function Leyenda({ items }: { items: { texto: string; tono: string; rayado?: boolean }[] }) {
   return (
     <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-tinta-2">
       {items.map((i) => (
         <li key={i.texto} className="inline-flex items-center gap-1.5">
-          <span className="size-2 rounded-full" style={{ background: i.tono }} aria-hidden />
+          <span
+            className={i.rayado ? "size-2.5 rounded-[3px]" : "size-2 rounded-full"}
+            style={{
+              background: i.rayado
+                ? `repeating-linear-gradient(-45deg, ${i.tono} 0 1.5px, color-mix(in oklch, ${i.tono} 50%, transparent) 1.5px 3.5px)`
+                : i.tono,
+            }}
+            aria-hidden
+          />
           {i.texto}
         </li>
       ))}
@@ -408,7 +476,21 @@ export function GraficoEmbudo({ datos }: { datos: FilaEtapa[] }) {
     <div className="grid h-full gap-6 lg:grid-cols-[minmax(0,1fr)_15rem]">
       <div className="flex min-w-0 flex-col">
         {hayAbiertas ? (
-          <Lienzo alto={248} llenar etiqueta={`Embudo del pipeline abierto: ${dinero(totalAbierto)} en total`}>
+          <Lienzo
+            alto={248}
+            llenar
+            etiqueta={`Embudo del pipeline abierto: ${dinero(totalAbierto)} en total`}
+            tabla={{
+              columnas: ["Etapa", "Valor", "Esperado", "Oportunidades", "Paso desde la anterior"],
+              filas: abiertas.map((d, i) => [
+                ETIQUETA_ETAPA[d.etapa],
+                dinero(d.valor),
+                dinero(d.esperado),
+                numero(d.n),
+                paso[i] == null ? "Entrada" : porcentaje(paso[i]!),
+              ]),
+            }}
+          >
             {(p) => {
               const tonos = [p["rampa-2"], p["rampa-3"], p["rampa-4"], p["rampa-5"]];
               const opciones: ChartOptions<"bar"> = {
@@ -506,7 +588,10 @@ export function GraficoEmbudo({ datos }: { datos: FilaEtapa[] }) {
       <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-fondo p-4">
         <p className="self-start text-xs font-medium text-tinta-2 lg:-mt-auto lg:mb-auto">Cerradas en el periodo</p>
         {ratio != null ? (
-          <Lienzo alto={150} etiqueta={`${porcentaje(ratio)} de las cerradas, ganadas`}>
+          <Lienzo
+            alto={150}
+            etiqueta={`Cerradas en el periodo: ${porcentaje(ratio)} ganadas. Ganadas: ${numero(ganada?.n ?? 0)}, ${dinero(ganada?.valor ?? 0)}. Perdidas: ${numero(perdida?.n ?? 0)}, ${dinero(perdida?.valor ?? 0)}.`}
+          >
             {(p) => (
               <Doughnut
                 plugins={[centro]}
@@ -536,7 +621,7 @@ export function GraficoEmbudo({ datos }: { datos: FilaEtapa[] }) {
                   datasets: [
                     {
                       data: [ganada?.n ?? 0, perdida?.n ?? 0],
-                      backgroundColor: [p.exito, p.critico],
+                      backgroundColor: (c: ScriptableContext<"doughnut">) => (c.dataIndex === 0 ? p.exito : rayado(c.chart, p.critico)),
                       hoverBackgroundColor: [p.exito, p.critico],
                       borderWidth: 0,
                       borderRadius: 8,
@@ -574,6 +659,7 @@ const DIRECCIONES = [
   { clave: "alianza", texto: "Alianza", serie: "serie-3" },
 ] as const;
 const serieDireccion = (p: Paleta, t: TipoOportunidad) => p[DIRECCIONES.find((d) => d.clave === DIRECCION_TIPO[t])!.serie];
+const textoDireccion = (t: TipoOportunidad) => DIRECCIONES.find((d) => d.clave === DIRECCION_TIPO[t])?.texto ?? "";
 
 /** Barras horizontales sobre una pista gris, coloreadas por dirección del dinero. */
 export function GraficoTipos({ datos }: { datos: { tipo: TipoOportunidad; n: number; valor: number }[] }) {
@@ -581,7 +667,14 @@ export function GraficoTipos({ datos }: { datos: { tipo: TipoOportunidad; n: num
   const presentes = DIRECCIONES.filter((d) => datos.some((x) => DIRECCION_TIPO[x.tipo] === d.clave));
   return (
     <div className="flex flex-col gap-3">
-      <Lienzo alto={alto} etiqueta="Valor abierto por tipo de oportunidad">
+      <Lienzo
+        alto={alto}
+        etiqueta="Valor abierto por tipo de oportunidad"
+        tabla={{
+          columnas: ["Tipo", "Dirección", "Valor abierto", "Oportunidades"],
+          filas: datos.map((d) => [ETIQUETA_TIPO_OPORTUNIDAD[d.tipo], textoDireccion(d.tipo), dinero(d.valor), numero(d.n)]),
+        }}
+      >
         {(p) => {
           const colores = datos.map((d) => serieDireccion(p, d.tipo));
           const opciones: ChartOptions<"bar"> = {
@@ -602,7 +695,10 @@ export function GraficoTipos({ datos }: { datos: { tipo: TipoOportunidad; n: num
               tooltip: {
                 ...tooltipHtml(),
                 callbacks: {
-                  label: (item) => [`Valor abierto|${dinero(datos[item.dataIndex].valor)}`, `Oportunidades|${numero(datos[item.dataIndex].n)}`],
+                  label: (item) => {
+                    const d = datos[item.dataIndex];
+                    return [`Dirección|${textoDireccion(d.tipo)}`, `Valor abierto|${dinero(d.valor)}`, `Oportunidades|${numero(d.n)}`];
+                  },
                 },
               },
               // @ts-expect-error plugin propio
@@ -658,7 +754,14 @@ function ejes(p: Paleta, formatoY?: (v: number) => string) {
 /** Oportunidades creadas por mes; el mes en curso, destacado. */
 export function GraficoCreadas({ datos }: { datos: Mes[] }) {
   return (
-    <Lienzo alto={220} etiqueta="Oportunidades creadas por mes">
+    <Lienzo
+      alto={220}
+      etiqueta="Oportunidades creadas por mes"
+      tabla={{
+        columnas: ["Mes", "Creadas", "Valor"],
+        filas: datos.map((d) => [mesCorto(d.mes), numero(d.creadas), dinero(d.valorCreado)]),
+      }}
+    >
       {(p) => {
         const ultimo = datos.length - 1;
         const opciones: ChartOptions<"bar"> = {
@@ -712,10 +815,17 @@ export function GraficoGanadasPerdidas({ datos }: { datos: Mes[] }) {
       <Leyenda
         items={[
           { texto: "Ganadas", tono: "var(--exito)" },
-          { texto: "Perdidas", tono: "var(--critico)" },
+          { texto: "Perdidas", tono: "var(--critico)", rayado: true },
         ]}
       />
-      <Lienzo alto={196} etiqueta="Oportunidades ganadas y perdidas por mes">
+      <Lienzo
+        alto={196}
+        etiqueta="Oportunidades ganadas y perdidas por mes"
+        tabla={{
+          columnas: ["Mes", "Ganadas", "Perdidas", "Valor ganado"],
+          filas: datos.map((d) => [mesCorto(d.mes), numero(d.ganadas), numero(d.perdidas), dinero(d.valorGanado)]),
+        }}
+      >
         {(p) => {
           const opciones: ChartOptions<"bar"> = {
             maintainAspectRatio: false,
@@ -750,7 +860,7 @@ export function GraficoGanadasPerdidas({ datos }: { datos: Mes[] }) {
                   {
                     label: "Perdidas",
                     data: datos.map((d) => d.perdidas),
-                    backgroundColor: (c: ScriptableContext<"bar">) => degradadoV(c.chart, p.critico, alfa(p.critico, 0.45)),
+                    backgroundColor: (c: ScriptableContext<"bar">) => rayado(c.chart, p.critico),
                     hoverBackgroundColor: p.critico,
                     ...barra,
                   },
@@ -776,7 +886,14 @@ export function GraficoPipeline({ datos }: { datos: Mes[] }) {
         {delta != null && Math.round(delta) !== 0 && <Variacion delta={delta} />}
         <span className="text-xs text-tinta-2">vs. mes anterior</span>
       </div>
-      <Lienzo alto={180} etiqueta="Evolución del valor del pipeline abierto">
+      <Lienzo
+        alto={180}
+        etiqueta="Evolución del valor del pipeline abierto"
+        tabla={{
+          columnas: ["Mes", "Pipeline abierto"],
+          filas: datos.map((d) => [mesCorto(d.mes), dinero(d.pipeline)]),
+        }}
+      >
         {(p) => {
           const n = datos.length;
           const opciones: ChartOptions<"line"> = {

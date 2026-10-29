@@ -5,6 +5,7 @@ import { Plus } from "@phosphor-icons/react";
 import { dinero } from "@/lib/formato";
 import {
   ETIQUETA_PLAZO,
+  TINTA_PLAZO,
   TONO_PLAZO,
   hoyISO,
   plazoDe,
@@ -57,7 +58,7 @@ export function VistaActividad({ filas }: { filas: OportunidadVentasCompleta[] }
         className="flex h-9 w-full flex-col items-center justify-center rounded-md px-1 text-xs transition-colors hover:bg-placa-2"
         style={{ boxShadow: `inset 0 -3px 0 ${TONO_PLAZO[plazo]}` }}
       >
-        <span className="font-semibold" style={{ color: TONO_PLAZO[plazo] }}>
+        <span className="font-semibold" style={{ color: TINTA_PLAZO[plazo] }}>
           {textoPlazo(a.vence, hoy)}
           <span className="sr-only"> ({ETIQUETA_PLAZO[plazo]})</span>
         </span>

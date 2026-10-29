@@ -63,6 +63,20 @@ function celdaInvalida(campo: Destino, v: string) {
   return false;
 }
 
+/**
+ * Texto del archivo: UTF-8 si lo es; si no, Windows-1252, que es lo que guarda
+ * Excel en español con «CSV (delimitado por comas)». Con `f.text()` las tildes
+ * y las eñes de esos archivos llegaban como «�».
+ */
+async function textoDe(f: File) {
+  const bytes = await f.arrayBuffer();
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return new TextDecoder("windows-1252").decode(bytes);
+  }
+}
+
 export function ImportarCsv({ abierto, onCerrar, catalogos }: { abierto: boolean; onCerrar: () => void; catalogos: CatalogosVentas }) {
   const router = useRouter();
   const [pendiente, empezar] = useTransition();
@@ -82,8 +96,10 @@ export function ImportarCsv({ abierto, onCerrar, catalogos }: { abierto: boolean
 
   async function leer(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
+    // Vaciar el campo: elegir otra vez el mismo archivo (ya corregido) vuelve a leerlo.
+    e.target.value = "";
     if (!f) return;
-    const t = leerCsv(await f.text());
+    const t = leerCsv(await textoDe(f));
     if (t.length < 2) {
       toast.error("El archivo no tiene filas debajo de la cabecera.");
       return;
@@ -102,7 +118,7 @@ export function ImportarCsv({ abierto, onCerrar, catalogos }: { abierto: boolean
         d.etapa_id = catalogos.etapas.find((e) => normalizarTexto(e.nombre) === normalizarTexto(v))?.id ?? null;
       } else if (campo === "comercial") {
         const t = normalizarTexto(v);
-        d.comercial_id = catalogos.comerciales.find((c) => c.email.toLowerCase() === v.toLowerCase() || normalizarTexto(nombreCompleto(c)) === t || normalizarTexto(c.nombre) === t)?.id ?? null;
+        d.comercial_id = catalogos.comerciales.find((c) => (c.email ?? "").toLowerCase() === v.toLowerCase() || normalizarTexto(nombreCompleto(c)) === t || normalizarTexto(c.nombre) === t)?.id ?? null;
       } else if (campo === "cierre_previsto") d.cierre_previsto = fechaIso(v);
       else if (campo === "ingresos" || campo === "probabilidad") d[campo] = leerImporte(v);
       else d[campo] = v;
@@ -149,6 +165,7 @@ export function ImportarCsv({ abierto, onCerrar, catalogos }: { abierto: boolean
             </p>
             <div className="overflow-auto rounded-xl border border-linea">
               <table className="w-full border-collapse text-left text-[0.8125rem]">
+                <caption className="sr-only">Columnas del archivo y vista previa de las primeras filas</caption>
                 <thead>
                   <tr className="border-b border-linea bg-placa-2/50">
                     {cabecera.map((c, i) => (
@@ -182,7 +199,7 @@ export function ImportarCsv({ abierto, onCerrar, catalogos }: { abierto: boolean
                           <td
                             key={j}
                             title={mala ? "No se entiende: se importará vacío" : undefined}
-                            className={`max-w-56 truncate p-2 ${mala ? "bg-critico-suave font-semibold text-critico" : destinos[j] ? "text-tinta" : "text-tinta-2/60"}`}
+                            className={`max-w-56 truncate p-2 ${mala ? "bg-critico-suave font-semibold text-critico" : destinos[j] ? "text-tinta" : "text-tinta-2"}`}
                           >
                             {f[j] ?? ""}
                             {mala && <span className="sr-only"> (no se entiende, se importará vacío)</span>}

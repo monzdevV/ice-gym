@@ -48,26 +48,27 @@ export function VistaEmpleados({ filas, hayFiltros }: { filas: FilaEmpleado[]; h
         <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-linea bg-placa">
           <div className="relative min-h-0 flex-1 overflow-auto">
             <table className="w-full min-w-[1100px] border-collapse text-left">
+              <caption className="sr-only">Empleados</caption>
               <thead className="sticky top-0 z-10 bg-placa">
                 <tr className="border-b border-linea text-[0.8125rem] text-tinta-2">
-                  <th className="py-2.5 pl-4 pr-4 font-normal">Empleado</th>
-                  <th className="py-2.5 pr-4 font-normal">Departamento</th>
-                  <th className="py-2.5 pr-4 font-normal">Email y teléfono</th>
-                  <th className="py-2.5 pr-4 font-normal">Responsable</th>
-                  <th className="py-2.5 pr-4 font-normal">Rol</th>
-                  <th className="py-2.5 pr-4 font-normal">Estado</th>
-                  <th className="py-2.5 pr-4 font-normal">Alta</th>
-                  <th className="w-40 py-2.5 pr-4 font-normal">Incorporación</th>
+                  <th scope="col" className="py-2.5 pl-4 pr-4 font-normal">Empleado</th>
+                  <th scope="col" className="py-2.5 pr-4 font-normal">Departamento</th>
+                  <th scope="col" className="py-2.5 pr-4 font-normal">Email y teléfono</th>
+                  <th scope="col" className="py-2.5 pr-4 font-normal">Responsable</th>
+                  <th scope="col" className="py-2.5 pr-4 font-normal">Rol</th>
+                  <th scope="col" className="py-2.5 pr-4 font-normal">Estado</th>
+                  <th scope="col" className="py-2.5 pr-4 font-normal">Alta</th>
+                  <th scope="col" className="w-40 py-2.5 pr-4 font-normal">Incorporación</th>
                 </tr>
               </thead>
               <tbody>
                 {visibles.map((e) => (
-                  <tr key={e.id} className={`border-b border-linea/70 transition-colors last:border-0 hover:bg-placa-2/60 ${e.estado === "inactivo" ? "opacity-60" : ""}`}>
+                  <tr key={e.id} className={`border-b border-linea/70 transition-colors last:border-0 hover:bg-placa-2/60 ${e.estado === "inactivo" ? "bg-placa-2/40" : ""}`}>
                     <td className="max-w-[260px] py-2.5 pl-4 pr-4">
                       <div className="flex min-w-0 items-center gap-2.5">
                         <AvatarEmpleado e={e} tamano="md" />
                         <div className="min-w-0">
-                          <Link href={rutaRrhh.empleado(e.id)} className="block truncate font-medium text-tinta outline-none hover:text-acento-tinta focus-visible:underline">
+                          <Link href={rutaRrhh.empleado(e.id)} className="block truncate font-medium text-tinta hover:text-acento-tinta focus-visible:underline">
                             {nombreEmpleado(e)}
                           </Link>
                           <span className="block truncate text-[0.8125rem] text-tinta-2">{e.puesto ?? "Sin puesto"}</span>
@@ -94,6 +95,7 @@ export function VistaEmpleados({ filas, hayFiltros }: { filas: FilaEmpleado[]; h
                     <td className="py-2.5 pr-4">
                       {e.incorporacion ? (
                         <Progreso
+                          etiqueta={`Incorporación de ${nombreEmpleado(e)}`}
                           pct={e.incorporacion.pct}
                           completado={e.incorporacion.completada}
                           texto={e.incorporacion.completada ? "Completada" : `${e.incorporacion.hechas}/${e.incorporacion.obligatorias}`}
@@ -118,7 +120,7 @@ function Tarjetas({ filas }: { filas: FilaEmpleado[] }) {
   return (
     <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {filas.map((e) => (
-        <li key={e.id} className={`relative flex flex-col gap-3 rounded-xl border border-linea bg-placa p-4 transition-colors hover:border-tinta-2/30 ${e.estado === "inactivo" ? "opacity-60" : ""}`}>
+        <li key={e.id} className={`relative flex flex-col gap-3 rounded-xl border border-linea bg-placa p-4 transition-colors hover:border-tinta-2/30 ${e.estado === "inactivo" ? "bg-placa-2/40" : ""}`}>
           <div className="flex items-start gap-3">
             <AvatarEmpleado e={e} tamano="md" />
             <div className="min-w-0 flex-1">
@@ -137,6 +139,7 @@ function Tarjetas({ filas }: { filas: FilaEmpleado[] }) {
               href={`mailto:${e.email}`}
               title={e.email}
               className="inline-flex h-7 min-w-0 items-center gap-1.5 rounded-md border border-linea px-2 text-xs text-tinta hover:bg-placa-2"
+              aria-label={`Escribir a ${e.email}`}
             >
               <EnvelopeSimple className="size-3.5 shrink-0" aria-hidden />
               <span className="truncate">{e.email}</span>
@@ -158,7 +161,7 @@ function Tarjetas({ filas }: { filas: FilaEmpleado[] }) {
               <PersonaRrhh e={e.jefe} />
             </div>
             {e.incorporacion && !e.incorporacion.completada && (
-              <Progreso pct={e.incorporacion.pct} texto={`Incorporación ${e.incorporacion.hechas}/${e.incorporacion.obligatorias}`} />
+              <Progreso etiqueta={`Incorporación de ${nombreEmpleado(e)}`} pct={e.incorporacion.pct} texto={`Incorporación ${e.incorporacion.hechas}/${e.incorporacion.obligatorias}`} />
             )}
           </div>
         </li>

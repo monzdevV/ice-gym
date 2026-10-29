@@ -113,7 +113,7 @@ export function ChatterCliente({
         </button>
         <button type="button" onClick={() => setPlanificando(true)} className={claseBoton} disabled={!tipos.length}>
           <CalendarPlus className="size-4" aria-hidden />
-          Actividad
+          Planificar actividad
         </button>
       </div>
 

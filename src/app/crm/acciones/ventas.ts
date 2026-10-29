@@ -286,6 +286,9 @@ export async function actualizarOportunidadVentas(id: string, d: DatosOportunida
  * que se haya puesto a mano.
  */
 export async function moverOportunidadVentas(id: string, etapaId: string, posicion?: number): Promise<Resultado> {
+  if (!UUID.test(id) || !UUID.test(etapaId)) return { ok: false, mensaje: "Falta la oportunidad o la etapa." };
+  // Llega del navegador: un NaN o un Infinity dejaría la columna desordenada para siempre.
+  if (posicion !== undefined && !Number.isFinite(posicion)) posicion = undefined;
   const supabase = await createClient();
   const { data: antes } = await supabase
     .from("ventas_oportunidades")
@@ -377,11 +380,14 @@ export async function restaurarOportunidadVentas(id: string): Promise<Resultado>
   if (!antes) return { ok: false, mensaje: "Esa oportunidad ya no existe." };
   let e = await etapa(antes.etapa_id);
   if (!e || e.ganada) e = await primeraEtapa();
+  const cambiaEtapa = (e?.id ?? null) !== antes.etapa_id;
   const { error } = await supabase
     .from("ventas_oportunidades")
     .update({
       estado: "abierta" satisfies EstadoVenta,
       etapa_id: e?.id ?? null,
+      // Sale de «Ganado» a la primera etapa: el tiempo en la etapa empieza de nuevo.
+      ...(cambiaEtapa ? { etapa_desde: ahora(), posicion: await posicionArriba(e?.id ?? null) } : {}),
       probabilidad: e?.probabilidad ?? 10,
       probabilidad_manual: false,
       motivo_perdida_id: null,
@@ -463,7 +469,7 @@ export async function accionLoteVentas(
   ids: string[],
   accion: { tipo: "comercial"; valor: string | null } | { tipo: "etapa"; valor: string } | { tipo: "archivar" } | { tipo: "borrar" } | { tipo: "perdida"; motivo: string | null; nota: string }
 ): Promise<Resultado> {
-  const validos = ids.filter((id) => UUID.test(id));
+  const validos = (Array.isArray(ids) ? ids : []).filter((id) => typeof id === "string" && UUID.test(id));
   if (!validos.length) return { ok: false, mensaje: "No hay nada seleccionado." };
   const supabase = await createClient();
   if (accion.tipo === "comercial") {
@@ -494,6 +500,7 @@ export async function accionLoteVentas(
 /* -------------------------------- Etiquetas -------------------------------- */
 
 export async function ponerEtiquetas(id: string, etiquetas: string[]): Promise<Resultado> {
+  if (!UUID.test(id) || !Array.isArray(etiquetas)) return { ok: false, mensaje: "Falta la oportunidad." };
   const ids = [...new Set(etiquetas.map(idONulo).filter(Boolean) as string[])];
   const error = await sincronizar("ventas_oportunidad_etiquetas", "oportunidad_id", id, "etiqueta_id", ids);
   if (error) return { ok: false, mensaje: `No se pudieron guardar las etiquetas: ${error}` };
@@ -607,13 +614,21 @@ export async function marcarActividadHecha(id: string, comentario = ""): Promise
   const supabase = await createClient();
   const { data: a } = await supabase
     .from("ventas_actividades")
-    .select("oportunidad_id, cliente_id, resumen, tipo:ventas_tipos_actividad(nombre)")
+    .select("oportunidad_id, cliente_id, resumen, estado, tipo:ventas_tipos_actividad(nombre)")
     .eq("id", id)
-    .maybeSingle<{ oportunidad_id: string | null; cliente_id: string | null; resumen: string | null; tipo: { nombre: string } | null }>();
+    .maybeSingle<{ oportunidad_id: string | null; cliente_id: string | null; resumen: string | null; estado: string; tipo: { nombre: string } | null }>();
   if (!a) return { ok: false, mensaje: "Esa actividad ya no existe." };
+  if (a.estado !== "pendiente") return { ok: false, mensaje: "Esa actividad ya estaba hecha o cancelada." };
   const c = nulo(comentario, 5000);
-  const { error } = await supabase.from("ventas_actividades").update({ estado: "hecha", hecha_at: ahora(), comentario: c }).eq("id", id);
+  // Sólo si sigue pendiente: dos clics seguidos no la marcan (ni la anotan) dos veces.
+  const { data: marcada, error } = await supabase
+    .from("ventas_actividades")
+    .update({ estado: "hecha", hecha_at: ahora(), comentario: c })
+    .eq("id", id)
+    .eq("estado", "pendiente")
+    .select("id");
   if (error) return { ok: false, mensaje: `No se pudo marcar como hecha: ${error.message}` };
+  if (!marcada?.length) return { ok: false, mensaje: "Esa actividad ya estaba hecha o cancelada." };
   await supabase.from("ventas_mensajes").insert({
     oportunidad_id: a.oportunidad_id,
     cliente_id: a.cliente_id,
@@ -692,7 +707,7 @@ export async function guardarEquipoVentas(d: DatosEquipo): Promise<Resultado> {
     : await supabase.from("ventas_equipos").insert(fila).select("id").single();
   if (error) return { ok: false, mensaje: `No se pudo guardar el equipo: ${error.message}` };
 
-  if (d.miembros) {
+  if (Array.isArray(d.miembros)) {
     const miembros = [...new Set(d.miembros.map(idONulo).filter(Boolean) as string[])];
     const fallo = await sincronizar("ventas_equipo_miembros", "equipo_id", data.id, "miembro_id", miembros);
     if (fallo) return { ok: false, mensaje: `El equipo se guardó, pero no sus miembros: ${fallo}`, id: data.id };
@@ -767,7 +782,7 @@ export async function guardarClienteVentas(d: DatosCliente): Promise<Resultado> 
     codigo_postal: nulo(d.codigo_postal, 20),
     pais: texto(d.pais, 120) || "España",
     comercial_id: idONulo(d.comercial_id),
-    etiquetas: (d.etiquetas ?? []).map((e) => texto(e, 40)).filter(Boolean),
+    etiquetas: (Array.isArray(d.etiquetas) ? d.etiquetas : []).map((e) => texto(e, 40)).filter(Boolean),
     notas: nulo(d.notas, 10_000),
     updated_at: ahora(),
   };
@@ -829,6 +844,7 @@ export async function plegarEtapaVentas(id: string, plegada: boolean): Promise<R
 
 /** Nuevo orden de las etapas: el de la lista que llega. */
 export async function ordenarEtapasVentas(ids: string[]): Promise<Resultado> {
+  if (!Array.isArray(ids) || !ids.every((id) => typeof id === "string" && UUID.test(id))) return { ok: false, mensaje: "Orden no válido." };
   const supabase = await createClient();
   for (const [i, id] of ids.entries()) {
     const { error } = await supabase.from("ventas_etapas").update({ orden: (i + 1) * 10 }).eq("id", id);
@@ -924,7 +940,7 @@ export async function guardarPlanVentas(d: {
 }): Promise<Resultado> {
   const nombre = texto(d.nombre, 120);
   if (!nombre) return { ok: false, mensaje: "Pon un nombre al plan." };
-  const pasos = d.pasos.filter((p) => idONulo(p.tipo_id));
+  const pasos = (Array.isArray(d.pasos) ? d.pasos : []).filter((p) => idONulo(p?.tipo_id));
   if (!pasos.length) return { ok: false, mensaje: "Añade al menos una actividad al plan." };
   const supabase = await createClient();
   const { data, error } = d.id
@@ -967,7 +983,8 @@ export async function borrarPlanVentas(id: string): Promise<Resultado> {
  * navegador, con las columnas emparejadas a campos. Máximo 2.000 por vez.
  */
 export async function importarOportunidadesVentas(filas: DatosOportunidad[]): Promise<Resultado> {
-  if (!filas.length) return { ok: false, mensaje: "El archivo no tiene filas." };
+  if (!Array.isArray(filas) || !filas.length) return { ok: false, mensaje: "El archivo no tiene filas." };
+  if (filas.some((f) => typeof f !== "object" || f === null)) return { ok: false, mensaje: "El archivo no se ha leído bien." };
   if (filas.length > 2000) return { ok: false, mensaje: "Importa como mucho 2.000 filas cada vez." };
   const supabase = await createClient();
 
@@ -997,7 +1014,8 @@ export async function importarOportunidadesVentas(filas: DatosOportunidad[]): Pr
   }
 
   const errores: string[] = [];
-  const nuevas: { fila: Record<string, unknown>; etiquetas: string[] }[] = [];
+  // `linea`: la del archivo (cabecera = 1), para que los errores señalen la fila de verdad.
+  const nuevas: { fila: Record<string, unknown>; etiquetas: string[]; linea: number }[] = [];
   for (const [i, d] of filas.entries()) {
     const cliente = clientePorId.get(idONulo(d.cliente_id) ?? "") ?? null;
     const titulo =
@@ -1012,7 +1030,8 @@ export async function importarOportunidadesVentas(filas: DatosOportunidad[]): Pr
     const comercial = idONulo(d.comercial_id);
     const probabilidad = numero(d.probabilidad);
     nuevas.push({
-      etiquetas: (d.etiquetas ?? []).map(idONulo).filter(Boolean) as string[],
+      linea: i + 2,
+      etiquetas: (Array.isArray(d.etiquetas) ? d.etiquetas : []).map(idONulo).filter(Boolean) as string[],
       fila: {
         nombre: titulo,
         cliente_id: cliente?.id ?? null,
@@ -1052,7 +1071,7 @@ export async function importarOportunidadesVentas(filas: DatosOportunidad[]): Pr
       .insert(tanda.map((n) => n.fila))
       .select("id");
     if (error) {
-      errores.push(`Filas ${i + 2}–${i + tanda.length + 1}: ${error.message}`);
+      errores.push(`Filas ${tanda[0].linea}–${tanda[tanda.length - 1].linea}: ${error.message}`);
       continue;
     }
     // PostgREST devuelve las filas en el orden en que se insertaron.

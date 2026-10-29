@@ -117,12 +117,11 @@ function PildoraEmpresa({
           aria-label="Buscar empresa"
           className="h-8 w-full rounded-md border border-linea bg-placa px-2.5 text-sm text-tinta outline-none placeholder:text-tinta-2 focus:border-acento-tinta"
         />
-        <ul className="max-h-64 overflow-y-auto" role="listbox" aria-label="Empresas">
+        <ul className="max-h-64 overflow-y-auto" aria-label="Empresas">
           <li>
             <button
               type="button"
-              role="option"
-              aria-selected={!valor}
+              aria-pressed={!valor}
               onClick={() => elegir("")}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-tinta hover:bg-placa-2"
             >
@@ -134,8 +133,7 @@ function PildoraEmpresa({
             <li key={e.id}>
               <button
                 type="button"
-                role="option"
-                aria-selected={valor === e.id}
+                aria-pressed={valor === e.id}
                 onClick={() => elegir(e.id)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-tinta hover:bg-placa-2"
               >

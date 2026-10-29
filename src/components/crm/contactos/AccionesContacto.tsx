@@ -40,6 +40,8 @@ const Contexto = createContext<Abrir | null>(null);
 export function ProveedorAcciones({ catalogos, children }: { catalogos: Catalogos; children: React.ReactNode }) {
   const [objetivo, setObjetivo] = useState<(Objetivo & { vez: number }) | null>(null);
   const disparador = useRef<HTMLButtonElement>(null);
+  // Botón «…» que lanzó el diálogo: al cerrarse, el foco vuelve a él y no al disparador oculto.
+  const origen = useRef<HTMLElement | null>(null);
 
   const abrir = useCallback<Abrir>((o) => setObjetivo((p) => ({ ...o, vez: (p?.vez ?? 0) + 1 })), []);
 
@@ -47,12 +49,24 @@ export function ProveedorAcciones({ catalogos, children }: { catalogos: Catalogo
   // El retardo deja que el menú desplegable termine de cerrarse y devolver el foco.
   useEffect(() => {
     if (!objetivo) return;
-    const t = setTimeout(() => disparador.current?.click(), 30);
+    const t = setTimeout(() => {
+      origen.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      disparador.current?.click();
+    }, 30);
     return () => clearTimeout(t);
   }, [objetivo]);
 
   const oculto = (
-    <button ref={disparador} type="button" tabIndex={-1} aria-hidden className="sr-only">
+    <button
+      ref={disparador}
+      type="button"
+      tabIndex={-1}
+      aria-hidden
+      className="sr-only"
+      onFocus={() => {
+        if (origen.current?.isConnected) origen.current.focus();
+      }}
+    >
       Abrir
     </button>
   );

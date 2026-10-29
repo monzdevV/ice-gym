@@ -115,6 +115,10 @@ const camposMarca: Campos = { acento: marca.azul, alarma: marca.bengala, sobreCa
  * CRM: herramienta interna. Base en negro y grises neutros (sin tinte), azul
  * como único color de acción y de marca dentro de la herramienta, y rojo /
  * ámbar / verde reservados para estados: error, aviso y correcto.
+ * Contrastes WCAG 2.2 AA comprobados con la fórmula de luminancia: texto ≥ 4,5:1
+ * sobre fondo, placa, placa-2, columna y su fondo suave; apagado, serie-5 y
+ * linea-campo (borde de los campos) ≥ 3:1 sobre las placas. La línea normal es
+ * decorativa y no lleva información.
  * Las superficies se separan por tono, no por bordes: la línea es casi muda.
  */
 export const temasCrm: Record<"claro" | "oscuro", Tema & Campos> = {
@@ -130,7 +134,7 @@ export const temasCrm: Record<"claro" | "oscuro", Tema & Campos> = {
     datoAzul: "#2563EB",
     datoBengala: "#D9468F",
     rampa: ["#DBE8FE", "#BCD4FD", "#93BBFB", "#5F97F6", "#2F72EA", "#1D55C7"],
-    apagado: "#A1A1AA",
+    apagado: "#87878F",
     acento: "#2563EB",
     alarma: "#DC2626",
     sobreCampo: "#FFFFFF",
@@ -147,9 +151,9 @@ export const temasCrm: Record<"claro" | "oscuro", Tema & Campos> = {
     datoAzul: "#3B82F6",
     datoBengala: "#E0569E",
     rampa: ["#152A52", "#1B3A73", "#224C98", "#2C61BF", "#3F7BE6", "#6B9BF7"],
-    apagado: "#4B4B52",
+    apagado: "#676770",
     acento: "#2F6FEB",
-    alarma: "#EF4444",
+    alarma: "#DC2626",
     sobreCampo: "#FFFFFF",
   },
 };
@@ -164,9 +168,9 @@ const extrasCrm = {
     "serie-2": "#D9468F",
     "serie-3": "#7C5CF0",
     "serie-4": "#0E9AB8",
-    "serie-5": "#A1A1AA",
-    exito: "#15803D",
-    aviso: "#B45309",
+    "serie-5": "#87878F",
+    exito: "#147A3A",
+    aviso: "#AB4F09",
     critico: "#C81E1E",
     "exito-suave": "#E3F5EA",
     "aviso-suave": "#FDF0DC",
@@ -178,12 +182,12 @@ const extrasCrm = {
     columna: "#EBEBED",
     tarjeta: "#FFFFFF",
     "tag-azul": "#1D5FD6",
-    "tag-verde": "#15803D",
-    "tag-ambar": "#B45309",
+    "tag-verde": "#147A3A",
+    "tag-ambar": "#AB4F09",
     "tag-violeta": "#6D4FD8",
     "tag-rosa": "#BE185D",
-    "tag-gris": "#71717A",
-    "tag-cian": "#0E7C93",
+    "tag-gris": "#696971",
+    "tag-cian": "#0D7389",
     "relleno-azul": "#2563EB",
     "relleno-verde": "#15803D",
     "relleno-ambar": "#B45309",
@@ -192,6 +196,7 @@ const extrasCrm = {
     "relleno-gris": "#52525B",
     "relleno-cian": "#0B7A95",
     "relleno-rojo": "#DC2626",
+    "linea-campo": "#8A8A93",
     sombra: "0 1px 2px rgb(17 17 19 / 0.05), 0 2px 8px -2px rgb(17 17 19 / 0.06)",
   },
   oscuro: {
@@ -199,7 +204,7 @@ const extrasCrm = {
     "serie-2": "#E0569E",
     "serie-3": "#8B6CF6",
     "serie-4": "#1499B8",
-    "serie-5": "#52525B",
+    "serie-5": "#656570",
     exito: "#4ADE80",
     aviso: "#FBBF24",
     critico: "#F87171",
@@ -227,6 +232,7 @@ const extrasCrm = {
     "relleno-gris": "#3F3F46",
     "relleno-cian": "#0E7C93",
     "relleno-rojo": "#C42B2B",
+    "linea-campo": "#6A6A73",
     sombra: "0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6)",
   },
 } as const;
@@ -269,6 +275,8 @@ export function cssTemas() {
   return [
     // El CRM es oscuro por defecto; sólo un "claro" elegido a mano lo aclara.
     `.crm{${crmOscuro}}`,
+    // La landing vive de noche, como sus fotos: siempre oscura.
+    `.landing{${oscuro};color-scheme:dark}`,
     `:root[data-tema="claro"] .crm{${crmClaro}}`,
     `:root{${claro};color-scheme:light}`,
     `@media (prefers-color-scheme: dark){:root:not([data-tema="claro"]){${oscuro};color-scheme:dark}}`,

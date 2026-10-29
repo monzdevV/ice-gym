@@ -46,7 +46,7 @@ export function SolicitarVacaciones({ disponibles, empleados }: { disponibles?: 
         </CampoRrhh>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
-        <CampoRrhh etiqueta="Desde">
+        <CampoRrhh etiqueta="Desde" obligatorio>
           <input
             type="date"
             name="inicio"
@@ -59,7 +59,7 @@ export function SolicitarVacaciones({ disponibles, empleados }: { disponibles?: 
             className={claseCampo}
           />
         </CampoRrhh>
-        <CampoRrhh etiqueta="Hasta (incluido)">
+        <CampoRrhh etiqueta="Hasta (incluido)" obligatorio>
           <input type="date" name="fin" required min={inicio} value={fin} onChange={(e) => setFin(e.target.value)} className={claseCampo} />
         </CampoRrhh>
       </div>
@@ -100,10 +100,10 @@ export function ResolverVacaciones({ id, nombre }: { id: string; nombre: string 
   return (
     <span className="flex items-center gap-1.5">
       <button type="button" disabled={pendiente} onClick={() => resolver(true)} className={claseBotonAccionRrhh}>
-        <Check className="size-4" weight="bold" aria-hidden /> Aprobar
+        <Check className="size-4" weight="bold" aria-hidden /> Aprobar<span className="sr-only"> las vacaciones de {nombre}</span>
       </button>
       <button type="button" disabled={pendiente} onClick={() => setDenegar(true)} className={claseBotonSecundarioRrhh}>
-        <X className="size-4" aria-hidden /> Denegar
+        <X className="size-4" aria-hidden /> Denegar<span className="sr-only"> las vacaciones de {nombre}</span>
       </button>
       <Dialog open={denegar} onOpenChange={setDenegar}>
         <DialogContent className="sm:max-w-md">
@@ -127,7 +127,7 @@ export function ResolverVacaciones({ id, nombre }: { id: string; nombre: string 
               type="button"
               disabled={pendiente}
               onClick={() => resolver(false)}
-              className="inline-flex h-9 items-center gap-2 rounded-md bg-alarma px-4 text-sm font-medium text-white shadow-sm transition-[filter] hover:brightness-110 disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-2 rounded-md bg-critico px-4 text-sm font-medium text-sobre-critico shadow-sm transition-[filter] hover:brightness-110 disabled:opacity-50"
             >
               {pendiente ? "Denegando…" : "Denegar"}
             </button>
@@ -155,9 +155,9 @@ export function CancelarVacaciones({ id }: { id: string }) {
           } else toast.error(r.mensaje);
         })
       }
-      className="text-[0.8125rem] font-medium text-tinta-2 underline-offset-4 hover:text-alarma-tinta hover:underline disabled:opacity-50"
+      className="inline-flex min-h-6 items-center text-[0.8125rem] font-medium text-tinta-2 underline-offset-4 hover:text-alarma-tinta hover:underline disabled:opacity-50"
     >
-      {pendiente ? "Cancelando…" : "Cancelar"}
+      {pendiente ? "Cancelando…" : "Cancelar solicitud"}
     </button>
   );
 }

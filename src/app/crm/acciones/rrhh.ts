@@ -8,7 +8,7 @@ import { clienteAdmin } from "@/lib/supabase/admin";
 import { textoDe } from "@/lib/acciones";
 import { incluye } from "@/lib/b2b";
 import { perfilRrhh } from "@/lib/datos/rrhh";
-import { ESTADOS_EMPLEADO, ROLES, USUARIO_VALIDO, documentoValido, nombreEmpleado } from "@/lib/rrhh";
+import { ESTADOS_EMPLEADO, ROLES, USUARIO_VALIDO, documentoValido, hoyMadrid, nombreEmpleado } from "@/lib/rrhh";
 import type { Resultado } from "./b2b";
 
 /**
@@ -102,6 +102,15 @@ async function subirFoto(supabase: Awaited<ReturnType<typeof createClient>>, emp
   const ext = tipos[archivo.type];
   if (!ext) return { error: "La foto tiene que ser JPG, PNG o WebP." };
   if (archivo.size > 5 * 1024 * 1024) return { error: "La foto no puede pasar de 5 MB." };
+  // El tipo lo declara el navegador: se comprueba también la firma real del archivo.
+  const cabecera = Buffer.from(await archivo.slice(0, 12).arrayBuffer());
+  const firmaOk =
+    ext === "jpg"
+      ? cabecera[0] === 0xff && cabecera[1] === 0xd8 && cabecera[2] === 0xff
+      : ext === "png"
+        ? cabecera.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+        : cabecera.subarray(0, 4).toString("latin1") === "RIFF" && cabecera.subarray(8, 12).toString("latin1") === "WEBP";
+  if (!firmaOk) return { error: "La foto tiene que ser JPG, PNG o WebP." };
   const ruta = `${empleadoId}/foto-${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from("empleados").upload(ruta, archivo, { contentType: archivo.type, upsert: true });
   if (error) return { error: `No se pudo subir la foto: ${error.message}` };
@@ -173,7 +182,7 @@ export async function guardarEmpleado(_: Resultado | null, fd: FormData): Promis
     fecha_baja: nulo(fechaBaja),
     jefe_id: nulo(jefe),
     rol,
-    estado: fechaBaja && fechaBaja <= new Date().toISOString().slice(0, 10) ? "inactivo" : estado,
+    estado: fechaBaja && fechaBaja <= hoyMadrid() ? "inactivo" : estado,
     fecha_nacimiento: nulo(textoDe(fd, "fecha_nacimiento")),
     direccion: nulo(textoDe(fd, "direccion")),
     contacto_emergencia: nulo(textoDe(fd, "contacto_emergencia")),
@@ -203,7 +212,11 @@ export async function guardarEmpleado(_: Resultado | null, fd: FormData): Promis
       fotoPath = r.ruta;
     }
     const { error } = await supabase.from("empleados").update({ ...fila, ...(fotoPath ? { foto_path: fotoPath } : {}) }).eq("id", id);
-    if (error) return { ok: false, mensaje: explicar(error, "editar empleados") };
+    if (error) {
+      // Sin cambios en la ficha no debe quedar la foto nueva huérfana en Storage.
+      if (fotoPath) await supabase.storage.from("empleados").remove([fotoPath]);
+      return { ok: false, mensaje: explicar(error, "editar empleados") };
+    }
     if (fotoPath && antes.foto_path) await supabase.storage.from("empleados").remove([antes.foto_path]);
     if (antes.user_id && antes.estado !== fila.estado) await bloquearAcceso(antes.user_id, fila.estado === "inactivo");
     refrescar();
@@ -295,12 +308,18 @@ export async function gestionarCuenta(_: Resultado | null, fd: FormData): Promis
   if (!emp) return { ok: false, mensaje: "Ese empleado ya no existe." };
 
   if (emp.user_id) {
+    // Primero el usuario: si no es válido o está cogido, la contraseña no debe cambiar.
+    const cambiaUsuario = !!usuario && usuario !== emp.usuario;
+    if (cambiaUsuario) {
+      if (!USUARIO_VALIDO.test(usuario)) return { ok: false, mensaje: "Usuario: 3 a 40 letras minúsculas, números, puntos o guiones." };
+      const { data: cogido } = await supabase.from("empleados").select("id").eq("usuario", usuario).neq("id", id).maybeSingle();
+      if (cogido) return { ok: false, mensaje: "Ese nombre de usuario ya está cogido." };
+    }
     const { error } = await admin.auth.admin.updateUserById(emp.user_id, { password });
     if (error) return { ok: false, mensaje: `No se pudo cambiar la contraseña: ${error.message}` };
-    if (usuario && usuario !== emp.usuario) {
-      if (!USUARIO_VALIDO.test(usuario)) return { ok: false, mensaje: "Usuario: 3 a 40 letras minúsculas, números, puntos o guiones." };
+    if (cambiaUsuario) {
       const { error: e } = await supabase.from("empleados").update({ usuario }).eq("id", id);
-      if (e) return { ok: false, mensaje: explicar(e, "cambiar el usuario") };
+      if (e) return { ok: false, mensaje: `Contraseña cambiada, pero no el usuario: ${explicar(e, "cambiar el usuario")}` };
     }
     refrescar();
     return { ok: true, mensaje: `Contraseña de ${emp.nombre} cambiada.` };
@@ -349,6 +368,7 @@ export async function guardarFichaje(_: Resultado | null, fd: FormData): Promise
   const hEntrada = textoDe(fd, "entrada");
   const hSalida = textoDe(fd, "salida");
   const estado = textoDe(fd, "estado") === "incidencia" ? "incidencia" : "correcto";
+  if (id && !UUID.test(id)) return { ok: false, mensaje: "Registro no válido." };
   if (!UUID.test(empleado)) return { ok: false, mensaje: "Elige un empleado." };
   if (!FECHA.test(fecha)) return { ok: false, mensaje: "Pon la fecha." };
   if (!HORA.test(hEntrada)) return { ok: false, mensaje: "Pon la hora de entrada." };
@@ -448,6 +468,7 @@ export async function guardarTarea(_: Resultado | null, fd: FormData): Promise<R
   const nombre = textoDe(fd, "nombre");
   const responsable = textoDe(fd, "responsable_id");
   const limite = textoDe(fd, "fecha_limite");
+  if (id && !UUID.test(id)) return { ok: false, mensaje: "Tarea no válida." };
   if (!UUID.test(empleado)) return { ok: false, mensaje: "Falta el empleado." };
   if (nombre.length < 2) return { ok: false, mensaje: "Pon el nombre de la tarea." };
   if (responsable && !UUID.test(responsable)) return { ok: false, mensaje: "Responsable no válido." };
@@ -494,6 +515,7 @@ export async function guardarPaso(_: Resultado | null, fd: FormData): Promise<Re
   const id = textoDe(fd, "id");
   const nombre = textoDe(fd, "nombre");
   const plazo = Number(textoDe(fd, "dias_plazo") || 0);
+  if (id && !UUID.test(id)) return { ok: false, mensaje: "Paso no válido." };
   if (nombre.length < 2) return { ok: false, mensaje: "Pon el nombre de la tarea." };
   if (!Number.isInteger(plazo) || plazo < 0 || plazo > 365) return { ok: false, mensaje: "Plazo: de 0 a 365 días." };
   const fila = {
@@ -536,6 +558,7 @@ export async function guardarEvaluacion(_: Resultado | null, fd: FormData): Prom
   const trimestre = Number(textoDe(fd, "trimestre"));
   const puntuacion = Number(textoDe(fd, "puntuacion"));
   const fecha = textoDe(fd, "fecha");
+  if (id && !UUID.test(id)) return { ok: false, mensaje: "Evaluación no válida." };
   if (!UUID.test(empleado)) return { ok: false, mensaje: "Elige a quién evalúas." };
   if (empleado === perfil.empleado.id) return { ok: false, mensaje: "No puedes evaluarte a ti mismo." };
   if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) return { ok: false, mensaje: "Año no válido." };
@@ -550,7 +573,7 @@ export async function guardarEvaluacion(_: Resultado | null, fd: FormData): Prom
     puntuacion,
     comentarios: nulo(textoDe(fd, "comentarios")),
     evaluador_id: perfil.empleado.id,
-    fecha: fecha || new Date().toISOString().slice(0, 10),
+    fecha: fecha || hoyMadrid(),
     visible_empleado: fd.get("visible_empleado") === "si",
   };
   const supabase = await createClient();

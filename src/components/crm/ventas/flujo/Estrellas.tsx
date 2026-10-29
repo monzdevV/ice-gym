@@ -72,9 +72,9 @@ export function EstrellasEditables({
             e.stopPropagation();
             elegir(i);
           }}
-          className="grid place-items-center rounded p-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta"
+          className="grid place-items-center rounded p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-tinta"
         >
-          <Star className={`${tamano} ${i <= visto ? "text-aviso" : "text-tinta-2/50"}`} weight={i <= visto ? "fill" : "regular"} aria-hidden />
+          <Star className={`${tamano} ${i <= visto ? "text-aviso" : "text-tinta-2/80"}`} weight={i <= visto ? "fill" : "regular"} aria-hidden />
         </button>
       ))}
     </span>

@@ -6,6 +6,7 @@ const bloque = "rounded-2xl bg-placa shadow-placa";
 export function EsqueletoContactos() {
   return (
     <main className={`${pulso} px-4 lg:px-8`} aria-busy="true" aria-label="Cargando contactos">
+      <p className="sr-only" role="status">Cargando contactos…</p>
       <div className="flex items-end justify-between gap-4 pb-5 pt-6">
         <div className="flex flex-col gap-2">
           <span className="h-7 w-36 rounded-md bg-placa-2" />
@@ -46,6 +47,7 @@ export function EsqueletoContactos() {
 export function EsqueletoFichaContacto() {
   return (
     <main className={`${pulso} px-4 pb-12 pt-5 lg:px-8`} aria-busy="true" aria-label="Cargando contacto">
+      <p className="sr-only" role="status">Cargando contacto…</p>
       <span className="block h-4 w-24 rounded bg-placa-2/70" />
       <div className="mt-3 flex flex-wrap items-center justify-between gap-4 pb-1">
         <div className="flex items-center gap-4">

@@ -153,7 +153,11 @@ export function Responsable({ m, soloAvatar = false }: { m: MiembroMini | null |
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5" title={nombreCompleto(m)}>
       <Avatar nombre={m.nombre} apellidos={m.apellidos} tono={tonoColor(m.color)} tamano="xs" />
-      {!soloAvatar && <span className="truncate text-sm text-tinta">{m.nombre}</span>}
+      {soloAvatar ? (
+        <span className="sr-only">Responsable: {nombreCompleto(m)}</span>
+      ) : (
+        <span className="truncate text-sm text-tinta">{m.nombre}</span>
+      )}
     </span>
   );
 }

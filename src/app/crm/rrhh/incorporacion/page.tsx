@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { directorio, gestionados, listarEmpleados, listarPlantilla, listarTareasIncorporacion, perfilRrhh } from "@/lib/datos/rrhh";
-import { estadoTarea, hoyMadrid, progresoIncorporacion, rutaRrhh, type TareaIncorporacion } from "@/lib/rrhh";
+import { estadoTarea, hoyMadrid, nombreEmpleado, progresoIncorporacion, rutaRrhh, type TareaIncorporacion } from "@/lib/rrhh";
 import { fecha, numero } from "@/lib/formato";
 import { Encabezado, Seccion, SinDatos } from "@/components/crm/Primitivas";
 import { Tag } from "@/components/crm/b2b/Piezas";
@@ -132,14 +132,14 @@ export default async function PaginaIncorporacion({ searchParams }: { searchPara
           {incorporaciones.length === 0 ? (
             <SinDatos titulo="No hay incorporaciones" texto="Cada vez que se da de alta a alguien se genera su lista de tareas de incorporación a partir de la plantilla." />
           ) : (
-            <MarcoTabla minimo="min-w-[760px]">
+            <MarcoTabla titulo="Incorporaciones y su progreso" minimo="min-w-[760px]">
               <thead>
                 <tr className={claseCabeceraTabla}>
-                  <th className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>
-                  <th className="py-2.5 pr-3 font-normal">Alta</th>
-                  <th className="w-56 py-2.5 pr-3 font-normal">Progreso (obligatorias)</th>
-                  <th className="py-2.5 pr-3 text-right font-normal">Pendientes</th>
-                  <th className="py-2.5 pr-4 font-normal">Estado</th>
+                  <th scope="col" className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>
+                  <th scope="col" className="py-2.5 pr-3 font-normal">Alta</th>
+                  <th scope="col" className="w-56 py-2.5 pr-3 font-normal">Progreso (obligatorias)</th>
+                  <th scope="col" className="py-2.5 pr-3 text-right font-normal">Pendientes</th>
+                  <th scope="col" className="py-2.5 pr-4 font-normal">Estado</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,7 +150,7 @@ export default async function PaginaIncorporacion({ searchParams }: { searchPara
                     </td>
                     <td className="py-2.5 pr-3 text-sm tabular-nums text-tinta-2">{fecha(e.fecha_alta)}</td>
                     <td className="py-2.5 pr-3">
-                      <Progreso pct={p.pct} completado={p.completada} texto={`${p.hechas}/${p.obligatorias}`} />
+                      <Progreso etiqueta={`Incorporación de ${nombreEmpleado(e)}`} pct={p.pct} completado={p.completada} texto={`${p.hechas}/${p.obligatorias}`} />
                     </td>
                     <td className="py-2.5 pr-3 text-right text-sm tabular-nums text-tinta">
                       {pendientes}
@@ -166,7 +166,7 @@ export default async function PaginaIncorporacion({ searchParams }: { searchPara
                           <Tag tono={vencidas ? "var(--relleno-rosa)" : "var(--relleno-ambar)"}>{vencidas ? "Con retraso" : "En curso"}</Tag>
                         )}
                         <Link href={`${rutaRrhh.empleado(e.id)}#incorporacion`} className="text-[0.8125rem] font-medium text-acento-tinta hover:underline">
-                          Ver tareas
+                          Ver tareas<span className="sr-only"> de {nombreEmpleado(e)}</span>
                         </Link>
                       </span>
                     </td>

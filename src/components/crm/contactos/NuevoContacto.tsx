@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "@phosphor-icons/react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { claseBotonPrincipal } from "@/components/crm/Primitivas";
 import { crearContacto, type Resultado } from "@/app/crm/acciones/b2b";
 import { ruta } from "@/lib/b2b";
 import type { Catalogos } from "@/lib/datos/b2b";
+import { useFormularioAccion } from "@/components/crm/b2b/useFormularioAccion";
 import { CamposContacto } from "./FormularioContacto";
 
 /** Alta de contacto en un Dialog. `children` sustituye al botón por defecto. */
@@ -25,7 +26,7 @@ export function NuevoContacto({
   const [abierto, setAbierto] = useState(false);
   const [vez, setVez] = useState(0); // reinicia el formulario en cada apertura
 
-  const [estado, accion] = useActionState(async (prev: Resultado | null, fd: FormData) => {
+  const { estado, onSubmit, pendiente } = useFormularioAccion<Resultado>(async (prev, fd) => {
     const r = await crearContacto(prev, fd);
     if (r.ok) {
       const id = r.id;
@@ -34,7 +35,7 @@ export function NuevoContacto({
       router.refresh();
     }
     return r;
-  }, null);
+  });
 
   return (
     <Dialog
@@ -57,7 +58,7 @@ export function NuevoContacto({
           <DialogTitle>Nuevo contacto</DialogTitle>
           <DialogDescription>Una persona de una empresa cliente, proveedora o partner.</DialogDescription>
         </DialogHeader>
-        <form action={accion} className="px-5 py-4">
+        <form onSubmit={onSubmit} className="px-5 py-4">
           <CamposContacto
             key={vez}
             catalogos={catalogos}
@@ -65,6 +66,7 @@ export function NuevoContacto({
             estado={estado}
             textoEnviar="Crear contacto"
             textoPendiente="Creando…"
+            pendiente={pendiente}
             onCancelar={() => setAbierto(false)}
           />
         </form>

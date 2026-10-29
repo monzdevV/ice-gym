@@ -1,12 +1,15 @@
 import type { CSSProperties } from "react";
 import {
+  CalendarCheck,
   CheckSquare,
   Clock,
+  ClockCountdown,
   EnvelopeSimple,
   FileText,
   Phone,
   Star,
   UsersThree,
+  WarningCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon } from "@phosphor-icons/react";
 import { tonoColor } from "@/lib/b2b";
@@ -32,13 +35,17 @@ export const ICONO_ACTIVIDAD: Record<IconoActividad, Icon> = {
   tarea: CheckSquare,
 };
 
-/** Icono del tipo de actividad, en una placa con el color de su plazo. */
+/**
+ * Icono del tipo de actividad, en una placa suave del color de su plazo. El icono
+ * va en el tono y la placa en su versión suave: el blanco sobre ámbar o verde del
+ * tema oscuro no llegaba a 3:1.
+ */
 export function IconoActividad({ icono, plazo, className = "" }: { icono: IconoActividad | null | undefined; plazo?: Plazo | null; className?: string }) {
   const Icono = ICONO_ACTIVIDAD[icono ?? "tarea"] ?? CheckSquare;
   return (
     <span
-      className={`grid size-6 shrink-0 place-items-center rounded-full text-sobre-campo ${className}`}
-      style={{ background: plazo ? TONO_PLAZO[plazo] : "var(--apagado)" }}
+      className={`grid size-6 shrink-0 place-items-center rounded-full ${className}`}
+      style={plazo ? { background: FONDO_PLAZO[plazo], color: TONO_PLAZO[plazo] } : { background: "var(--placa-2)", color: "var(--tinta-2)" }}
       aria-hidden
     >
       <Icono className="size-3.5" weight="bold" />
@@ -46,15 +53,22 @@ export function IconoActividad({ icono, plazo, className = "" }: { icono: IconoA
   );
 }
 
+const FONDO_PLAZO: Record<Plazo, string> = { vencida: "var(--critico-suave)", hoy: "var(--aviso-suave)", planificada: "var(--exito-suave)" };
+
+/** Cada plazo con su propia forma, para que no dependa sólo del rojo, ámbar o verde. */
+const ICONO_PLAZO: Record<Plazo, Icon> = { vencida: WarningCircle, hoy: ClockCountdown, planificada: CalendarCheck };
+
 /**
  * Reloj de actividad de las tarjetas y filas: gris sin nada planificado; rojo,
- * ámbar o verde según la más urgente. El color nunca va solo: lleva título y texto oculto.
+ * ámbar o verde según la más urgente. El color nunca va solo: cada plazo tiene
+ * su icono (aviso, cuenta atrás, calendario), título y texto oculto.
  */
 export function MarcaPlazo({ plazo, n = 0 }: { plazo: Plazo | null; n?: number }) {
   const texto = plazo ? `${n} ${n === 1 ? "actividad" : "actividades"} · ${ETIQUETA_PLAZO[plazo].toLowerCase()}` : "Sin actividades planificadas";
+  const Icono = plazo ? ICONO_PLAZO[plazo] : Clock;
   return (
     <span className="inline-grid size-5 place-items-center" style={{ color: plazo ? TONO_PLAZO[plazo] : "var(--tinta-2)" }} title={texto}>
-      <Clock className="size-[18px]" weight={plazo ? "fill" : "regular"} aria-hidden />
+      <Icono className="size-[18px]" weight={plazo ? "fill" : "regular"} aria-hidden />
       <span className="sr-only">{texto}</span>
     </span>
   );
@@ -65,7 +79,7 @@ export function Estrellas({ n, tamano = "size-4" }: { n: number; tamano?: string
   return (
     <span className="inline-flex items-center" title={`Prioridad: ${ETIQUETA_PRIORIDAD_VENTA[n] ?? "Normal"}`}>
       {[1, 2, 3].map((i) => (
-        <Star key={i} className={`${tamano} ${i <= n ? "text-aviso" : "text-tinta-2/50"}`} weight={i <= n ? "fill" : "regular"} aria-hidden />
+        <Star key={i} className={`${tamano} ${i <= n ? "text-aviso" : "text-tinta-2/80"}`} weight={i <= n ? "fill" : "regular"} aria-hidden />
       ))}
       <span className="sr-only">Prioridad {ETIQUETA_PRIORIDAD_VENTA[n] ?? "Normal"}</span>
     </span>

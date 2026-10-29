@@ -38,12 +38,25 @@ const OPCIONES: { tipo: TipoCrear; texto: string; Icono: Icon }[] = [
  * (DialogTrigger asChild), así que ha de ser un elemento nativo, no un componente.
  */
 const disparador = (tipo: TipoCrear) => (
-  <button type="button" data-crear={tipo} tabIndex={-1} aria-hidden className="hidden" />
+  <button type="button" data-crear={tipo} tabIndex={-1} aria-hidden className="sr-only" onFocus={devolverFoco} />
 );
+
+/** Quién pidió abrir el diálogo: al cerrarse, el foco vuelve ahí (no al disparador invisible). */
+let origen: HTMLElement | null = null;
+
+function devolverFoco() {
+  const el = origen;
+  origen = null;
+  if (el?.isConnected) el.focus();
+}
 
 function abrir(tipo: TipoCrear) {
   // Tras cerrar el menú, para que no le robe el foco al diálogo.
-  setTimeout(() => document.querySelector<HTMLButtonElement>(`[data-crear="${tipo}"]`)?.click(), 20);
+  setTimeout(() => {
+    const activo = document.activeElement;
+    origen = activo instanceof HTMLElement && activo !== document.body ? activo : null;
+    document.querySelector<HTMLButtonElement>(`[data-crear="${tipo}"]`)?.click();
+  }, 20);
 }
 
 /**

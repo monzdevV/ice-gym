@@ -25,7 +25,9 @@ function SelectorPuntuacion({ inicial }: { inicial?: number }) {
   const [valor, setValor] = useState(inicial ?? 0);
   return (
     <fieldset className="flex flex-col gap-1.5">
-      <legend className="mb-1.5 text-[0.8125rem] font-medium text-tinta">Puntuación</legend>
+      <legend className="mb-1.5 text-[0.8125rem] font-medium text-tinta">
+        Puntuación <span className="font-normal text-tinta-2">(obligatorio)</span>
+      </legend>
       <div className="grid grid-cols-5 gap-1.5">
         {PUNTUACIONES.map((n) => (
           <label key={n} className="cursor-pointer">
@@ -54,7 +56,7 @@ function CamposEvaluacion({ empleados, evaluacion, empleadoId }: { empleados: Em
       {fijo ? (
         <input type="hidden" name="empleado_id" value={fijo} />
       ) : (
-        <CampoRrhh etiqueta="Empleado">
+        <CampoRrhh etiqueta="Empleado" obligatorio>
           <select name="empleado_id" required defaultValue="" className={select}>
             <option value="" disabled>
               Elige a quién evalúas
@@ -77,7 +79,7 @@ function CamposEvaluacion({ empleados, evaluacion, empleadoId }: { empleados: Em
             ))}
           </select>
         </CampoRrhh>
-        <CampoRrhh etiqueta="Año">
+        <CampoRrhh etiqueta="Año" obligatorio>
           <input type="number" name="anio" min={2000} max={2100} required defaultValue={evaluacion?.anio ?? actual.anio} className={claseCampo} />
         </CampoRrhh>
         <CampoRrhh etiqueta="Fecha">
@@ -93,7 +95,7 @@ function CamposEvaluacion({ empleados, evaluacion, empleadoId }: { empleados: Em
           <span className="block text-sm font-medium text-tinta">Visible para el empleado</span>
           <span className="block text-xs text-tinta-2">Si la ocultas, sólo la ven sus responsables y administración.</span>
         </span>
-        <Switch checked={visible} onCheckedChange={setVisible} />
+        <Switch checked={visible} onCheckedChange={setVisible} aria-label="Visible para el empleado" />
       </label>
       <input type="hidden" name="visible_empleado" value={visible ? "si" : "no"} />
     </>

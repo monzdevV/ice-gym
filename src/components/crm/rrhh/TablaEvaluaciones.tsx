@@ -26,17 +26,17 @@ export function TablaEvaluaciones({
 }) {
   const conAcciones = lista.some((ev) => ev.empleado_id !== yoId && gestionaEmpleado(ev.empleado_id));
   return (
-    <MarcoTabla enSeccion={enSeccion} minimo="min-w-[820px]">
+    <MarcoTabla titulo="Evaluaciones trimestrales" enSeccion={enSeccion} minimo="min-w-[820px]">
       <thead>
         <tr className={claseCabeceraTabla}>
-          {conEmpleado && <th className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>}
-          <th className={`py-2.5 pr-3 font-normal ${conEmpleado ? "" : "pl-4"}`}>Trimestre</th>
-          <th className="py-2.5 pr-3 font-normal">Evaluación</th>
-          <th className="py-2.5 pr-3 font-normal">Puntuación</th>
-          <th className="py-2.5 pr-3 font-normal">Evaluador</th>
-          <th className="py-2.5 pr-4 font-normal">Comentarios</th>
+          {conEmpleado && <th scope="col" className="py-2.5 pl-4 pr-3 font-normal">Empleado</th>}
+          <th scope="col" className={`py-2.5 pr-3 font-normal ${conEmpleado ? "" : "pl-4"}`}>Trimestre</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Evaluación</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Puntuación</th>
+          <th scope="col" className="py-2.5 pr-3 font-normal">Evaluador</th>
+          <th scope="col" className="py-2.5 pr-4 font-normal">Comentarios</th>
           {conAcciones && (
-            <th className="w-12 py-2.5 pr-3 font-normal">
+            <th scope="col" className="w-12 py-2.5 pr-3 font-normal">
               <span className="sr-only">Acciones</span>
             </th>
           )}
