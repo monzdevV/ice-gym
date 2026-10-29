@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Buildings, User, X } from "@phosphor-icons/react";
+import { X } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { guardarClienteVentas } from "@/app/crm/acciones/ventas";
 import { nombreCompleto, type Miembro } from "@/lib/b2b";
-import type { ClienteMini, ClienteVentas } from "@/lib/ventas";
+import type { ClienteVentas, EmpresaVentas } from "@/lib/ventas";
 import { claseBotonPrincipal, claseCampo } from "@/components/crm/Primitivas";
 import { Campo, claseSecundario } from "@/components/crm/ventas/configuracion/Comun";
+import { ElegirEmpresa } from "@/components/crm/ventas/ficha/Elegir";
 
 /** Etiquetas de texto libre: Intro o coma añade, la X quita. */
 function CampoEtiquetas({ valor, onCambio }: { valor: string[]; onCambio: (v: string[]) => void }) {
@@ -47,8 +48,8 @@ function CampoEtiquetas({ valor, onCambio }: { valor: string[]; onCambio: (v: st
 }
 
 /**
- * Datos de un cliente: persona (con su empresa y puesto) o empresa. Sirve para
- * el alta (en diálogo) y para la ficha.
+ * Datos de un cliente de Ventas: una persona, con su empresa (una de las del
+ * CRM) y su puesto. Sirve para el alta (en diálogo) y para la ficha.
  */
 export function FormularioCliente({
   cliente,
@@ -56,26 +57,22 @@ export function FormularioCliente({
   comerciales,
   onGuardado,
   onCancelar,
-  empresaInicial,
-  empresaActual = null,
+  empresaInicial = null,
 }: {
-  cliente: ClienteVentas | null;
-  /** Su empresa ahora, aunque esté archivada: si no estuviera entre las opciones, guardar la desvincularía. */
-  empresaActual?: { id: string; nombre: string } | null;
-  /** Clientes empresa, para elegir la empresa de una persona. */
-  empresas: ClienteMini[];
+  cliente: (ClienteVentas & { empresa: EmpresaVentas | null }) | null;
+  /** Empresas del CRM (las de Oportunidades) para elegir la del cliente. */
+  empresas: EmpresaVentas[];
   comerciales: Miembro[];
   onGuardado?: (id: string) => void;
   onCancelar?: () => void;
   /** Alta de una persona dentro de una empresa. */
-  empresaInicial?: string;
+  empresaInicial?: EmpresaVentas | null;
 }) {
   const router = useRouter();
+  const idEmpresa = useId();
   const [pendiente, empezar] = useTransition();
-  const [esEmpresa, setEsEmpresa] = useState(cliente?.es_empresa ?? false);
+  const [empresa, setEmpresa] = useState<EmpresaVentas | null>(cliente ? cliente.empresa : empresaInicial);
   const [etiquetas, setEtiquetas] = useState<string[]>(cliente?.etiquetas ?? []);
-  const empresasElegibles: { id: string; nombre: string }[] = empresas.filter((e) => e.es_empresa && e.id !== cliente?.id);
-  if (empresaActual && !empresasElegibles.some((e) => e.id === empresaActual.id)) empresasElegibles.unshift(empresaActual);
 
   function guardar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -85,8 +82,7 @@ export function FormularioCliente({
       const r = await guardarClienteVentas({
         id: cliente?.id,
         nombre: t("nombre"),
-        es_empresa: esEmpresa,
-        empresa_id: t("empresa_id") || null,
+        empresa_id: empresa?.id ?? null,
         puesto: t("puesto"),
         email: t("email"),
         telefono: t("telefono"),
@@ -111,48 +107,21 @@ export function FormularioCliente({
 
   return (
     <form onSubmit={guardar} className="flex flex-col gap-4">
-      <div role="radiogroup" aria-label="Tipo de cliente" className="flex self-start rounded-lg bg-placa-2 p-0.5">
-        {[
-          { v: false, texto: "Persona", Icono: User },
-          { v: true, texto: "Empresa", Icono: Buildings },
-        ].map(({ v, texto, Icono }) => (
-          <button
-            key={texto}
-            type="button"
-            role="radio"
-            aria-checked={esEmpresa === v}
-            onClick={() => setEsEmpresa(v)}
-            className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-[0.8125rem] font-medium transition-colors ${
-              esEmpresa === v ? "bg-placa text-tinta shadow-placa" : "text-tinta-2 hover:text-tinta"
-            }`}
-          >
-            <Icono className="size-4" weight={esEmpresa === v ? "fill" : "regular"} aria-hidden />
-            {texto}
-          </button>
-        ))}
-      </div>
-
-      <Campo etiqueta={esEmpresa ? "Nombre de la empresa" : "Nombre y apellidos"}>
+      <Campo etiqueta="Nombre y apellidos">
         <input name="nombre" required minLength={2} maxLength={200} defaultValue={cliente?.nombre ?? ""} autoFocus={!cliente} className={claseCampo} />
       </Campo>
 
-      {!esEmpresa && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Campo etiqueta="Empresa">
-            <select name="empresa_id" defaultValue={cliente?.empresa_id ?? empresaInicial ?? ""} className={claseCampo}>
-              <option value="">Sin empresa</option>
-              {empresasElegibles.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.nombre}
-                </option>
-              ))}
-            </select>
-          </Campo>
-          <Campo etiqueta="Puesto">
-            <input name="puesto" maxLength={120} defaultValue={cliente?.puesto ?? ""} placeholder="Gerente, Compras…" className={claseCampo} />
-          </Campo>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label htmlFor={idEmpresa} className="text-[0.8125rem] font-medium text-tinta">
+            Empresa
+          </label>
+          <ElegirEmpresa id={idEmpresa} valor={empresa} empresas={empresas} onCambio={setEmpresa} sinElegir="Sin empresa" claseBoton={claseCampo} />
         </div>
-      )}
+        <Campo etiqueta="Puesto">
+          <input name="puesto" maxLength={120} defaultValue={cliente?.puesto ?? ""} placeholder="Gerente, Compras…" className={claseCampo} />
+        </Campo>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Campo etiqueta="Correo electrónico">

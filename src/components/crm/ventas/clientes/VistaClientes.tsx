@@ -7,7 +7,7 @@ import { EnvelopeSimple, MagnifyingGlass, MapPin, Phone, Rows, SquaresFour } fro
 import { Switch } from "@/components/ui/switch";
 import type { ClienteListado } from "@/lib/datos/ventas";
 import { numero } from "@/lib/formato";
-import { plazoMasUrgente, rutaVentas } from "@/lib/ventas";
+import { plazoMasUrgente } from "@/lib/ventas";
 import { SinDatos, claseCampo } from "@/components/crm/Primitivas";
 import { Avatar, LogoEmpresa, Responsable } from "@/components/crm/b2b/Piezas";
 import { MarcaPlazo } from "@/components/crm/ventas/Piezas";
@@ -18,18 +18,18 @@ const plazoCliente = (c: ClienteListado) => plazoMasUrgente(c.pendientes);
 
 const esControl = (ev: MouseEvent) => (ev.target as HTMLElement).closest("a, button, input") !== null;
 
-function Retrato({ c, tamano = "md" }: { c: Pick<ClienteListado, "nombre" | "es_empresa">; tamano?: "sm" | "md" }) {
-  return c.es_empresa ? <LogoEmpresa nombre={c.nombre} tamano={tamano} /> : <Avatar nombre={c.nombre} tamano={tamano} />;
+function Retrato({ c, tamano = "md" }: { c: Pick<ClienteListado, "nombre" | "tipo" | "logo_url">; tamano?: "sm" | "md" }) {
+  return c.tipo === "empresa" ? <LogoEmpresa nombre={c.nombre} url={c.logo_url} tamano={tamano} /> : <Avatar nombre={c.nombre} tamano={tamano} />;
 }
 
 function Nombre({ c }: { c: ClienteListado }) {
   return (
     <span className="flex min-w-0 flex-col leading-tight">
-      <Link href={rutaVentas.cliente(c.id)} className="truncate font-medium text-tinta outline-none group-hover:text-acento-tinta focus-visible:underline">
+      <Link href={c.href} className="truncate font-medium text-tinta outline-none group-hover:text-acento-tinta focus-visible:underline">
         {c.nombre}
       </Link>
       <span className="truncate text-xs text-tinta-2">
-        {c.es_empresa ? "Empresa" : [c.puesto, c.empresa?.nombre].filter(Boolean).join(" · ") || "Persona"}
+        {c.detalle}
       </span>
     </span>
   );
@@ -60,7 +60,7 @@ function Tabla({ filas }: { filas: ClienteListado[] }) {
             {filas.map((c) => (
               <tr
                 key={c.id}
-                onClick={(ev) => !esControl(ev) && router.push(rutaVentas.cliente(c.id))}
+                onClick={(ev) => !esControl(ev) && router.push(c.href)}
                 className="group cursor-pointer border-b border-linea/70 transition-colors last:border-0 hover:bg-placa-2/60"
               >
                 <td className="max-w-[300px] py-2.5 pl-4 pr-4">
@@ -79,16 +79,16 @@ function Tabla({ filas }: { filas: ClienteListado[] }) {
                   )}
                 </td>
                 <td className="whitespace-nowrap py-2.5 pr-4 tabular-nums">
-                  {c.telefono || c.movil ? (
-                    <a href={`tel:${(c.telefono || c.movil)!.replace(/\s/g, "")}`} className="text-tinta hover:underline">
-                      {c.telefono || c.movil}
+                  {c.telefono ? (
+                    <a href={`tel:${c.telefono.replace(/\s/g, "")}`} className="text-tinta hover:underline">
+                      {c.telefono}
                     </a>
                   ) : (
                     <span className="text-tinta-2">—</span>
                   )}
                 </td>
                 <td className="max-w-[140px] truncate py-2.5 pr-4 text-tinta">{c.ciudad ?? <span className="text-tinta-2">—</span>}</td>
-                <td className="max-w-[120px] truncate py-2.5 pr-4 text-tinta">{c.pais}</td>
+                <td className="max-w-[120px] truncate py-2.5 pr-4 text-tinta">{c.pais ?? <span className="text-tinta-2">—</span>}</td>
                 <td className="max-w-[150px] py-2.5 pr-4">
                   <Responsable m={c.comercial} />
                 </td>
@@ -112,7 +112,7 @@ function Tarjetas({ filas }: { filas: ClienteListado[] }) {
       {filas.map((c) => (
         <li
           key={c.id}
-          onClick={(ev) => !esControl(ev) && router.push(rutaVentas.cliente(c.id))}
+          onClick={(ev) => !esControl(ev) && router.push(c.href)}
           className="group flex cursor-pointer flex-col gap-3 rounded-2xl bg-placa p-4 shadow-placa transition-[background-color,transform] duration-150 hover:bg-placa-2/40 active:scale-[0.99]"
         >
           <div className="flex items-start gap-3">
@@ -131,11 +131,11 @@ function Tarjetas({ filas }: { filas: ClienteListado[] }) {
                 </a>
               </li>
             )}
-            {(c.telefono || c.movil) && (
+            {c.telefono && (
               <li className="flex min-w-0 items-center gap-1.5">
                 <Phone className="size-3.5 shrink-0" aria-hidden />
-                <a href={`tel:${(c.telefono || c.movil)!.replace(/\s/g, "")}`} className="truncate tabular-nums hover:text-tinta hover:underline">
-                  {c.telefono || c.movil}
+                <a href={`tel:${c.telefono.replace(/\s/g, "")}`} className="truncate tabular-nums hover:text-tinta hover:underline">
+                  {c.telefono}
                 </a>
               </li>
             )}

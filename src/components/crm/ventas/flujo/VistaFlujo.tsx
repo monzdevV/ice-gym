@@ -106,7 +106,12 @@ export function VistaFlujo({
   const prefill = useMemo<Prefill | null>(() => {
     const p = new URLSearchParams(texto);
     if (p.get("nuevo") !== "1") return null;
-    return { equipo_id: p.get("equipo") || null, cliente_id: p.get("cliente") || null, ...(p.get("etapa") ? { etapa_id: p.get("etapa") } : {}) };
+    return {
+      equipo_id: p.get("equipo") || null,
+      cliente_id: p.get("cliente") || null,
+      empresa_id: p.get("empresa") || null,
+      ...(p.get("etapa") ? { etapa_id: p.get("etapa") } : {}),
+    };
   }, [texto]);
 
   const aplicarQuery = (q: string) => empezar(() => router.replace(`${pathname}${q ? `?${q}` : ""}`, { scroll: false }));

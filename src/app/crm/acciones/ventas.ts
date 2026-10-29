@@ -9,6 +9,7 @@ import {
   esFechaValida,
   hoyISO,
   leerImporte,
+  normalizarTexto,
   sumarDias,
   type EtapaVentas,
   type EstadoVenta,
@@ -36,8 +37,9 @@ const ahora = () => new Date().toISOString();
 
 function refrescar(...extra: (string | null | undefined)[]) {
   for (const r of ["/crm/ventas", "/crm/ventas/actividades", "/crm/ventas/equipos", "/crm/ventas/clientes", ...extra]) if (r) revalidatePath(r);
-  // Cualquier ficha de cliente puede mostrar la oportunidad que acaba de cambiar.
+  // Cualquier ficha de cliente o de empresa puede mostrar la oportunidad que acaba de cambiar.
   revalidatePath("/crm/ventas/clientes/[id]", "page");
+  revalidatePath("/crm/empresas/[id]", "page");
 }
 
 async function autor() {
@@ -123,6 +125,8 @@ async function equipoDe(comercialId: string | null) {
 export type DatosOportunidad = {
   nombre?: string;
   cliente_id?: string | null;
+  /** Empresa del CRM (`empresas`). */
+  empresa_id?: string | null;
   contacto_nombre?: string | null;
   empresa_nombre?: string | null;
   email?: string | null;
@@ -146,20 +150,28 @@ export type DatosOportunidad = {
 
 /**
  * Alta, desde «Nuevo» o desde el «+» de una columna. Si no se dice etapa, va
- * a la primera. Si llega cliente, rellena email, teléfono y ciudad que falten.
+ * a la primera. Si llega cliente, rellena email, teléfono y ciudad que falten,
+ * y sin empresa elegida, la oportunidad es de la empresa del cliente.
  */
 export async function crearOportunidadVentas(d: DatosOportunidad): Promise<Resultado> {
   const nombre = texto(d.nombre, 200) || [texto(d.empresa_nombre), texto(d.contacto_nombre)].filter(Boolean).join(" · ");
   const clienteId = idONulo(d.cliente_id);
   const supabase = await createClient();
 
-  let cliente: { nombre: string; email: string | null; telefono: string | null; ciudad: string | null; pais: string } | null = null;
+  let cliente: { nombre: string; empresa_id: string | null; email: string | null; telefono: string | null; ciudad: string | null; pais: string } | null =
+    null;
   if (clienteId) {
-    const { data } = await supabase.from("ventas_clientes").select("nombre, email, telefono, ciudad, pais").eq("id", clienteId).maybeSingle();
+    const { data } = await supabase.from("ventas_clientes").select("nombre, empresa_id, email, telefono, ciudad, pais").eq("id", clienteId).maybeSingle();
     cliente = data;
   }
-  const titulo = nombre || (cliente ? `Oportunidad de ${cliente.nombre}` : "");
-  if (titulo.length < 2) return { ok: false, mensaje: "Pon un nombre a la oportunidad o elige un cliente." };
+  const empresaId = idONulo(d.empresa_id) ?? cliente?.empresa_id ?? null;
+  let empresa: { nombre: string } | null = null;
+  if (empresaId && !nombre && !cliente) {
+    const { data } = await supabase.from("empresas").select("nombre").eq("id", empresaId).maybeSingle();
+    empresa = data;
+  }
+  const titulo = nombre || (cliente ? `Oportunidad de ${cliente.nombre}` : empresa ? `Oportunidad de ${empresa.nombre}` : "");
+  if (titulo.length < 2) return { ok: false, mensaje: "Pon un nombre a la oportunidad o elige un cliente o una empresa." };
 
   const e = (await etapa(idONulo(d.etapa_id))) ?? (await primeraEtapa());
   // Sin decir comercial, la oportunidad es de quien la crea.
@@ -172,8 +184,9 @@ export async function crearOportunidadVentas(d: DatosOportunidad): Promise<Resul
     .insert({
       nombre: titulo,
       cliente_id: clienteId,
+      empresa_id: empresaId,
       contacto_nombre: nulo(d.contacto_nombre, 200),
-      empresa_nombre: nulo(d.empresa_nombre, 200),
+      empresa_nombre: empresaId ? null : nulo(d.empresa_nombre, 200),
       email: nulo(d.email, 200) ?? cliente?.email ?? null,
       telefono: nulo(d.telefono, 60) ?? cliente?.telefono ?? null,
       ciudad: nulo(d.ciudad, 120) ?? cliente?.ciudad ?? null,
@@ -205,7 +218,7 @@ export async function crearOportunidadVentas(d: DatosOportunidad): Promise<Resul
   }
   await anotar(data.id, "Oportunidad creada");
 
-  refrescar(clienteId && `/crm/ventas/clientes/${clienteId}`);
+  refrescar(clienteId && `/crm/ventas/clientes/${clienteId}`, empresaId && `/crm/empresas/${empresaId}`);
   return { ok: true, mensaje: `${titulo} creada.`, id: data.id };
 }
 
@@ -238,7 +251,25 @@ export async function actualizarOportunidadVentas(id: string, d: DatosOportunida
   ] as const) {
     if (d[campo] !== undefined) cambios[campo] = nulo(d[campo], max);
   }
-  if (d.cliente_id !== undefined) cambios.cliente_id = idONulo(d.cliente_id);
+  if (d.cliente_id !== undefined) {
+    cambios.cliente_id = idONulo(d.cliente_id);
+    // Un cliente nuevo en una oportunidad sin empresa le trae la suya.
+    if (cambios.cliente_id && d.empresa_id === undefined) {
+      const [{ data: actual }, { data: cliente }] = await Promise.all([
+        supabase.from("ventas_oportunidades").select("empresa_id").eq("id", id).maybeSingle(),
+        supabase.from("ventas_clientes").select("empresa_id").eq("id", cambios.cliente_id as string).maybeSingle(),
+      ]);
+      if (!actual?.empresa_id && cliente?.empresa_id) {
+        cambios.empresa_id = cliente.empresa_id;
+        cambios.empresa_nombre = null;
+      }
+    }
+  }
+  if (d.empresa_id !== undefined) {
+    cambios.empresa_id = idONulo(d.empresa_id);
+    // Elegida una empresa del CRM, el nombre escrito a mano sobra.
+    if (cambios.empresa_id) cambios.empresa_nombre = null;
+  }
   if (d.equipo_id !== undefined) cambios.equipo_id = idONulo(d.equipo_id);
   if (d.comercial_id !== undefined) {
     cambios.comercial_id = idONulo(d.comercial_id);
@@ -745,7 +776,6 @@ export async function borrarEquipoVentas(id: string): Promise<Resultado> {
 export type DatosCliente = {
   id?: string;
   nombre: string;
-  es_empresa?: boolean;
   empresa_id?: string | null;
   puesto?: string | null;
   email?: string | null;
@@ -766,12 +796,10 @@ export async function guardarClienteVentas(d: DatosCliente): Promise<Resultado> 
   const nombre = texto(d.nombre, 200);
   if (nombre.length < 2) return { ok: false, mensaje: "Pon el nombre del cliente." };
   const supabase = await createClient();
-  const esEmpresa = !!d.es_empresa;
   const fila = {
     nombre,
-    es_empresa: esEmpresa,
-    empresa_id: esEmpresa ? null : idONulo(d.empresa_id),
-    puesto: esEmpresa ? null : nulo(d.puesto, 120),
+    empresa_id: idONulo(d.empresa_id),
+    puesto: nulo(d.puesto, 120),
     email: nulo(d.email, 200),
     telefono: nulo(d.telefono, 60),
     movil: nulo(d.movil, 60),
@@ -792,6 +820,24 @@ export async function guardarClienteVentas(d: DatosCliente): Promise<Resultado> 
   if (error) return { ok: false, mensaje: `No se pudo guardar el cliente: ${error.message}` };
   refrescar(`/crm/ventas/clientes/${data.id}`);
   return { ok: true, mensaje: d.id ? "Cliente guardado." : `${nombre} creado.`, id: data.id };
+}
+
+/**
+ * Alta rápida de una empresa del CRM desde Ventas (al elegir la empresa de un
+ * cliente o de una oportunidad). Entra como prospecto; el resto se completa en su ficha.
+ */
+export async function crearEmpresaDesdeVentas(nombreEmpresa: string): Promise<Resultado> {
+  const nombre = texto(nombreEmpresa, 200);
+  if (nombre.length < 2) return { ok: false, mensaje: "Pon el nombre de la empresa." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("empresas")
+    .insert({ nombre, tipo: "prospecto", sector: "otros", pais: "España", estado: "activa", responsable_id: (await usuarioActual()).miembro?.id ?? null })
+    .select("id")
+    .single();
+  if (error) return { ok: false, mensaje: `No se pudo crear la empresa: ${error.message}` };
+  refrescar("/crm/empresas", "/crm/oportunidades");
+  return { ok: true, mensaje: `${nombre} creada en Empresas.`, id: data.id };
 }
 
 export async function archivarClienteVentas(id: string, archivar = true): Promise<Resultado> {
@@ -989,10 +1035,13 @@ export async function importarOportunidadesVentas(filas: DatosOportunidad[]): Pr
   const supabase = await createClient();
 
   // Todo lo que se consulta por fila al crear una a mano, aquí se carga una vez.
-  const [{ data: etapas }, { data: miembros }] = await Promise.all([
+  const [{ data: etapas }, { data: miembros }, { data: empresas }] = await Promise.all([
     supabase.from("ventas_etapas").select("*").order("orden").returns<EtapaVentas[]>(),
     supabase.from("ventas_equipo_miembros").select("equipo_id, miembro_id"),
+    supabase.from("empresas").select("id, nombre").returns<{ id: string; nombre: string }[]>(),
   ]);
+  // La columna «Empresa» del archivo se enlaza con la empresa del CRM del mismo nombre.
+  const empresaPorNombre = new Map((empresas ?? []).map((e) => [normalizarTexto(e.nombre.trim()), e.id]));
   const porId = new Map((etapas ?? []).map((e) => [e.id, { ...e, probabilidad: Number(e.probabilidad) }]));
   const primera = [...porId.values()].find((e) => !e.ganada) ?? null;
   const equipoDeMiembro = new Map<string, string>();
@@ -1000,8 +1049,8 @@ export async function importarOportunidadesVentas(filas: DatosOportunidad[]): Pr
 
   const idsCliente = [...new Set(filas.map((f) => idONulo(f.cliente_id)).filter(Boolean) as string[])];
   const { data: clientes } = idsCliente.length
-    ? await supabase.from("ventas_clientes").select("id, nombre, email, telefono, ciudad, pais").in("id", idsCliente)
-    : { data: [] as { id: string; nombre: string; email: string | null; telefono: string | null; ciudad: string | null; pais: string }[] };
+    ? await supabase.from("ventas_clientes").select("id, nombre, empresa_id, email, telefono, ciudad, pais").in("id", idsCliente)
+    : { data: [] as { id: string; nombre: string; empresa_id: string | null; email: string | null; telefono: string | null; ciudad: string | null; pais: string }[] };
   const clientePorId = new Map((clientes ?? []).map((c) => [c.id, c]));
 
   // Las importadas entran arriba de su columna, en el orden del archivo.
@@ -1029,14 +1078,17 @@ export async function importarOportunidadesVentas(filas: DatosOportunidad[]): Pr
     const e = porId.get(idONulo(d.etapa_id) ?? "") ?? primera;
     const comercial = idONulo(d.comercial_id);
     const probabilidad = numero(d.probabilidad);
+    const empresaNombre = nulo(d.empresa_nombre, 200);
+    const empresaId = (empresaNombre && empresaPorNombre.get(normalizarTexto(empresaNombre))) || cliente?.empresa_id || null;
     nuevas.push({
       linea: i + 2,
       etiquetas: (Array.isArray(d.etiquetas) ? d.etiquetas : []).map(idONulo).filter(Boolean) as string[],
       fila: {
         nombre: titulo,
         cliente_id: cliente?.id ?? null,
+        empresa_id: empresaId,
         contacto_nombre: nulo(d.contacto_nombre, 200),
-        empresa_nombre: nulo(d.empresa_nombre, 200),
+        empresa_nombre: empresaId ? null : empresaNombre,
         email: nulo(d.email, 200) ?? cliente?.email ?? null,
         telefono: nulo(d.telefono, 60) ?? cliente?.telefono ?? null,
         ciudad: nulo(d.ciudad, 120) ?? cliente?.ciudad ?? null,

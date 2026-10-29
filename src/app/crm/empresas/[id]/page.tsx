@@ -28,8 +28,10 @@ import {
 import { catalogos as leerCatalogos } from "@/lib/datos/b2b";
 import { obtenerEmpresa, type EmpresaFicha } from "@/lib/datos/empresas";
 import { listarInteracciones } from "@/lib/datos/interacciones";
+import { catalogosVentas, clientesDeEmpresa, oportunidadesDeEmpresa } from "@/lib/datos/ventas";
+import { rutaVentas } from "@/lib/ventas";
 import { dinero, fecha, fechaHora, numero, relativo } from "@/lib/formato";
-import { Seccion, SinDatos, claseBotonPrincipal } from "@/components/crm/Primitivas";
+import { Seccion, SinDatos, claseBotonPrincipal, claseBotonSecundario } from "@/components/crm/Primitivas";
 import {
   Avatar,
   BadgeEstadoEmpresa,
@@ -53,9 +55,10 @@ import {
   NotaRapida,
   NotasEmpresa,
   PestanasEmpresa,
-  claseBotonSecundario,
 } from "@/components/crm/empresas/ControlesEmpresa";
 import { urlWeb, webLimpia } from "@/components/crm/empresas/CamposEmpresa";
+import { NuevoCliente } from "@/components/crm/ventas/clientes/NuevoCliente";
+import { ListaOportunidades } from "@/components/crm/ventas/clientes/ListaOportunidades";
 
 export const dynamic = "force-dynamic";
 
@@ -92,10 +95,13 @@ export default async function PaginaEmpresa({
 }) {
   const [{ id }, { tab }] = await Promise.all([params, searchParams]);
   if (!UUID.test(id)) notFound();
-  const [empresa, catalogos, interacciones] = await Promise.all([
+  const [empresa, catalogos, interacciones, catsVentas, clientesVentas, opsVentas] = await Promise.all([
     obtenerEmpresa(id),
     leerCatalogos(),
     listarInteracciones({ empresaId: id }),
+    catalogosVentas(),
+    clientesDeEmpresa(id),
+    oportunidadesDeEmpresa(id),
   ]);
   if (!empresa) notFound();
 
@@ -424,6 +430,59 @@ export default async function PaginaEmpresa({
     </div>
   );
 
+  // Ventas: personas de esta empresa que son clientes de Ventas y sus oportunidades del flujo.
+  const ventas = (
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <Seccion
+        titulo="Clientes de Ventas"
+        extra={
+          <NuevoCliente
+            empresas={catsVentas.empresas}
+            comerciales={catsVentas.comerciales}
+            empresa={{ id: empresa.id, nombre: empresa.nombre, logo_url: empresa.logo_url, ciudad: empresa.ciudad }}
+          >
+            <button type="button" className="inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-acento-tinta underline-offset-4 hover:underline">
+              <UserPlus className="size-4" aria-hidden />
+              Añadir persona
+            </button>
+          </NuevoCliente>
+        }
+      >
+        {clientesVentas.length === 0 ? (
+          <p className="text-sm text-tinta-2">Nadie de esta empresa es cliente de Ventas todavía.</p>
+        ) : (
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {clientesVentas.map((c) => (
+              <li key={c.id}>
+                <Link href={rutaVentas.cliente(c.id)} className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-placa-2/60">
+                  <Avatar nombre={c.nombre} tamano="sm" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-tinta">{c.nombre}</span>
+                    <span className="block truncate text-xs text-tinta-2">{c.email ?? c.telefono ?? "Sin datos de contacto"}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Seccion>
+      <Seccion
+        titulo="Oportunidades de Ventas"
+        extra={
+          <Link
+            href={`${rutaVentas.flujo}?nuevo=1&empresa=${empresa.id}&f=abiertas,ganadas,perdidas`}
+            className="inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-acento-tinta underline-offset-4 hover:underline"
+          >
+            <Plus className="size-4" weight="bold" aria-hidden />
+            Nueva
+          </Link>
+        }
+      >
+        <ListaOportunidades oportunidades={opsVentas} etapas={catsVentas.etapas} vacio="Esta empresa no tiene oportunidades en el flujo de Ventas." />
+      </Seccion>
+    </div>
+  );
+
   const notasPanel = (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <Seccion titulo="Notas generales">
@@ -526,6 +585,7 @@ export default async function PaginaEmpresa({
           { id: "general", texto: "General", contenido: general },
           { id: "contactos", texto: "Contactos", n: empresa.contactos.length, contenido: contactos },
           { id: "oportunidades", texto: "Oportunidades", n: ops.length, contenido: oportunidades },
+          { id: "ventas", texto: "Ventas", n: clientesVentas.length + opsVentas.length, contenido: ventas },
           { id: "actividad", texto: "Actividad", n: interacciones.length, contenido: actividad },
           { id: "notas", texto: "Notas", n: notas.length, contenido: notasPanel },
         ]}

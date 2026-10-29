@@ -47,10 +47,10 @@ export default async function PaginaAjustesVentas({ searchParams }: { searchPara
           ))}
         </TabsList>
 
-        <TabsContent value="etapas" className="max-w-4xl">
+        <TabsContent value="etapas">
           <Etapas etapas={cats.etapas} conteo={conteo} />
         </TabsContent>
-        <TabsContent value="etiquetas" className="max-w-2xl">
+        <TabsContent value="etiquetas">
           <Etiquetas etiquetas={cats.etiquetas} />
         </TabsContent>
         <TabsContent value="razones">
@@ -59,7 +59,7 @@ export default async function PaginaAjustesVentas({ searchParams }: { searchPara
         <TabsContent value="tipos">
           <TiposActividad tipos={cats.tipos} />
         </TabsContent>
-        <TabsContent value="planes" className="max-w-5xl">
+        <TabsContent value="planes">
           <Planes planes={cats.planes} tipos={cats.tipos} comerciales={cats.comerciales} />
         </TabsContent>
       </Tabs>

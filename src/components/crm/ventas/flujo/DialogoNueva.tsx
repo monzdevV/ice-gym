@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { crearOportunidadVentas, type DatosOportunidad } from "@/app/crm/acciones/ventas";
 import { nombreCompleto, tonoColor } from "@/lib/b2b";
 import type { CatalogosVentas } from "@/lib/datos/ventas";
-import { esFechaValida, leerImporte, rutaVentas } from "@/lib/ventas";
+import { esFechaValida, leerImporte, rutaVentas, type EmpresaVentas } from "@/lib/ventas";
 import { claseBotonPrincipal, claseCampo } from "@/components/crm/Primitivas";
 import { Selector } from "@/components/crm/actividad/Selector";
+import { ElegirEmpresa } from "@/components/crm/ventas/ficha/Elegir";
 import { EstrellasEditables } from "./Estrellas";
 
 /** Lo que llega rellenado al abrir: desde una columna, un día del calendario o un enlace. */
@@ -66,14 +67,25 @@ export function DialogoNueva({
 
   const poner = <K extends keyof Prefill>(k: K, v: Prefill[K]) => setD((a) => ({ ...a, [k]: v }));
 
+  // Recién creada desde el selector: aún no está en el catálogo hasta refrescar.
+  const [empresaCreada, setEmpresaCreada] = useState<EmpresaVentas | null>(null);
+  const empresa = catalogos.empresas.find((e) => e.id === d.empresa_id) ?? (empresaCreada?.id === d.empresa_id ? empresaCreada : null);
+
   function elegirCliente(id: string) {
     const c = catalogos.clientes.find((x) => x.id === id);
     setD((a) => ({
       ...a,
       cliente_id: id || null,
+      // Sin empresa elegida, la del cliente.
+      empresa_id: a.empresa_id || c?.empresa_id || null,
       email: a.email || c?.email || "",
       telefono: a.telefono || c?.telefono || "",
     }));
+  }
+
+  function elegirEmpresa(e: EmpresaVentas | null) {
+    if (e && !catalogos.empresas.some((x) => x.id === e.id)) setEmpresaCreada(e);
+    setD((a) => ({ ...a, empresa_id: e?.id ?? null }));
   }
 
   function elegirEtapa(id: string) {
@@ -110,7 +122,7 @@ export function DialogoNueva({
       <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Nueva oportunidad</DialogTitle>
-          <DialogDescription>Lo mínimo es un nombre o un cliente; el resto se puede completar después en la ficha.</DialogDescription>
+          <DialogDescription>Lo mínimo es un nombre, un cliente o una empresa; el resto se puede completar después en la ficha.</DialogDescription>
         </DialogHeader>
 
         <form
@@ -159,15 +171,16 @@ export function DialogoNueva({
               </select>
             </Campo>
 
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={`${idError}-empresa`} className={claseEtiqueta}>
+                Empresa
+              </label>
+              <ElegirEmpresa id={`${idError}-empresa`} valor={empresa} empresas={catalogos.empresas} onCambio={elegirEmpresa} sinElegir="Elige o crea una empresa" claseBoton={claseCampo} />
+            </div>
             {!d.cliente_id && (
-              <>
-                <Campo etiqueta="Contacto">
-                  <input value={d.contacto_nombre ?? ""} onChange={(e) => poner("contacto_nombre", e.target.value)} maxLength={200} placeholder="Nombre de la persona" className={claseCampo} />
-                </Campo>
-                <Campo etiqueta="Empresa">
-                  <input value={d.empresa_nombre ?? ""} onChange={(e) => poner("empresa_nombre", e.target.value)} maxLength={200} placeholder="Si aún no es cliente" className={claseCampo} />
-                </Campo>
-              </>
+              <Campo etiqueta="Contacto">
+                <input value={d.contacto_nombre ?? ""} onChange={(e) => poner("contacto_nombre", e.target.value)} maxLength={200} placeholder="Nombre de la persona" className={claseCampo} />
+              </Campo>
             )}
 
             <Campo etiqueta="Correo electrónico">

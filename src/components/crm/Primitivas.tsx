@@ -137,6 +137,10 @@ export const claseEnlace =
 export const claseBotonPrincipal =
   "inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-acento px-4 text-sm font-semibold text-sobre-campo transition-[background-color,transform] duration-150 ease-out hover:bg-acento/90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50";
 
+/** Botón secundario (placa con sombra), al lado del principal. */
+export const claseBotonSecundario =
+  "inline-flex h-8 items-center gap-1.5 rounded-md bg-placa px-3 text-[0.8125rem] font-medium text-tinta shadow-placa transition-colors hover:bg-placa-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento disabled:opacity-50";
+
 /** Campo de formulario. */
 export const claseCampo =
   "h-9 w-full rounded-lg border border-linea-campo bg-placa px-3 text-sm text-tinta outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-tinta-2 focus:border-acento-tinta aria-invalid:border-critico aria-invalid:ring-3 aria-invalid:ring-critico/20";

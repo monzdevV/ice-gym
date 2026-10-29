@@ -3,14 +3,14 @@
 import { useId, useState } from "react";
 import Link from "next/link";
 import { ArrowCounterClockwise, ArrowSquareOut, EnvelopeSimple, Phone } from "@phosphor-icons/react";
-import { nombreCompleto } from "@/lib/b2b";
+import { nombreCompleto, ruta } from "@/lib/b2b";
 import type { CatalogosVentas } from "@/lib/datos/ventas";
 import { ingresoEsperado, rutaVentas, type OportunidadVentasCompleta } from "@/lib/ventas";
 import { dinero } from "@/lib/formato";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { claseCampo } from "@/components/crm/Primitivas";
 import { EstrellasEditables, Fila, NumeroEnLinea, SelectEnLinea, TextoEnLinea } from "./Editables";
-import { ElegirCliente, ElegirEtiquetas } from "./Elegir";
+import { ElegirCliente, ElegirEmpresa, ElegirEtiquetas } from "./Elegir";
 import { useGuardar } from "./useGuardar";
 
 const enlaceIcono = "grid size-7 shrink-0 place-items-center rounded-md text-acento-tinta hover:bg-placa-2";
@@ -19,6 +19,7 @@ const enlaceIcono = "grid size-7 shrink-0 place-items-center rounded-md text-ace
 export function CamposFicha({ o, catalogos }: { o: OportunidadVentasCompleta; catalogos: CatalogosVentas }) {
   const { guardar, pendiente, estado } = useGuardar(o.id);
   const idCliente = useId();
+  const idEmpresa = useId();
   const idEtiquetas = useId();
   const etapa = catalogos.etapas.find((e) => e.id === o.etapa_id);
   const cerrada = o.estado !== "abierta";
@@ -91,7 +92,24 @@ export function CamposFicha({ o, catalogos }: { o: OportunidadVentasCompleta; ca
             </span>
           </Fila>
           <TextoEnLinea etiqueta="Contacto" valor={o.contacto_nombre} onGuardar={(v) => guardar({ contacto_nombre: v })} placeholder="Nombre de la persona" />
-          <TextoEnLinea etiqueta="Empresa" valor={o.empresa_nombre} onGuardar={(v) => guardar({ empresa_nombre: v })} placeholder="Si aún no es cliente" />
+          <Fila etiqueta="Empresa" htmlFor={idEmpresa}>
+            <span className="flex items-center gap-1">
+              <span className="min-w-0 flex-1">
+                <ElegirEmpresa
+                  id={idEmpresa}
+                  valor={o.empresa}
+                  empresas={catalogos.empresas}
+                  onCambio={(e) => guardar({ empresa_id: e?.id ?? null })}
+                  sinElegir={o.empresa_nombre ? `${o.empresa_nombre} (sin dar de alta)` : undefined}
+                />
+              </span>
+              {o.empresa && (
+                <Link href={ruta.empresa(o.empresa.id)} className={enlaceIcono} title="Abrir la empresa" aria-label={`Abrir la empresa ${o.empresa.nombre}`}>
+                  <ArrowSquareOut className="size-4" aria-hidden />
+                </Link>
+              )}
+            </span>
+          </Fila>
           <ConEnlace href={o.email ? `mailto:${o.email}` : null} icono="email">
             <TextoEnLinea etiqueta="Correo electrónico" valor={o.email} tipo="email" onGuardar={(v) => guardar({ email: v })} placeholder="nombre@empresa.es" />
           </ConEnlace>

@@ -23,7 +23,7 @@ export function EsqueletoAjustesVentas() {
           <span key={i} className="h-8 w-28 rounded bg-placa-2" />
         ))}
       </div>
-      <div className="max-w-4xl overflow-hidden rounded-2xl bg-placa shadow-placa">
+      <div className="overflow-hidden rounded-2xl bg-placa shadow-placa">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 border-b border-linea/70 px-4 py-4 last:border-0">
             <span className="h-10 w-6 rounded bg-placa-2" />

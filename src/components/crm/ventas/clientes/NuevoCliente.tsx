@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "@phosphor-icons/react";
 import type { Miembro } from "@/lib/b2b";
-import { rutaVentas, type ClienteMini } from "@/lib/ventas";
+import { rutaVentas, type EmpresaVentas } from "@/lib/ventas";
 import { claseBotonPrincipal } from "@/components/crm/Primitivas";
 import { DialogoFormulario } from "@/components/crm/ventas/configuracion/Comun";
 import { FormularioCliente } from "./FormularioCliente";
@@ -16,9 +16,9 @@ export function NuevoCliente({
   empresa,
   children,
 }: {
-  empresas: ClienteMini[];
+  empresas: EmpresaVentas[];
   comerciales: Miembro[];
-  empresa?: string;
+  empresa?: EmpresaVentas;
   /** Botón propio; por defecto, «Nuevo cliente». */
   children?: ReactNode;
 }) {
@@ -44,8 +44,8 @@ export function NuevoCliente({
       <DialogoFormulario
         abierto={abierto}
         onCerrar={() => setAbierto(false)}
-        titulo={empresa ? "Nueva persona de contacto" : "Nuevo cliente"}
-        descripcion="Una persona o una empresa a la que vendes."
+        titulo={empresa ? `Nueva persona de ${empresa.nombre}` : "Nuevo cliente"}
+        descripcion="Una persona a la que vendes. Su empresa es una de las del CRM, las mismas de Oportunidades."
       >
         <FormularioCliente
           key={vez}

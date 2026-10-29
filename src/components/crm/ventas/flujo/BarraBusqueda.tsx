@@ -166,6 +166,7 @@ export function BarraBusqueda({
     return x ? txt(x) : "…";
   };
   if (f.cliente) facetas.push({ clave: "cliente", icono: <Funnel className="size-3" weight="fill" />, texto: `Cliente: ${nombreDe(catalogos.clientes, f.cliente, (c) => c.nombre)}`, quitar: () => cambiar({ cliente: "" }) });
+  if (f.empresa) facetas.push({ clave: "empresa", icono: <Funnel className="size-3" weight="fill" />, texto: `Empresa: ${nombreDe(catalogos.empresas, f.empresa, (e) => e.nombre)}`, quitar: () => cambiar({ empresa: "" }) });
   if (f.etapa) facetas.push({ clave: "etapa", icono: <Funnel className="size-3" weight="fill" />, texto: `Etapa: ${nombreDe(catalogos.etapas, f.etapa, (e) => e.nombre)}`, quitar: () => cambiar({ etapa: "" }) });
   if (f.agrupar.length)
     facetas.push({

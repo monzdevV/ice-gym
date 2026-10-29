@@ -5,7 +5,7 @@
  * Tablas Supabase: ventas_* (ver supabase/ventas.sql). Los comerciales son `equipo`.
  */
 
-import type { ColorEquipo, MiembroMini } from "@/lib/b2b";
+import type { ColorEquipo, Empresa, MiembroMini } from "@/lib/b2b";
 import { incluye } from "@/lib/b2b";
 
 /* ------------------------------- Catálogos ------------------------------- */
@@ -75,7 +75,6 @@ export type EquipoMini = Pick<EquipoVentas, "id" | "nombre" | "color">;
 export type ClienteVentas = {
   id: string;
   nombre: string;
-  es_empresa: boolean;
   empresa_id: string | null;
   puesto: string | null;
   email: string | null;
@@ -94,10 +93,13 @@ export type ClienteVentas = {
   created_at: string;
   updated_at: string;
 };
-export type ClienteMini = Pick<ClienteVentas, "id" | "nombre" | "es_empresa" | "email" | "telefono" | "ciudad" | "pais">;
+export type ClienteMini = Pick<ClienteVentas, "id" | "nombre" | "empresa_id" | "email" | "telefono" | "ciudad" | "pais">;
+
+/** Empresa del CRM (tabla `empresas`, la misma de Oportunidades) tal como la usa Ventas. */
+export type EmpresaVentas = Pick<Empresa, "id" | "nombre" | "logo_url" | "ciudad">;
 
 export type ClienteCompleto = ClienteVentas & {
-  empresa: Pick<ClienteVentas, "id" | "nombre"> | null;
+  empresa: EmpresaVentas | null;
   comercial: MiembroMini | null;
 };
 
@@ -115,6 +117,7 @@ export type OportunidadVentas = {
   id: string;
   nombre: string;
   cliente_id: string | null;
+  empresa_id: string | null;
   contacto_nombre: string | null;
   empresa_nombre: string | null;
   email: string | null;
@@ -157,6 +160,7 @@ export type ActividadMini = {
 
 export type OportunidadVentasCompleta = OportunidadVentas & {
   cliente: ClienteMini | null;
+  empresa: EmpresaVentas | null;
   comercial: MiembroMini | null;
   equipo: EquipoMini | null;
   motivo: Pick<MotivoPerdida, "id" | "nombre"> | null;
@@ -166,11 +170,11 @@ export type OportunidadVentasCompleta = OportunidadVentas & {
 };
 
 export const SELECT_OPORTUNIDAD_VENTAS =
-  "*, cliente:ventas_clientes(id, nombre, es_empresa, email, telefono, ciudad, pais), comercial:equipo(id, nombre, apellidos, color), equipo:ventas_equipos(id, nombre, color), motivo:ventas_motivos_perdida(id, nombre), etiquetas:ventas_etiquetas(id, nombre, color), actividades:ventas_actividades(id, vence, resumen, estado, tipo_id, asignado_id)";
+  "*, cliente:ventas_clientes(id, nombre, empresa_id, email, telefono, ciudad, pais), empresa:empresas(id, nombre, logo_url, ciudad), comercial:equipo(id, nombre, apellidos, color), equipo:ventas_equipos(id, nombre, color), motivo:ventas_motivos_perdida(id, nombre), etiquetas:ventas_etiquetas(id, nombre, color), actividades:ventas_actividades(id, vence, resumen, estado, tipo_id, asignado_id)";
 
-/** Quién: el cliente, o el contacto escrito a mano si aún no es cliente. */
-export function quienVenta(o: Pick<OportunidadVentasCompleta, "cliente" | "contacto_nombre" | "empresa_nombre">) {
-  return o.cliente?.nombre ?? o.empresa_nombre ?? o.contacto_nombre ?? null;
+/** Quién: el cliente, su empresa o lo escrito a mano si aún no está dado de alta. */
+export function quienVenta(o: Pick<OportunidadVentasCompleta, "cliente" | "empresa" | "contacto_nombre" | "empresa_nombre">) {
+  return o.cliente?.nombre ?? o.empresa?.nombre ?? o.empresa_nombre ?? o.contacto_nombre ?? null;
 }
 
 /**
@@ -401,6 +405,7 @@ export type FiltrosVentas = {
   equipo: string;
   comercial: string;
   cliente: string;
+  empresa: string;
   etiqueta: string;
   etapa: string;
   fecha: CampoFechaVentas;
@@ -426,6 +431,7 @@ export const DEFECTO_VENTAS: FiltrosVentas = {
   equipo: "",
   comercial: "",
   cliente: "",
+  empresa: "",
   etiqueta: "",
   etapa: "",
   fecha: "creacion",
@@ -470,6 +476,7 @@ export function leerFiltrosVentas(fuente: Fuente): FiltrosVentas {
     equipo: id("equipo"),
     comercial: comercial === "sin" ? "sin" : id("comercial"),
     cliente: id("cliente"),
+    empresa: id("empresa"),
     etiqueta: id("etiqueta"),
     etapa: id("etapa"),
     fecha: Object.hasOwn(CAMPOS_FECHA_VENTAS, fecha) ? (fecha as CampoFechaVentas) : DEFECTO_VENTAS.fecha,
@@ -502,7 +509,7 @@ export function escribirFiltrosVentas(f: Partial<FiltrosVentas>, base = new URLS
 
 /** Filtros de datos activos (sin vista, orden ni opciones de análisis). */
 export function cuantosFiltrosVentas(f: FiltrosVentas) {
-  return [f.q, f.f.length, f.equipo, f.comercial, f.cliente, f.etiqueta, f.etapa, f.desde || f.hasta].filter(Boolean).length;
+  return [f.q, f.f.length, f.equipo, f.comercial, f.cliente, f.empresa, f.etiqueta, f.etapa, f.desde || f.hasta].filter(Boolean).length;
 }
 
 export function normalizarTexto(t: string) {

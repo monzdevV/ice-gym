@@ -19,12 +19,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { crearInteraccion, type Resultado } from "@/app/crm/acciones/b2b";
 import { actualizarEmpresa, borrarEmpresa, guardarNotasEmpresa, marcarContactoPrincipal } from "@/app/crm/acciones/empresas";
 import { ruta, type Empresa, type Miembro } from "@/lib/b2b";
-import { claseBotonPrincipal, claseCampo, claseError } from "@/components/crm/Primitivas";
+import { claseBotonPrincipal, claseBotonSecundario, claseCampo, claseError } from "@/components/crm/Primitivas";
 import { useFormularioAccion } from "@/components/crm/b2b/useFormularioAccion";
 import { CamposEmpresa } from "./CamposEmpresa";
-
-export const claseBotonSecundario =
-  "inline-flex h-8 items-center gap-1.5 rounded-md bg-placa px-3 text-[0.8125rem] font-medium text-tinta shadow-placa transition-colors hover:bg-placa-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento disabled:opacity-50";
 
 function Enviar({
   texto,

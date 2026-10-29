@@ -6,7 +6,7 @@ Lo que falta para dar por terminado Ice Gym (landing + CRM comercial + ventas + 
 
 Nada de lo nuevo funciona hasta ejecutar estos scripts en el SQL Editor de Supabase. Se pueden volver a ejecutar sin romper nada.
 
-- [ ] `supabase/ventas.sql`: tablas del segmento Ventas, permisos (RLS) y valores por defecto (etapas Nuevo / Calificado / Propuesta / Ganado, razones de pérdida, tipos de actividad y el equipo «Ventas»).
+- [ ] `supabase/ventas.sql`: tablas del segmento Ventas, permisos (RLS) y valores por defecto (etapas Nuevo / Calificado / Propuesta / Ganado, razones de pérdida, tipos de actividad y el equipo «Ventas»). Volver a ejecutarlo aunque ya estuviera aplicado: Ventas ya no tiene empresas propias y usa las de `empresas` (las de Oportunidades); el script pasa allí las empresas que hubiera en Ventas y enlaza sus personas y oportunidades.
 - [ ] `supabase/facturas.sql`: tabla `facturas` (la usan el agente de `agente/` y la pantalla `/crm/facturas`) y bucket privado «facturas». Sustituye a la antigua `supabase/migrations/20261019_facturas.sql`.
 - [ ] Comprobar que `supabase/rrhh.sql` ya está aplicado en el proyecto de producción.
 

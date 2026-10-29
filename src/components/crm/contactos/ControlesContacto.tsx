@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { claseBotonPrincipal, claseCampo } from "@/components/crm/Primitivas";
+import { claseBotonPrincipal, claseBotonSecundario, claseCampo } from "@/components/crm/Primitivas";
 import { actualizarContacto, borrarContacto, guardarNotasContacto } from "@/app/crm/acciones/contactos";
 import { cambiarEstadoInteraccion, type Resultado } from "@/app/crm/acciones/b2b";
 import { nombreCompleto, ruta, type Contacto } from "@/lib/b2b";
@@ -29,9 +29,6 @@ import type { Catalogos } from "@/lib/datos/b2b";
 import { useFormularioAccion } from "@/components/crm/b2b/useFormularioAccion";
 import { CamposContacto } from "./FormularioContacto";
 import { copiar } from "./AccionesContacto";
-
-export const claseBotonSecundario =
-  "inline-flex h-8 items-center gap-1.5 rounded-md bg-placa px-3 text-[0.8125rem] font-medium text-tinta shadow-placa transition-colors hover:bg-placa-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento";
 
 /* ------------------------------ Editar (Sheet) ------------------------------ */
 

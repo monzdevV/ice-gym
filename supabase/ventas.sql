@@ -4,8 +4,9 @@
 -- comercial B2B y de RRHH.
 --
 -- Ejecútalo una vez en el SQL Editor de Supabase (se puede volver a ejecutar).
--- No toca las tablas comerciales ni las de RRHH. Los comerciales son los
--- miembros de la tabla `equipo` del CRM.
+-- No cambia las tablas comerciales ni las de RRHH. Los comerciales son los
+-- miembros de la tabla `equipo` del CRM y las empresas son las de `empresas`,
+-- las mismas de Oportunidades y Contactos: Ventas no tiene empresas propias.
 --
 -- Seguridad: RLS en todas las tablas; como en el comercial, el equipo con
 -- sesión (rol authenticated) trabaja sobre todo el segmento.
@@ -92,11 +93,11 @@ create table if not exists public.ventas_equipo_miembros (
 
 /* --------------------------------- Clientes -------------------------------- */
 
+-- Personas a las que se vende. Su empresa es una de `empresas`.
 create table if not exists public.ventas_clientes (
   id            uuid primary key default gen_random_uuid(),
   nombre        text not null,
-  es_empresa    boolean not null default false,
-  empresa_id    uuid references public.ventas_clientes(id) on delete set null,  -- persona: su empresa
+  empresa_id    uuid references public.empresas(id) on delete set null,
   puesto        text,
   email         text,
   telefono      text,
@@ -124,8 +125,9 @@ create table if not exists public.ventas_oportunidades (
   id                 uuid primary key default gen_random_uuid(),
   nombre             text not null,
   cliente_id         uuid references public.ventas_clientes(id) on delete set null,
+  empresa_id         uuid references public.empresas(id) on delete set null,
   contacto_nombre    text,                         -- quién, si aún no es cliente
-  empresa_nombre     text,
+  empresa_nombre     text,                         -- su empresa, si aún no está en `empresas`
   email              text,
   telefono           text,
   ciudad             text,
@@ -158,6 +160,66 @@ create index if not exists ventas_oportunidades_etapa_idx on public.ventas_oport
 create index if not exists ventas_oportunidades_comercial_idx on public.ventas_oportunidades (comercial_id);
 create index if not exists ventas_oportunidades_equipo_idx on public.ventas_oportunidades (equipo_id);
 create index if not exists ventas_oportunidades_cliente_idx on public.ventas_oportunidades (cliente_id);
+
+/* ------------------- Empresas comunes con el comercial B2B ------------------ */
+
+-- Bases creadas con la primera versión: Ventas tenía sus propias empresas
+-- (clientes con es_empresa). Pasan a `empresas` (o se enlazan con la que ya
+-- tenga el mismo CIF o nombre) y sus personas y oportunidades las siguen.
+alter table public.ventas_oportunidades
+  add column if not exists empresa_id uuid references public.empresas(id) on delete set null;
+
+do $$
+declare
+  c record;
+  e uuid;
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'ventas_clientes' and column_name = 'es_empresa'
+  ) then
+    return;
+  end if;
+
+  -- La FK de empresa_id apuntaba a la propia tabla; se rehace abajo hacia `empresas`.
+  alter table public.ventas_clientes drop constraint if exists ventas_clientes_empresa_id_fkey;
+
+  for c in execute 'select * from public.ventas_clientes where es_empresa' loop
+    select id into e from public.empresas
+    where (c.nif is not null and upper(cif) = upper(c.nif)) or lower(nombre) = lower(c.nombre)
+    order by (c.nif is not null and upper(cif) = upper(c.nif)) desc
+    limit 1;
+    if e is null then
+      insert into public.empresas (nombre, tipo, sector, web, email, telefono, direccion, ciudad, pais, cif, notas, estado, responsable_id)
+      values (c.nombre, 'cliente', 'otros', c.web, c.email, coalesce(c.telefono, c.movil), c.direccion, c.ciudad, c.pais,
+              c.nif, c.notas, case when c.activo then 'activa' else 'inactiva' end, c.comercial_id)
+      returning id into e;
+    end if;
+    update public.ventas_clientes set empresa_id = e where empresa_id = c.id;
+    update public.ventas_oportunidades set empresa_id = e, cliente_id = null where cliente_id = c.id;
+    -- Lo que colgaba de una oportunidad sigue en ella; lo que era sólo de la empresa se va con ella.
+    update public.ventas_actividades set cliente_id = null where cliente_id = c.id and oportunidad_id is not null;
+    update public.ventas_mensajes set cliente_id = null where cliente_id = c.id and oportunidad_id is not null;
+    delete from public.ventas_clientes where id = c.id;
+  end loop;
+
+  alter table public.ventas_clientes drop column es_empresa;
+  update public.ventas_clientes v set empresa_id = null
+  where empresa_id is not null and not exists (select 1 from public.empresas x where x.id = v.empresa_id);
+  alter table public.ventas_clientes
+    add constraint ventas_clientes_empresa_id_fkey foreign key (empresa_id) references public.empresas(id) on delete set null;
+end $$;
+
+-- La empresa de la oportunidad: la de su cliente o la escrita a mano, si ya existe.
+update public.ventas_oportunidades o set empresa_id = v.empresa_id
+from public.ventas_clientes v
+where o.cliente_id = v.id and o.empresa_id is null and v.empresa_id is not null;
+
+update public.ventas_oportunidades o set empresa_id = x.id, empresa_nombre = null
+from public.empresas x
+where o.empresa_id is null and o.empresa_nombre is not null and lower(x.nombre) = lower(trim(o.empresa_nombre));
+
+create index if not exists ventas_oportunidades_empresa_idx on public.ventas_oportunidades (empresa_id);
 
 create table if not exists public.ventas_oportunidad_etiquetas (
   oportunidad_id  uuid not null references public.ventas_oportunidades(id) on delete cascade,

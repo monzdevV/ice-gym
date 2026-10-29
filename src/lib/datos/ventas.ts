@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { ETIQUETA_TIPO_EMPRESA, ruta, type Empresa, type MiembroMini } from "@/lib/b2b";
 import { listarEquipo } from "@/lib/datos/b2b";
 import { usuarioActual } from "@/lib/datos/interacciones";
 import {
@@ -12,10 +13,12 @@ import {
   normalizarTexto,
   plazoMasUrgente,
   quienVenta,
+  rutaVentas,
   type ActividadMini,
   type ActividadVentasCompleta,
   type ClienteCompleto,
   type ClienteMini,
+  type EmpresaVentas,
   type EquipoVentas,
   type EtapaVentas,
   type EtiquetaVentas,
@@ -85,10 +88,17 @@ export async function opcionesClientes(): Promise<ClienteMini[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("ventas_clientes")
-    .select("id, nombre, es_empresa, email, telefono, ciudad, pais")
+    .select("id, nombre, empresa_id, email, telefono, ciudad, pais")
     .eq("activo", true)
     .order("nombre")
     .returns<ClienteMini[]>();
+  return data ?? [];
+}
+
+/** Empresas del CRM (las mismas de Oportunidades y Contactos) para elegir en Ventas. */
+export async function opcionesEmpresas(): Promise<EmpresaVentas[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("empresas").select("id, nombre, logo_url, ciudad").order("nombre").returns<EmpresaVentas[]>();
   return data ?? [];
 }
 
@@ -98,7 +108,7 @@ export async function opcionesClientes(): Promise<ClienteMini[]> {
  * Con `cache`: varias piezas de la misma petición lo piden y se consulta una vez.
  */
 export const catalogosVentas = cache(async () => {
-  const [etapas, etiquetas, motivos, tipos, planes, equipos, comerciales, clientes, usuario] = await Promise.all([
+  const [etapas, etiquetas, motivos, tipos, planes, equipos, comerciales, clientes, empresas, usuario] = await Promise.all([
     listarEtapas(),
     listarEtiquetas(),
     listarMotivos(),
@@ -107,9 +117,10 @@ export const catalogosVentas = cache(async () => {
     listarEquiposVentas(),
     listarEquipo(),
     opcionesClientes(),
+    opcionesEmpresas(),
     usuarioActual(),
   ]);
-  return { etapas, etiquetas, motivos, tipos, planes, equipos, comerciales, clientes, yo: usuario.miembro?.id ?? null, email: usuario.email };
+  return { etapas, etiquetas, motivos, tipos, planes, equipos, comerciales, clientes, empresas, yo: usuario.miembro?.id ?? null, email: usuario.email };
 });
 export type CatalogosVentas = Awaited<ReturnType<typeof catalogosVentas>>;
 
@@ -161,6 +172,7 @@ export async function listarOportunidadesVentas(
 
   if (f.equipo) consulta = consulta.eq("equipo_id", f.equipo);
   if (f.cliente) consulta = consulta.eq("cliente_id", f.cliente);
+  if (f.empresa) consulta = consulta.eq("empresa_id", f.empresa);
   if (f.etapa) consulta = consulta.eq("etapa_id", f.etapa);
 
   const campo = f.fecha === "cierre" ? "cerrada_at" : f.fecha === "previsto" ? "cierre_previsto" : "created_at";
@@ -194,7 +206,7 @@ export async function listarOportunidadesVentas(
   if (q) {
     filas = filas.filter((o) =>
       normalizarTexto(
-        [o.nombre, quienVenta(o), o.contacto_nombre, o.email, o.telefono, o.ciudad, o.notas, ...o.etiquetas.map((e) => e.nombre)]
+        [o.nombre, quienVenta(o), o.empresa?.nombre, o.empresa_nombre, o.contacto_nombre, o.email, o.telefono, o.ciudad, o.notas, ...o.etiquetas.map((e) => e.nombre)]
           .filter(Boolean)
           .join(" ")
       ).includes(q)
@@ -347,29 +359,106 @@ export async function resumenEquipos(): Promise<Record<string, ResumenEquipo>> {
 
 /* -------------------------------- Clientes ------------------------------- */
 
-const SELECT_CLIENTE = "*, empresa:ventas_clientes!empresa_id(id, nombre), comercial:equipo(id, nombre, apellidos, color)";
+const SELECT_CLIENTE = "*, empresa:empresas(id, nombre, logo_url, ciudad), comercial:equipo(id, nombre, apellidos, color)";
 
-export type ClienteListado = ClienteCompleto & { oportunidades: number; pendientes: Pick<ActividadMini, "vence" | "estado">[] };
+type Pendiente = Pick<ActividadMini, "vence" | "estado">;
+
+/** Una fila del listado de clientes: una persona de Ventas o una empresa del CRM. */
+export type ClienteListado = {
+  id: string;
+  tipo: "persona" | "empresa";
+  /** Ficha: la de Ventas para personas, la del CRM para empresas. */
+  href: string;
+  nombre: string;
+  /** Puesto y empresa de la persona; tipo de la empresa. */
+  detalle: string;
+  logo_url: string | null;
+  email: string | null;
+  telefono: string | null;
+  ciudad: string | null;
+  pais: string | null;
+  comercial: MiembroMini | null;
+  etiquetas: string[];
+  oportunidades: number;
+  pendientes: Pendiente[];
+  /** Texto extra para la búsqueda (NIF, móvil…). */
+  buscable: string;
+};
+
+/** Empresas que se ven en Clientes: clientes y prospectos, y cualquiera con algo en Ventas. */
+const TIPOS_EMPRESA_CLIENTE = new Set(["cliente", "prospecto"]);
+/** Una empresa archivada en Clientes es una inactiva o bloqueada en el CRM. */
+const ESTADOS_EMPRESA_ARCHIVADA = new Set(["inactiva", "bloqueada"]);
+
+const soloPendientes = (a: Pendiente[] | null | undefined) => (a ?? []).filter((x) => x.estado === "pendiente");
 
 export async function listarClientes(q = "", archivados = false): Promise<ClienteListado[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("ventas_clientes")
-    .select(`${SELECT_CLIENTE}, ops:ventas_oportunidades(id), pendientes:ventas_actividades(vence, estado)`)
-    .eq("activo", !archivados)
-    .order("nombre")
-    .returns<(ClienteCompleto & { ops: { id: string }[]; pendientes: Pick<ActividadMini, "vence" | "estado">[] })[]>();
-  if (error) throw new Error(`No se pudieron cargar los clientes: ${error.message}`);
-  let filas: ClienteListado[] = (data ?? []).map(({ ops, pendientes, ...c }) => ({
-    ...c,
-    oportunidades: ops?.length ?? 0,
-    pendientes: (pendientes ?? []).filter((a) => a.estado === "pendiente"),
+  const [personas, empresas] = await Promise.all([
+    supabase
+      .from("ventas_clientes")
+      .select(`${SELECT_CLIENTE}, ops:ventas_oportunidades(id), pendientes:ventas_actividades(vence, estado)`)
+      .eq("activo", !archivados)
+      .order("nombre")
+      .returns<(ClienteCompleto & { ops: { id: string }[]; pendientes: Pendiente[] })[]>(),
+    supabase
+      .from("empresas")
+      .select(
+        "id, nombre, tipo, estado, email, telefono, ciudad, pais, cif, logo_url, responsable:equipo(id, nombre, apellidos, color), personas:ventas_clientes(id), ops:ventas_oportunidades(id, actividades:ventas_actividades(vence, estado))"
+      )
+      .order("nombre")
+      .returns<
+        (Pick<Empresa, "id" | "nombre" | "tipo" | "estado" | "email" | "telefono" | "ciudad" | "pais" | "cif" | "logo_url"> & {
+          responsable: MiembroMini | null;
+          personas: { id: string }[];
+          ops: { id: string; actividades: Pendiente[] }[];
+        })[]
+      >(),
+  ]);
+  if (personas.error) throw new Error(`No se pudieron cargar los clientes: ${personas.error.message}`);
+  if (empresas.error) throw new Error(`No se pudieron cargar las empresas: ${empresas.error.message}`);
+
+  const filasPersonas: ClienteListado[] = (personas.data ?? []).map((c) => ({
+    id: c.id,
+    tipo: "persona",
+    href: rutaVentas.cliente(c.id),
+    nombre: c.nombre,
+    detalle: [c.puesto, c.empresa?.nombre].filter(Boolean).join(" · ") || "Persona",
+    logo_url: null,
+    email: c.email,
+    telefono: c.telefono || c.movil,
+    ciudad: c.ciudad,
+    pais: c.pais,
+    comercial: c.comercial,
+    etiquetas: c.etiquetas,
+    oportunidades: c.ops?.length ?? 0,
+    pendientes: soloPendientes(c.pendientes),
+    buscable: [c.movil, c.nif, c.empresa?.nombre].filter(Boolean).join(" "),
   }));
+  const filasEmpresas: ClienteListado[] = (empresas.data ?? [])
+    .filter((e) => (TIPOS_EMPRESA_CLIENTE.has(e.tipo) || e.personas.length > 0 || e.ops.length > 0) && ESTADOS_EMPRESA_ARCHIVADA.has(e.estado) === archivados)
+    .map((e) => ({
+      id: e.id,
+      tipo: "empresa",
+      href: ruta.empresa(e.id),
+      nombre: e.nombre,
+      detalle: `Empresa · ${ETIQUETA_TIPO_EMPRESA[e.tipo]}`,
+      logo_url: e.logo_url,
+      email: e.email,
+      telefono: e.telefono,
+      ciudad: e.ciudad,
+      pais: e.pais,
+      comercial: e.responsable,
+      etiquetas: [],
+      oportunidades: e.ops.length,
+      pendientes: soloPendientes(e.ops.flatMap((o) => o.actividades)),
+      buscable: e.cif ?? "",
+    }));
+
+  let filas = [...filasPersonas, ...filasEmpresas].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   const t = normalizarTexto(q.trim());
   if (t) {
-    filas = filas.filter((c) =>
-      normalizarTexto([c.nombre, c.email, c.telefono, c.movil, c.ciudad, c.pais, c.nif, c.empresa?.nombre].filter(Boolean).join(" ")).includes(t)
-    );
+    filas = filas.filter((c) => normalizarTexto([c.nombre, c.detalle, c.email, c.telefono, c.ciudad, c.pais, c.buscable].filter(Boolean).join(" ")).includes(t));
   }
   return filas;
 }
@@ -380,16 +469,28 @@ export async function obtenerCliente(id: string): Promise<ClienteCompleto | null
   return data ?? null;
 }
 
-/** Personas que trabajan en un cliente empresa. */
-export async function contactosDeCliente(id: string): Promise<ClienteMini[]> {
+/** Clientes de Ventas que trabajan en una empresa del CRM. */
+export async function clientesDeEmpresa(empresaId: string): Promise<ClienteMini[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("ventas_clientes")
-    .select("id, nombre, es_empresa, email, telefono, ciudad, pais")
-    .eq("empresa_id", id)
+    .select("id, nombre, empresa_id, email, telefono, ciudad, pais")
+    .eq("empresa_id", empresaId)
     .order("nombre")
     .returns<ClienteMini[]>();
   return data ?? [];
+}
+
+/** Oportunidades de Ventas de una empresa del CRM, en cualquier estado. */
+export async function oportunidadesDeEmpresa(empresaId: string): Promise<OportunidadVentasCompleta[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("ventas_oportunidades")
+    .select(SELECT_OPORTUNIDAD_VENTAS)
+    .eq("empresa_id", empresaId)
+    .order("created_at", { ascending: false })
+    .returns<OportunidadVentasCompleta[]>();
+  return (data ?? []).map(limpiar);
 }
 
 /** Oportunidades de un cliente, en cualquier estado (smart button de su ficha). */

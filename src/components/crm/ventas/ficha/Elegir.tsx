@@ -4,9 +4,9 @@ import { useEffect, useId, useMemo, useRef, useState, useTransition, type ReactN
 import { Buildings, CaretUpDown, Check, MagnifyingGlass, Plus, User, X } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { guardarClienteVentas, guardarEtiquetaVentas } from "@/app/crm/acciones/ventas";
+import { crearEmpresaDesdeVentas, guardarClienteVentas, guardarEtiquetaVentas } from "@/app/crm/acciones/ventas";
 import { COLORES_EQUIPO } from "@/lib/b2b";
-import { normalizarTexto, type ClienteMini, type EtiquetaVentas } from "@/lib/ventas";
+import { normalizarTexto, type ClienteMini, type EmpresaVentas, type EtiquetaVentas } from "@/lib/ventas";
 import { EtiquetaChip, PuntoColor } from "@/components/crm/ventas/Piezas";
 import { claseEnLinea } from "./Editables";
 
@@ -143,7 +143,7 @@ export function ElegirCliente({
         valor: c.id,
         texto: c.nombre,
         detalle: [c.email, c.ciudad].filter(Boolean).join(" · ") || undefined,
-        icono: c.es_empresa ? <Buildings className="size-4 shrink-0 text-tinta-2" aria-hidden /> : <User className="size-4 shrink-0 text-tinta-2" aria-hidden />,
+        icono: <User className="size-4 shrink-0 text-tinta-2" aria-hidden />,
         elegida: c.id === valor?.id,
       })),
     [clientes, valor?.id]
@@ -190,6 +190,87 @@ export function ElegirCliente({
           creando={creando}
           vacio="No hay clientes con ese nombre."
           etiqueta="Clientes"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/**
+ * Empresa: una de las del CRM (las mismas de Oportunidades y Contactos). Lo
+ * escrito que no exista se crea en Empresas. `sinElegir` es lo que se ve sin
+ * empresa (p. ej. el nombre escrito a mano en una oportunidad antigua).
+ */
+export function ElegirEmpresa({
+  id,
+  valor,
+  empresas,
+  onCambio,
+  sinElegir = "Elige o crea una empresa",
+  claseBoton = claseEnLinea,
+}: {
+  id?: string;
+  valor: EmpresaVentas | null;
+  empresas: EmpresaVentas[];
+  onCambio: (empresa: EmpresaVentas | null) => void;
+  sinElegir?: string;
+  claseBoton?: string;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const [creando, empezar] = useTransition();
+  const opciones = useMemo<Opcion[]>(
+    () =>
+      empresas.map((e) => ({
+        valor: e.id,
+        texto: e.nombre,
+        detalle: e.ciudad ?? undefined,
+        icono: <Buildings className="size-4 shrink-0 text-tinta-2" aria-hidden />,
+        elegida: e.id === valor?.id,
+      })),
+    [empresas, valor?.id]
+  );
+
+  function crear(nombre: string) {
+    empezar(async () => {
+      const r = await crearEmpresaDesdeVentas(nombre);
+      if (!r.ok || !r.id) return void toast.error(r.mensaje);
+      toast.success(r.mensaje);
+      onCambio({ id: r.id, nombre, logo_url: null, ciudad: null });
+      setAbierto(false);
+    });
+  }
+
+  return (
+    <Popover modal open={abierto} onOpenChange={setAbierto}>
+      <div className="relative">
+        <PopoverTrigger asChild>
+          <button id={id} type="button" aria-haspopup="listbox" aria-expanded={abierto} className={`${claseBoton} flex items-center gap-2 text-left ${valor ? "pr-8" : ""}`}>
+            <span className={`min-w-0 flex-1 truncate ${valor ? "text-tinta" : "text-tinta-2/80"}`}>{valor?.nombre ?? sinElegir}</span>
+            {!valor && <CaretUpDown className="size-3.5 shrink-0 text-tinta-2" aria-hidden />}
+          </button>
+        </PopoverTrigger>
+        {valor && (
+          <button
+            type="button"
+            onClick={() => onCambio(null)}
+            aria-label="Quitar empresa"
+            className="absolute right-1 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded text-tinta-2 hover:bg-placa-2 hover:text-tinta"
+          >
+            <X className="size-3" aria-hidden />
+          </button>
+        )}
+      </div>
+      <PopoverContent align="start" className="w-(--radix-popover-trigger-width) min-w-72 gap-0 bg-placa p-0 text-tinta shadow-lg">
+        <ListaBuscable
+          opciones={opciones}
+          onElegir={(v) => {
+            onCambio(empresas.find((e) => e.id === v) ?? null);
+            setAbierto(false);
+          }}
+          onCrear={crear}
+          creando={creando}
+          vacio="No hay empresas con ese nombre."
+          etiqueta="Empresas"
         />
       </PopoverContent>
     </Popover>

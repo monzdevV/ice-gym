@@ -129,7 +129,7 @@ export function Razones({ motivos }: { motivos: MotivoPerdida[] }) {
           e.preventDefault();
           ejecutar(() => guardarMotivoVentas({ nombre: nueva }), () => setNueva(""));
         }}
-        className="flex max-w-xl gap-2"
+        className="flex gap-2"
       >
         <label className="min-w-0 flex-1">
           <span className="sr-only">Nueva razón de pérdida</span>
@@ -143,7 +143,7 @@ export function Razones({ motivos }: { motivos: MotivoPerdida[] }) {
       {motivos.length === 0 ? (
         <SinDatos titulo="Sin razones" texto="Sin razones, al marcar una perdida sólo se pide la nota de cierre." />
       ) : (
-        <ul className={`${claseLista} max-w-xl`}>
+        <ul className={claseLista}>
           {motivos.map((m) => (
             <li key={m.id} className={claseFila}>
               {editando === m.id ? (
@@ -275,7 +275,7 @@ export function TiposActividad({ tipos }: { tipos: TipoActividadVentas[] }) {
       {tipos.length === 0 ? (
         <SinDatos titulo="Sin tipos de actividad" texto="Sin tipos no se pueden planificar actividades." />
       ) : (
-        <ul className={`${claseLista} max-w-2xl`}>
+        <ul className={claseLista}>
           {tipos.map((t) => {
             const Icono = ICONO_ACTIVIDAD[t.icono];
             return (

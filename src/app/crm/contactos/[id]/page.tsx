@@ -24,7 +24,7 @@ import {
   ruta,
 } from "@/lib/b2b";
 import { dinero, fecha, fechaHora, numero, relativo } from "@/lib/formato";
-import { Seccion, SinDatos } from "@/components/crm/Primitivas";
+import { Seccion, SinDatos, claseBotonSecundario } from "@/components/crm/Primitivas";
 import {
   Avatar,
   BadgeEstadoEmpresa,
@@ -49,7 +49,6 @@ import {
   EditarContacto,
   MasAcciones,
   NotasContacto,
-  claseBotonSecundario,
 } from "@/components/crm/contactos/ControlesContacto";
 
 export const dynamic = "force-dynamic";
