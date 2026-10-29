@@ -42,6 +42,12 @@ create index if not exists facturas_empresa_id_idx on public.facturas (empresa_i
 
 alter table public.facturas enable row level security;
 
+-- Políticas con los nombres de la primera versión (migrations/20261019_facturas.sql).
+drop policy if exists "Equipo ve facturas" on public.facturas;
+drop policy if exists "Equipo crea facturas" on public.facturas;
+drop policy if exists "Equipo edita facturas" on public.facturas;
+drop policy if exists "Equipo borra facturas" on public.facturas;
+
 drop policy if exists facturas_ver on public.facturas;
 create policy facturas_ver on public.facturas for select to authenticated using (true);
 
